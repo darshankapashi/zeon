@@ -21,19 +21,3 @@ enum Persistance {
   MEMORY_ONLY,
 };
 
-typedef uint64_t zeonid_t;
-
-struct Data {
-  Data(long _x, long _y, string _val, long _version)
-    : x(_x), y(_y), val(_val), version(_version) {}
-  Data() = delete;
-
-  long x;
-  long y;
-  string val;
-  long version;
-};
-
-struct Record {
-
-};

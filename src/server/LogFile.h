@@ -8,11 +8,21 @@
 
 class LogFile {
  public:
-  LogFile() = default;
+  LogFile(DataStoreConfig* config);
   ~LogFile() = default;
 
-  int write(Record const& record);
+  void writePoint(Data const& data);
+
+  // Returns the offset at which the record will be written
+  // Writes the point too
+  long writeValue(Data const& data);
 
  private:
-  int fd_;
+  fstream valueFile_;
+  fstream pointFile_;
+  bool run_;
+  long currentOffset_;
+  ProducerConsumerQueue<Data> queue_;
+
+  mutex valueLock_;
 };

@@ -11,13 +11,16 @@ GEN_SRC    = gen-cpp/core_constants.cpp \
              gen-cpp/PointStore.cpp
 GEN_INC    = -I./gen-cpp
 
-default: server client
+default: thrift server client
 
-server: CoreServer.cpp
-	g++ ${CPP_OPTS} ${CPP_DEFS} -o bin/server ${GEN_INC} ${INCS_DIRS} CoreServer.cpp ${GEN_SRC} ${LIBS_DIRS} ${LIBS}
+thrift: src/if/core.thrift
+	thrift --gen cpp src/if/core.thrift
 
-client: CoreClient.cpp
-	g++ ${CPP_OPTS} ${CPP_DEFS} -o bin/client ${GEN_INC} ${INCS_DIRS} CoreClient.cpp ${GEN_SRC} ${LIBS_DIRS} ${LIBS}
+server: src/server/CoreServer.cpp
+	g++ ${CPP_OPTS} ${CPP_DEFS} -o bin/server ${GEN_INC} ${INCS_DIRS} src/server/CoreServer.cpp ${GEN_SRC} ${LIBS_DIRS} ${LIBS}
+
+client: src/client/CoreClient.cpp
+	g++ ${CPP_OPTS} ${CPP_DEFS} -o bin/client ${GEN_INC} ${INCS_DIRS} src/client/CoreClient.cpp ${GEN_SRC} ${LIBS_DIRS} ${LIBS}
 
 clean:
-	$(RM) -r bin/server bin/client
+	$(RM) -r bin/server bin/client gen-cpp/*

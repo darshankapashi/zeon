@@ -4,7 +4,7 @@
 #include <thrift/transport/TSocket.h>
 #include <thrift/transport/TTransportUtils.h>
 
-#include "gen-cpp/PointStore.h"
+#include "../../gen-cpp/PointStore.h"
 
 using namespace std;
 using namespace apache::thrift;
