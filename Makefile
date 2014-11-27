@@ -14,10 +14,10 @@ GEN_INC    = -I./gen-cpp
 default: server client
 
 server: CoreServer.cpp
-	g++ ${CPP_OPTS} ${CPP_DEFS} -o bin/CoreServer ${GEN_INC} ${INCS_DIRS} CoreServer.cpp ${GEN_SRC} ${LIBS_DIRS} ${LIBS}
+	g++ ${CPP_OPTS} ${CPP_DEFS} -o bin/server ${GEN_INC} ${INCS_DIRS} CoreServer.cpp ${GEN_SRC} ${LIBS_DIRS} ${LIBS}
 
 client: CoreClient.cpp
-	g++ ${CPP_OPTS} ${CPP_DEFS} -o bin/CoreClient ${GEN_INC} ${INCS_DIRS} CoreClient.cpp ${GEN_SRC} ${LIBS_DIRS} ${LIBS}
+	g++ ${CPP_OPTS} ${CPP_DEFS} -o bin/client ${GEN_INC} ${INCS_DIRS} CoreClient.cpp ${GEN_SRC} ${LIBS_DIRS} ${LIBS}
 
 clean:
-	$(RM) -r CppClient CppServer
+	$(RM) -r bin/server bin/client
