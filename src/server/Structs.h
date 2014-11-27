@@ -1,14 +1,14 @@
 #pragma once
 
 #include <string>
-#include "gen-cpp/PointStore.h"
 
-#include "../../gen-cpp/core_types.h"
+#include "gen-cpp/core_types.h"
+#include "gen-cpp/PointStore.h"
 
 using namespace std;
 using namespace ::core;
 
-string DEFAULT_VALUE  = "";
+string const DEFAULT_VALUE = "";
 
 enum ErrorCode {
   FAILED_TO_LOCK,
