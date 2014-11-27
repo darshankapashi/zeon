@@ -10,7 +10,7 @@ SERVER_FILES = src/server/CoreServer.cpp \
                src/server/DataStore.cpp \
                src/server/LogFile.cpp
 
-default: thrift server 
+default: thrift server client
 
 thrift: src/if/core.thrift
 	thrift --gen cpp src/if/core.thrift

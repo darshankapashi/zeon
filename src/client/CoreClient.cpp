@@ -27,10 +27,11 @@ int main() {
     auto p = Point();
     p.xCord = 2;
     p.yCord = 3;
-    //client.setKeyValue(1, p);
-    Point p1;
-    //client.getValue(p1, 1);
-    cout<<"point: "<<p1.xCord<<" "<<p1.yCord; 
+    Data data;
+    data.point = p;
+    data.value = "hello world";
+    client.setData(data, true);
+    client.setData(data, false);
 
     transport->close();
   } catch (TException& tx) {

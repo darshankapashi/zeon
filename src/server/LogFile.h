@@ -1,6 +1,5 @@
 #pragma once
 
-#include <fstream>
 #include <mutex>
 #include <thread>
 
@@ -26,8 +25,8 @@ class LogFile {
   void consumer();
 
   thread writerThread_;
-  ofstream valueFile_;
-  ofstream pointFile_;
+  int valueFile_;
+  int pointFile_;
   bool run_;
   long currentOffset_;
   folly::ProducerConsumerQueue<core::Data> queue_;

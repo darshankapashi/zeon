@@ -31,6 +31,8 @@ class DataStore {
   // Not thread safe! Make sure only 1 thread is calling this!
   void setPersistance(Persistance option);
 
+  LogFile* log() { return &logFile_; }
+
  private:
   bool lockKey(zeonid_t key);
   void unlockKey(zeonid_t key);

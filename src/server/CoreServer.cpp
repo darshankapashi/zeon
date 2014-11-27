@@ -39,11 +39,21 @@ class PointStoreHandler : virtual public PointStoreIf {
   void setData(const Data& data, const bool valuePresent) {
     // Your implementation goes here
     printf("setData\n");
+    if (valuePresent)
+      dataStore_.log()->writeValue(data);
+    else
+      dataStore_.log()->writePoint(data);
   }
 
   void createData(const zeonid_t id, const Point& point, const int64_t timestamp, const std::string& value) {
     // Your implementation goes here
     printf("createData\n");
+    Data data;
+    data.id = id;
+    data.point = point;
+    data.version.timestamp = timestamp;
+    data.value = value;
+    dataStore_.log()->writeValue(data);
   }
 
   void getNearestKById(std::vector<Data> & _return, const zeonid_t id) {
