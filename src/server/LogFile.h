@@ -14,7 +14,7 @@ class LogFile {
  public:
   LogFile(DataStoreConfig* config);
   ~LogFile();
-
+  // TODO: ReturnCodes for these operations (?)
   void writePoint(core::Data const& data);
 
   // Returns the offset at which the record will be written

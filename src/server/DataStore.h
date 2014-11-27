@@ -27,6 +27,8 @@ class DataStore {
   int storeValue(zeonid_t key, string value); 
   int get(zeonid_t key, Data& data, bool valuePresent);
   int history(zeonid_t key, vector<Data>& history);
+  int removeData(zeonid_t key);
+  int removePersistedData(zeonid_t key);
 
   // Not thread safe! Make sure only 1 thread is calling this!
   void setPersistance(Persistance option);
@@ -41,6 +43,7 @@ class DataStore {
   unordered_map<zeonid_t, vector<Data>> metaData_;
 
   // Map from key -> value (this doesn't change often)
+  // TODO: convert this into LRU cache since valueData_ could be large
   unordered_map<zeonid_t, string> valueData_;
 
   // Locks on each key

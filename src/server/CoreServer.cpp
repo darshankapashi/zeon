@@ -21,11 +21,9 @@ using namespace  ::core;
 namespace core {
 
 class PointStoreHandler : virtual public PointStoreIf {
- public:
-  PointStoreHandler() 
+ public:  PointStoreHandler() 
     : PointStoreIf(),
-      dataStore_(new DataStoreConfig())
-  {}
+      dataStore_(new DataStoreConfig()){}
 
   void ping() {
     // Your implementation goes here
@@ -34,26 +32,65 @@ class PointStoreHandler : virtual public PointStoreIf {
 
   void getData(Data& _return, const zeonid_t id, const bool valuePresent) {
     printf("getData\n");
+    auto re = ReturnCode();
+    try {
+      re.what = dataStore_.get(id, _return, valuePresent);
+    } catch (exception e) {
+      re.what = ErrorCode::SERVER_ERROR;
+    }
+    throw re;
   }
 
   void setData(const Data& data, const bool valuePresent) {
-    // Your implementation goes here
     printf("setData\n");
-    if (valuePresent)
-      dataStore_.log()->writeValue(data);
-    else
-      dataStore_.log()->writePoint(data);
+    auto re = ReturnCode();
+    try {
+      auto resMeta = dataStore_.storeMetaData(data.id, data.point, data.version.timestamp); 
+      int resValue = ErrorCode::STORED;
+      if (valuePresent) {
+        dataStore_.log()->writeValue(data);
+        resValue = dataStore_.storeValue(data.id, data.value);
+      }
+      else {
+        dataStore_.log()->writePoint(data);
+      }
+      if (resValue == ErrorCode::STORED && 
+          resMeta == ErrorCode::STORED) {
+        re.what = ErrorCode::STORED;
+      } else {
+        // TODO: might do better error resolution
+        re.what = ErrorCode::SERVER_ERROR;
+      }
+    }
+    catch (exception e) {
+      re.what = ErrorCode::SERVER_ERROR;
+    }
   }
 
   void createData(const zeonid_t id, const Point& point, const int64_t timestamp, const std::string& value) {
     // Your implementation goes here
-    printf("createData\n");
-    Data data;
-    data.id = id;
-    data.point = point;
-    data.version.timestamp = timestamp;
-    data.value = value;
-    dataStore_.log()->writeValue(data);
+    auto re = ReturnCode();
+    try {
+      printf("createData\n");
+      Data data;
+      data.id = id;
+      data.point = point;
+      data.version.timestamp = timestamp;
+      data.value = value;
+      auto metaRes = dataStore_.storeMetaData(data.id, 
+        data.point, 
+        data.version.timestamp);
+      auto valueRes = dataStore_.storeValue(data.id, data.value);
+      if (metaRes == ErrorCode::STORED && valueRes == ErrorCode::STORED) {
+        re.what = ErrorCode::STORED;
+      } else {
+        re.what = ErrorCode::SERVER_ERROR;
+      }
+      dataStore_.log()->writeValue(data);
+    } catch (exception e) {
+      re.what = ErrorCode::SERVER_ERROR;
+    }
+    throw re;
   }
 
   void getNearestKById(std::vector<Data> & _return, const zeonid_t id) {
@@ -73,7 +110,14 @@ class PointStoreHandler : virtual public PointStoreIf {
 
   void removeData(const zeonid_t id) {
     // Your implementation goes here
-    printf("removeData\n");
+    auto re = ReturnCode();
+    try {
+      printf("removeData\n");
+      re.what = dataStore_.removeData(id);
+    } catch (exception e) {
+      re.what = ErrorCode::SERVER_ERROR;
+    }
+    throw re;
   }
 
  private:
@@ -83,6 +127,7 @@ class PointStoreHandler : virtual public PointStoreIf {
 }
 
 int main(int argc, char **argv) {
+  // TODO:: use ThreadManager and ThreadPoool
   int port = 9090;
   boost::shared_ptr<PointStoreHandler> handler(new PointStoreHandler());
   boost::shared_ptr<TProcessor> processor(new PointStoreProcessor(boost::dynamic_pointer_cast<PointStoreIf>(handler)));
