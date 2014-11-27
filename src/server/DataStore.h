@@ -3,6 +3,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "DataStoreConfig.h"
+
 using namespace std;
 
 /*
@@ -41,7 +43,8 @@ struct Data {
 
 class DataStore {
  public:
-  DataStore() = default;
+  DataStore(DataStoreConfig* config) {}
+
   ~DataStore() = default;
 
   int store(zeonid_t key, long x, long y, string val);
