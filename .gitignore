@@ -29,3 +29,7 @@
 
 # Temporaries
 *.swp
+
+gen-cpp/*
+bin/*
+
