@@ -65,5 +65,4 @@ service PointStore {
    
    // Delete the Data corresponding to id
    void removeData (1: zeonid_t id)
-
 }

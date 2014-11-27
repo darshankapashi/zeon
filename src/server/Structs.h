@@ -1,8 +1,12 @@
 #pragma once
 
 #include <string>
+#include "gen-cpp/PointStore.h"
 
 using namespace std;
+using namespace ::core;
+
+string DEFAULT_VALUE  = "";
 
 enum ErrorCode {
   FAILED_TO_LOCK,
