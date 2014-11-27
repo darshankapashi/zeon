@@ -1,7 +1,7 @@
 THRIFT_VER =thrift-0.9.1
 USR_DIR    =${HOME}/usr
 THRIFT_DIR =${USR_DIR}/${THRIFT_VER}
-INCS_DIRS  =-I src/server
+INCS_DIRS  =-I./
 CPP_DEFS   =-D=HAVE_CONFIG_H
 CPP_OPTS   =-Wall -O2 -std=c++11
 LIBS       =-lthrift
