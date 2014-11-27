@@ -3,6 +3,10 @@
 #define LOCK(key) if (!lockKey(key)) return FAILED_TO_LOCK;
 #define UNLOCK(key) unlockKey(key)
 
+void DataStore::setPersistance(Persistance option) {
+  persist_ = option;
+}
+
 bool DataStore::lockKey(zeonid_t key) {
   try {
     lockTableLock_.lock();
@@ -43,4 +47,19 @@ int DataStore::get(zeonid_t key, Data& data) {
   UNLOCK(key);
 
   return ret;
+}
+
+int DataStore::history(zeonid_t key, vector<Data>& history) {
+  int ret = FOUND;
+  LOCK(key);
+  auto dataIt = data_.find(key);
+  if (dataIt == data_.end()) {
+    ret = NOT_FOUND;
+  } else {
+    history = dataIt->second;
+  }
+  UNLOCK(key);
+
+  return ret;
+  
 }

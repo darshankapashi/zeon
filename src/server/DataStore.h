@@ -1,42 +1,29 @@
+#pragma once
+
 #include <mutex>
-#include <string>
 #include <unordered_map>
 #include <vector>
 
-using namespace std;
+#include "DataStoreConfig.h"
+#include "LogFile.h"
+#include "Structs.h"
 
 /*
  * This class encapsulates the data store for the system
  */
 
-typedef uint64_t zeonid_t;
-
-enum ErrorCode {
-  FAILED_TO_LOCK,
-  STORED,
-  FOUND,
-  NOT_FOUND,
-  FOUND_EMPTY,
-};
-
-struct Data {
-  Data(long _x, long _y, string _val, long _version)
-    : x(_x), y(_y), val(_val), version(_version) {}
-  Data() = delete;
-
-  long x;
-  long y;
-  string val;
-  long version;
-};
-
 class DataStore {
  public:
-  DataStore() = default;
+  DataStore(DataStoreConfig* config) {}
+
   ~DataStore() = default;
 
   int store(zeonid_t key, long x, long y, string val);
   int get(zeonid_t key, Data& data);
+  int history(zeonid_t key, vector<Data>& history);
+
+  // Not thread safe! Make sure only 1 thread is calling this!
+  void setPersistance(Persistance option);
 
  private:
   bool lockKey(zeonid_t key);
@@ -51,4 +38,8 @@ class DataStore {
 
   // Lock for the lock table
   mutex lockTableLock_;
+
+  Persistance persist_;
+
+  LogFile logFile_;
 };
