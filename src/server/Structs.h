@@ -28,7 +28,7 @@ enum Persistance {
 };
 
 struct DataStoreConfig {
-  string pointFileName;
-  string valueFileName;
-  long maxBufferSize;
+  string pointFileName = "/tmp/zeon.points.txt";
+  string valueFileName = "/tmp/zeon.values.txt";
+  long maxBufferSize = 100;
 };

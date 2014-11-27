@@ -25,7 +25,7 @@ LogFile::~LogFile() {
 }
 
 void LogFile::consumer() {
-  cout << "Starting writer thread...";
+  cout << "Starting writer thread...\n";
 
   while(run_) {
     core::Data data;
