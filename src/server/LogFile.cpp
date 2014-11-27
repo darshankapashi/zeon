@@ -6,21 +6,67 @@
 #include <sys/stat.h>
 #include <thrift/protocol/TJSONProtocol.h>
 
+using namespace apache::thrift::protocol;
+using namespace apache::thrift::transport;
+
+template<class T>
+struct WriteBlob;
+
+template<class T>
+void serialize(T obj, WriteBlob<T>& b);
+
+template<class T>
+struct WriteBlob {
+  uint8_t* data;
+  uint32_t len;
+
+  WriteBlob(T obj) {
+    serialize(obj, *this);
+  }
+
+  void writeToFile(int fd) {
+    write(fd, &len, sizeof(len));
+    write(fd, data, len);
+  }
+};
+
+template<class T>
+void serialize(T obj, WriteBlob<T>& b) {
+  TMemoryBuffer* buffer = new TMemoryBuffer;
+  boost::shared_ptr<TTransport> trans(buffer);
+  TJSONProtocol protocol(trans);
+
+  obj.write(&protocol);
+
+  buffer->getBuffer(&b.data, &b.len);
+  cout << "Serialized id=" << obj.id << " len=" << b.len << "\n";
+}
+
+template<class T>
+void deserialize(T& obj, uint8_t* data, uint32_t len) {
+  TMemoryBuffer* buffer = new TMemoryBuffer(data, len, TMemoryBuffer::TAKE_OWNERSHIP);
+  boost::shared_ptr<TTransport> trans(buffer);
+  TJSONProtocol protocol(trans);
+
+  obj.read(&protocol);
+}
+
 LogFile::LogFile(DataStoreConfig* config) 
   : run_(true),
     queue_(config->maxBufferSize)
 {
-  valueFile_ = open(config->valueFileName.c_str(), O_APPEND | O_CREAT | O_WRONLY);
+  valueFile_ = open(config->valueFileName.c_str(), O_APPEND | O_CREAT | O_RDWR);
   if (valueFile_ == -1) {
     throw std::runtime_error("Could not open file: " + config->valueFileName);
   }
-  currentOffset_ = lseek(valueFile_, 0, SEEK_CUR);
 
-  pointFile_ = open(config->pointFileName.c_str(), O_APPEND | O_CREAT | O_WRONLY);
+  pointFile_ = open(config->pointFileName.c_str(), O_APPEND | O_CREAT | O_RDWR);
   if (pointFile_ == -1) {
     throw std::runtime_error("Could not open file: " + config->pointFileName);
   }
   writerThread_ = std::thread(&LogFile::consumer, this);
+
+  recover();
 }
 
 LogFile::~LogFile() {
@@ -34,11 +80,45 @@ void LogFile::consumer() {
   while(run_) {
     core::Data data;
     if (queue_.read(data)) {
-      string json = apache::thrift::ThriftJSONString(data);
-      cout << "Writing to disk: \n" << json << "\n";
-      write(pointFile_, json.c_str(), json.size());
+      WriteBlob<Data> b(data);
+      cout << "Writing to disk: id=" << data.id << "\n";
+      b.writeToFile(pointFile_);
     }
   }
+}
+
+void LogFile::recover() {
+	lseek(pointFile_, 0, SEEK_SET);
+	size_t bytesRead = 0;
+	uint32_t len;
+	while ((bytesRead = read(pointFile_, &len, sizeof(len))) != 0) {
+    cout << "bytesRead=" << bytesRead << " errno=" << errno << " len=" << len << "\n";
+		uint8_t* buffer = new uint8_t[len];
+		bytesRead = read(pointFile_, buffer, len);
+		if (bytesRead != len) {
+			throw std::runtime_error("Could not recover from values file");
+		}
+		Data data;
+    // Deserialize will deallocate the buffer for us :)
+    deserialize(data, buffer, len);
+    pointData_[data.id].emplace_back(data);
+    cout << "Read from disk: id=" << data.id << "\n";
+	}
+
+	lseek(valueFile_, 0, SEEK_SET);
+	bytesRead = 0;
+	while ((bytesRead = read(valueFile_, &len, sizeof(len))) != 0) {
+		uint8_t* buffer = new uint8_t[len];
+		bytesRead = read(valueFile_, buffer, len);
+		if (bytesRead != len) {
+			throw std::runtime_error("Could not recover from values file");
+		}
+		Data data;
+    // Deserialize will deallocate the buffer for us :)
+    deserialize(data, buffer, len);
+    valueData_[data.id] = data.value;
+    cout << "Read from disk: id=" << data.id << "value=\n" << data.value << "\n";
+	}
 }
 
 void LogFile::writePoint(core::Data const& data) {
@@ -52,13 +132,13 @@ void LogFile::writePoint(core::Data const& data) {
 long LogFile::writeValue(core::Data const& data) {
   writePoint(data);
 
-  string json = apache::thrift::ThriftJSONString(data);
+  WriteBlob<Data> b(data);
 
   lock_guard<mutex> lock(valueLock_);
-  currentOffset_ += json.size();
-  cout << "(reliable) Writing to disk: size=" << json.size() << " fd=" << valueFile_ << "\n" << json << "\n";
-  write(valueFile_, json.c_str(), json.size());
+  long offset = lseek(valueFile_, 0, SEEK_CUR);
+  cout << "(reliable) Writing to disk: id=" << data.id << "\n";
+  b.writeToFile(valueFile_);
   fsync(valueFile_);
 
-  return currentOffset_;
+  return offset;
 }
