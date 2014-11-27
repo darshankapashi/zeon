@@ -40,6 +40,7 @@ int DataStore::storeMetaData(zeonid_t key, Point point, int64_t timestamp) {
   data.value = DEFAULT_VALUE;
   metaData_[key].emplace_back(data);
   UNLOCK(key);
+  return STORED;
 }
 
 int DataStore::storeValue(zeonid_t key, string val) {
@@ -52,8 +53,8 @@ int DataStore::storeValue(zeonid_t key, string val) {
 int DataStore::get(zeonid_t key, Data& data, bool valuePresent) {
   int ret = FOUND;
   LOCK(key);
-  auto dataIt = data_.find(key);
-  if (dataIt == data_.end()) {
+  auto dataIt = metaData_.find(key);
+  if (dataIt == metaData_.end()) {
     ret = NOT_FOUND;
   } else if (dataIt->second.size() == 0) {
     ret = FOUND_EMPTY;
@@ -71,8 +72,8 @@ int DataStore::get(zeonid_t key, Data& data, bool valuePresent) {
 int DataStore::history(zeonid_t key, vector<Data>& history) {
   int ret = FOUND;
   LOCK(key);
-  auto dataIt = data_.find(key);
-  if (dataIt == data_.end()) {
+  auto dataIt = metaData_.find(key);
+  if (dataIt == metaData_.end()) {
     ret = NOT_FOUND;
   } else {
     history = dataIt->second;
