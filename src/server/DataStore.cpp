@@ -48,3 +48,18 @@ int DataStore::get(zeonid_t key, Data& data) {
 
   return ret;
 }
+
+int DataStore::history(zeonid_t key, vector<Data>& history) {
+  int ret = FOUND;
+  LOCK(key);
+  auto dataIt = data_.find(key);
+  if (dataIt == data_.end()) {
+    ret = NOT_FOUND;
+  } else {
+    history = dataIt->second;
+  }
+  UNLOCK(key);
+
+  return ret;
+  
+}

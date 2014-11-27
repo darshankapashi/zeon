@@ -49,6 +49,7 @@ class DataStore {
 
   int store(zeonid_t key, long x, long y, string val);
   int get(zeonid_t key, Data& data);
+  int history(zeonid_t key, vector<Data>& history);
 
   // Not thread safe! Make sure only 1 thread is calling this!
   void setPersistance(Persistance option);
