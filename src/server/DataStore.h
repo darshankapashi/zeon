@@ -19,6 +19,15 @@ enum ErrorCode {
   FOUND_EMPTY,
 };
 
+enum Persistance {
+  // Guarantee that the value has been written reliably to disk
+  GUARANTEED,
+  // Not needed right now, but will be nice to have
+  LATER,
+  // Only use as a cache, I don't care about data loss
+  MEMORY_ONLY,
+};
+
 struct Data {
   Data(long _x, long _y, string _val, long _version)
     : x(_x), y(_y), val(_val), version(_version) {}
@@ -38,6 +47,9 @@ class DataStore {
   int store(zeonid_t key, long x, long y, string val);
   int get(zeonid_t key, Data& data);
 
+  // Not thread safe! Make sure only 1 thread is calling this!
+  void setPersistance(Persistance option);
+
  private:
   bool lockKey(zeonid_t key);
   void unlockKey(zeonid_t key);
@@ -51,4 +63,6 @@ class DataStore {
 
   // Lock for the lock table
   mutex lockTableLock_;
+
+  Persistance persist_;
 };
