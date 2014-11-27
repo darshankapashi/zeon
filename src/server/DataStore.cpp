@@ -39,11 +39,12 @@ int DataStore::storeMetaData(zeonid_t key, Point point, int64_t timestamp) {
   data.version = version;
   data.value = DEFAULT_VALUE;
   metaData_[key].emplace_back(data);
+  UNLOCK(key);
 }
 
 int DataStore::storeValue(zeonid_t key, string val) {
   LOCK(key);
-  valueData_[key] = value;
+  valueData_[key] = val;
   UNLOCK(key);
   return STORED;
 }
