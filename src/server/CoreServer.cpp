@@ -70,6 +70,7 @@ class PointStoreHandler : virtual public PointStoreIf {
   DataStore dataStore_;
 
 };
+}
 
 int main(int argc, char **argv) {
   int port = 9090;
@@ -83,4 +84,4 @@ int main(int argc, char **argv) {
   server.serve();
   return 0;
 }
-}
+
