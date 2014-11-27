@@ -2,6 +2,8 @@
 
 #include <string>
 
+#include "../../gen-cpp/core_types.h"
+
 using namespace std;
 
 enum ErrorCode {
@@ -21,3 +23,8 @@ enum Persistance {
   MEMORY_ONLY,
 };
 
+struct DataStoreConfig {
+  string pointFileName;
+  string valueFileName;
+  long maxBufferSize;
+};

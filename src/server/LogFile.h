@@ -1,28 +1,36 @@
 #pragma once
 
+#include <fstream>
+#include <mutex>
+#include <thread>
+
+#include "Structs.h"
+#include "util/ProducerConsumerQueue.h"
+
 /*
  * This class encapsulates a log file on disk
  */
 
-#include "Structs.h"
-
 class LogFile {
  public:
   LogFile(DataStoreConfig* config);
-  ~LogFile() = default;
+  ~LogFile();
 
-  void writePoint(Data const& data);
+  void writePoint(core::Data const& data);
 
   // Returns the offset at which the record will be written
   // Writes the point too
-  long writeValue(Data const& data);
+  long writeValue(core::Data const& data);
 
  private:
-  fstream valueFile_;
-  fstream pointFile_;
+  void consumer();
+
+  thread writerThread_;
+  ofstream valueFile_;
+  ofstream pointFile_;
   bool run_;
   long currentOffset_;
-  ProducerConsumerQueue<Data> queue_;
+  folly::ProducerConsumerQueue<core::Data> queue_;
 
   mutex valueLock_;
 };

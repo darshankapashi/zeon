@@ -4,7 +4,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include "DataStoreConfig.h"
 #include "LogFile.h"
 #include "Structs.h"
 
@@ -12,9 +11,13 @@
  * This class encapsulates the data store for the system
  */
 
+using core::Data;
+using core::zeonid_t;
+
 class DataStore {
  public:
-  DataStore(DataStoreConfig* config) {}
+  DataStore(DataStoreConfig* config) 
+    : logFile_(config) {}
 
   ~DataStore() = default;
 

@@ -1,60 +1,57 @@
-#include "LogFile.cpp"
+#include "LogFile.h"
 
-#include <fstream>
-#include "util/ProducerConsumerQueue.h"
+#include <iostream>
+#include <thrift/protocol/TJSONProtocol.h>
 
 LogFile::LogFile(DataStoreConfig* config) 
-  : queue(config->maxBufferSize)
+  : queue_(config->maxBufferSize)
 {
   valueFile_.open(config->valueFileName, fstream::out | fstream::app);
-  if (!valueFile_.is_open) {
+  if (!valueFile_.is_open()) {
     throw std::runtime_error("Could not open file: " + config->valueFileName);
   }
   currentOffset_ = valueFile_.tellp();
 
   pointFile_.open(config->pointFileName, fstream::out | fstream::app);
-  if (!pointFile_.is_open) {
+  if (!pointFile_.is_open()) {
     throw std::runtime_error("Could not open file: " + config->pointFileName);
   }
-  writerThread = std::thread(consumer, this);
+  writerThread_ = std::thread(&LogFile::consumer, this);
 }
 
 LogFile::~LogFile() {
   run_ = false;
-  writerThread.join();
+  writerThread_.join();
 }
 
 void LogFile::consumer() {
   cout << "Starting writer thread...";
 
   while(run_) {
-    Data data;
+    core::Data data;
     if (queue_.read(data)) {
-      // Serialize data ...
-      pointFile_.write(serialized);
+      string json = apache::thrift::ThriftJSONString(data);
+      pointFile_.write(json.c_str(), json.size());
     }
   }
 }
 
-void LogFile::writePoint(Data const& data) {
-  Data smallData;
+void LogFile::writePoint(core::Data const& data) {
+  core::Data smallData;
   smallData.id = data.id;
   smallData.point = data.point;
   smallData.version = data.version;
   queue_.write(smallData);
 }
 
-long LogFile::writeValue(Data const& data) {
+long LogFile::writeValue(core::Data const& data) {
   writePoint(data);
 
-  // TODO: Serialize and store in toWrite
-  size_t len = 0;
-  char* toWrite = nullptr;
+  string json = apache::thrift::ThriftJSONString(data);
 
   lock_guard<mutex> lock(valueLock_);
-  currentOffset_ += len;
-  // write to file ...
-  valueFile_.write(...);
+  currentOffset_ += json.size();
+  valueFile_.write(json.c_str(), json.size());
 
   return currentOffset_;
 }
