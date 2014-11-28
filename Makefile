@@ -6,18 +6,40 @@ GEN_SRC    = gen-cpp/core_constants.cpp \
 						 gen-cpp/core_types.cpp \
              gen-cpp/PointStore.cpp
 
-SERVER_FILES = src/server/CoreServer.cpp \
-               src/server/DataStore.cpp \
-               src/server/LogFile.cpp \
-               src/server/NodeStats.cpp
+################################
+# A concise build for the server
+CC         = g++
+CFLAGS     = -c -Wall -O2 -std=c++11
+LDFLAGS    = -lthrift
 
-default: thrift server client
+ODIR       = bin
+SDIR       = src/server
+GEN_DIR    = gen-cpp
+INC        = -I./
+
+_OBJS      = CoreServer.o DataStore.o LogFile.o NodeStats.o
+OBJS       = $(patsubst %,$(ODIR)/%,$(_OBJS))
+
+_GEN_OBJS  = core_constants.o core_types.o PointStore.o
+GEN_OBJS   = $(patsubst %,$(ODIR)/%,$(_GEN_OBJS))
+
+EXECUTABLE = bin/server
+
+$(ODIR)/%.o: $(SDIR)/%.cpp thrift
+	$(CC) -c $(INC) -o $@ $< $(CFLAGS) 
+
+$(ODIR)/%.o: $(GEN_DIR)/%.cpp thrift
+	$(CC) -c $(INC) -o $@ $< $(CFLAGS) 
+
+$(EXECUTABLE): $(OBJS) $(GEN_OBJS)
+	$(CC) $(LDFLAGS) -o $(EXECUTABLE) $(OBJS) $(GEN_OBJS)
+################################
+
+
+default: thrift $(EXECUTABLE) client
 
 thrift: src/if/core.thrift
 	thrift --gen cpp src/if/core.thrift
-
-server: ${SERVER_FILES}
-	g++ ${CPP_OPTS} -o bin/server ${INCS_DIRS} ${SERVER_FILES} ${GEN_SRC} ${LIBS}
 
 client: src/client/CoreClient.cpp
 	g++ ${CPP_OPTS} -o bin/client ${INCS_DIRS} src/client/CoreClient.cpp ${GEN_SRC} ${LIBS}
@@ -26,4 +48,4 @@ proximity: src/server/ProximityManager.cpp
 	g++ ${CPP_OPTS} -o bin/proximity ${INCS_DIRS} src/server/ProximityManager.cpp ${GEN_SRC} ${LIBS}
 
 clean:
-	$(RM) -r bin/server bin/client gen-cpp/*
+	$(RM) -r bin/* gen-cpp/*
