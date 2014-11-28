@@ -4,7 +4,6 @@
 #include <thrift/transport/TBufferTransports.h>
 
 #include "PointStoreHandler.h"
-#include "PointStoreEventHandler.h"
 
 using namespace ::apache::thrift;
 using namespace ::apache::thrift::protocol;
@@ -21,7 +20,6 @@ int main(int argc, char **argv) {
   boost::shared_ptr<TServerTransport> serverTransport(new TServerSocket(port));
   boost::shared_ptr<TTransportFactory> transportFactory(new TBufferedTransportFactory());
   boost::shared_ptr<TProtocolFactory> protocolFactory(new TBinaryProtocolFactory());
-  boost::shared_ptr<TProcessorEventHandler> eventHandler(new PointStoreEventHandler());
 
   TSimpleServer server(processor, serverTransport, transportFactory, protocolFactory);
   server.serve();
