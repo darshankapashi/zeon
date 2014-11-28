@@ -24,7 +24,7 @@ struct MetaDataConfig {
   2: core.Region globalRegion;
 }
 
-service MetaDataStore {
+service MetaDataProvider {
   // Admin client setting up the config for leader
   void initializeConfig(1: MetaDataConfig config) throws (1: MetaStoreException me),
 
