@@ -77,12 +77,20 @@ LogFile::~LogFile() {
 void LogFile::consumer() {
   cout << "Starting writer thread...\n";
 
+  core::Data data;
+  int inactive = 0;
   while(run_) {
-    core::Data data;
     if (queue_.read(data)) {
       WriteBlob<Data> b(data);
       cout << "Writing to disk: id=" << data.id << "\n";
       b.writeToFile(pointFile_);
+      inactive = 0;
+    } else {
+      inactive++;
+    }
+    if (inactive > 10) {
+      this_thread::sleep_for(chrono::milliseconds(10));
+    }   
     }
   }
 }

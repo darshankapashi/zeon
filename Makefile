@@ -8,7 +8,8 @@ GEN_SRC    = gen-cpp/core_constants.cpp \
 
 SERVER_FILES = src/server/CoreServer.cpp \
                src/server/DataStore.cpp \
-               src/server/LogFile.cpp
+               src/server/LogFile.cpp \
+               src/server/NodeStats.cpp
 
 default: thrift server client
 
