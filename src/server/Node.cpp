@@ -1,7 +1,7 @@
 #include "Node.h"
 
-Node::Node(int id) {
-  me_.id = id;
+Node::Node(NodeId id) {
+  me_ = id;
 }
 
 bool inRectangle(Rectangle const& r, Point const& p) {
@@ -13,7 +13,8 @@ bool inRectangle(Rectangle const& r, Point const& p) {
   }
 }
 
-NodeInfo Node::getNodeForPoint(Point const& p) {
+NodeId Node::getNodeForPoint(Point const& p, Operation op) {
+  // TODO: Handle READ_OP, WRITE_OP differently
   for (auto const& kv: routes_) {
     for (auto const& rect: kv.second.rectangles) {
       if (inRectangle(rect, p)) {
@@ -22,5 +23,13 @@ NodeInfo Node::getNodeForPoint(Point const& p) {
     }
   }
   throw out_of_range("not found");
+}
+
+bool Node::canIHandleThis(Point const& p, Operation op) {
+  for (auto const& rect: region_.rectangles) {
+    if (inRectangle(rect, p))
+      return true;
+  }
+  return false;
 }
 

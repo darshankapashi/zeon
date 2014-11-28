@@ -7,9 +7,26 @@ PointStoreHandler::PointStoreHandler()
     dataStore_(new DataStoreConfig())
 {}
 
-void PointStoreHandler::throwServerError() {
+void PointStoreHandler::routeCorrectly(Point const& p, Operation op) {
+  if (!node_) {
+    throwError(ErrorCode::SERVER_NOT_READY);
+  }
+
+  if (node_->canIHandleThis(p, op)) {
+    return;
+  }
+
   ZeonException ze;
-  ze.what = ErrorCode::SERVER_ERROR;
+  ze.what = ErrorCode::SERVER_REDIRECT;
+  ze.node = node_->getNodeForPoint(p, op);
+  ze.__isset.node = true;
+  throw ze;
+}
+
+void PointStoreHandler::throwError(ErrorCode::type what, string why) {
+  ZeonException ze;
+  ze.what = what;
+  ze.why = why;
   throw ze;
 }
 
@@ -20,11 +37,12 @@ void PointStoreHandler::ping() {
 
 void PointStoreHandler::getData(Data& _return, const zeonid_t id, const bool valuePresent) {
   printf("getData\n");
+  // TODO: How do you route this!!!!
   int ret;
   try {
     ret = dataStore_.get(id, _return, valuePresent);
   } catch (exception const& e) {
-    throwServerError();
+    throwError(ErrorCode::SERVER_ERROR);
   }
 
   if (ret != ErrorCode::FOUND) {
@@ -36,6 +54,7 @@ void PointStoreHandler::getData(Data& _return, const zeonid_t id, const bool val
 
 void PointStoreHandler::setData(const Data& data, const bool valuePresent) {
   printf("setData\n");
+  routeCorrectly(data.point, WRITE_OP);
   int resMeta, resValue;
   try {
     resMeta = dataStore_.storeMetaData(data.id, data.point, data.version.timestamp); 
@@ -47,17 +66,18 @@ void PointStoreHandler::setData(const Data& data, const bool valuePresent) {
       dataStore_.log()->writePoint(data);
     }
   } catch (exception const& e) {
-    throwServerError();
+    throwError(ErrorCode::SERVER_ERROR);
   }
   if (resValue != ErrorCode::STORED || 
       resMeta != ErrorCode::STORED) {
     // TODO: might do better error resolution
-    throwServerError();
+    throwError(ErrorCode::SERVER_ERROR);
   }
 }
 
 void PointStoreHandler::createData(const zeonid_t id, const Point& point, const int64_t timestamp, const std::string& value) {
   printf("createData\n");
+  routeCorrectly(point, WRITE_OP);
   Data data;
   data.id = id;
   data.point = point;
@@ -71,10 +91,10 @@ void PointStoreHandler::createData(const zeonid_t id, const Point& point, const 
     try {
       dataStore_.log()->writeValue(data);
     } catch (exception const& e) {
-      throwServerError();
+      throwError(ErrorCode::SERVER_ERROR);
     }
   } else {
-    throwServerError();
+    throwError(ErrorCode::SERVER_ERROR);
   }
 }
 
@@ -95,6 +115,7 @@ void PointStoreHandler::getPointsInRegion(std::vector<Data> & _return, const Reg
 
 void PointStoreHandler::removeData(const zeonid_t id) {
   printf("removeData\n");
+  // TODO: How do you route this!!!
   int ret = dataStore_.removeData(id);
   if (ret != ErrorCode::DELETED) {
     ZeonException ze;

@@ -4,31 +4,32 @@
 
 #include "Structs.h"
 
-struct NodeInfo {
-  int id;
-  // ipaddr
-  // port
-};
-
 namespace std {
 template<>
-struct hash<NodeInfo> {
-  size_t operator() (NodeInfo const& n) const {
-    return std::hash<int>()(n.id);
+struct hash<NodeId> {
+  size_t operator() (NodeId const& n) const {
+    return std::hash<int>()(n.nid);
   }
 };
 }
 
+enum Operation {
+  READ_OP,
+  WRITE_OP,
+};
+
 class Node {
  public:
-  Node(int id);
+  Node(NodeId id);
   ~Node() = default;
  
-  NodeInfo getNodeForPoint(Point const& p);
+  NodeId getNodeForPoint(Point const& p, Operation op);
+  bool canIHandleThis(Point const& p, Operation op);
 
  private:
-  NodeInfo me_;
+  NodeId me_;
+  Region region_;
 
   // Routing table
-  unordered_map<NodeInfo, Region> routes_;
+  unordered_map<NodeId, Region> routes_;
 };

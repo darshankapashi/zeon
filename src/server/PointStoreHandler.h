@@ -1,12 +1,14 @@
 #include "gen-cpp/PointStore.h"
 #include "DataStore.h"
+#include "Node.h"
 
 namespace core {
 
 class PointStoreHandler : virtual public PointStoreIf {
  public:  
   PointStoreHandler();
-  void throwServerError();
+  void routeCorrectly(Point const& p, Operation op);
+  void throwError(ErrorCode::type e, string why = "");
   void ping();
   void getData(Data& _return, const zeonid_t id, const bool valuePresent);
   void setData(const Data& data, const bool valuePresent);
@@ -18,7 +20,7 @@ class PointStoreHandler : virtual public PointStoreIf {
 
  private:
   DataStore dataStore_;
-
+  Node* node_;
 };
 
 }

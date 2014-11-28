@@ -2,12 +2,6 @@ namespace cpp metadata
 
 include "core.thrift"
 
-struct NodeId {
-  1: i32 nid,
-  2: i32 ipv4,
-  3: i16 port,
-}
-
 struct RoutingInfo {
   1: map <NodeId, core.Region> nodeRegionMap,
   // timestamp when routingInfo was updated

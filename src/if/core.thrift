@@ -2,6 +2,12 @@ namespace cpp core
 
 typedef i64 zeonid_t
 
+struct NodeId {
+  1: i32 nid,
+  2: i32 ipv4,
+  3: i16 port,
+}
+
 struct Point {
   1: i64 xCord = 0,
   2: i64 yCord = 0,
@@ -42,11 +48,14 @@ enum ErrorCode {
   FOUND_EMPTY = 5,
   DELETED = 6,
   SERVER_ERROR = 7,
+  SERVER_NOT_READY = 8,
+  SERVER_REDIRECT = 9,
 }
 
 exception ZeonException {
   1: i32 what,
-  2: string why
+  2: string why,
+  3: optional NodeId node,
 }
 
 enum Persistance {
