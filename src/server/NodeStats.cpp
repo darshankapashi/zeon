@@ -34,6 +34,7 @@ void NodeStats::consumer() {
 }
 
 void NodeStats::addStat(Stat stat, long val) {
+  lock_guard<mutex> lock(statsLock_);
   queue_.write(make_pair(stat, val));
 }
 

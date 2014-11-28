@@ -35,4 +35,5 @@ class LogFile {
   folly::ProducerConsumerQueue<core::Data> queue_;
 
   mutex valueLock_;
+  mutex pointLock_;
 };

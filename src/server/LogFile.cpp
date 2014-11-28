@@ -132,6 +132,7 @@ void LogFile::writePoint(core::Data const& data) {
   smallData.id = data.id;
   smallData.point = data.point;
   smallData.version = data.version;
+  lock_guard<mutex> lock(pointLock_);
   queue_.write(smallData);
 }
 

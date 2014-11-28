@@ -51,7 +51,7 @@ class NodeStats {
   bool run_;
   thread consumerThread;
   map<Stat, vector<long>> stats_;
-  mutex lock_;
+  mutex statsLock_;
 };
 
 NodeStats* zeonData = new NodeStats();
