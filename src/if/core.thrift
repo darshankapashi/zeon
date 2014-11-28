@@ -34,7 +34,6 @@ struct Region {
   1: list<Rectangle> rectangles,
 }
 
-// TODO: consider renaming this as ReturnCode
 enum ErrorCode {
   FAILED_TO_LOCK = 1,
   STORED = 2,
@@ -45,7 +44,7 @@ enum ErrorCode {
   SERVER_ERROR = 7,
 }
 
-exception ReturnCode {
+exception ZeonException {
   1: i32 what,
   2: string why
 }
@@ -66,26 +65,26 @@ service PointStore {
 
    // Get last updated data for id, if valuePresent is true then fetch Value
    Data getData (1: zeonid_t id, 2: bool valuePresent=0) throws 
-   (1: ReturnCode re),
+   (1: ZeonException re),
 
    // Set data as latest value, Version.counter will be incremented by server,
    // If valuePresent is true then set Value in Data
    void setData (1: Data data, 2: bool valuePresent=0) throws
-   (1: ReturnCode rc),
+   (1: ZeonException rc),
 
    // Create latest data for id with these parameters. Version.counter will be determined by server
    void createData (1: zeonid_t id, 2: Point point, 3: i64 timestamp, 4: string value) 
-   throws (1:ReturnCode re),
+   throws (1:ZeonException re),
 
    // Get K Data values nearest to id
-   list<Data> getNearestKById (1: zeonid_t id) throws (1:ReturnCode re),
+   list<Data> getNearestKById (1: zeonid_t id) throws (1:ZeonException re),
 
    // Get K Data values nearest to point
-   list<Data> getNearestKByPoint (1: Point point) throws (1:ReturnCode re),
+   list<Data> getNearestKByPoint (1: Point point) throws (1:ZeonException re),
    
    // Get all Data values inside region
-   list<Data> getPointsInRegion (1: Region region) throws (1:ReturnCode re),
+   list<Data> getPointsInRegion (1: Region region) throws (1:ZeonException re),
    
    // Delete the Data corresponding to id
-   void removeData (1: zeonid_t id) throws (1:ReturnCode re),
+   void removeData (1: zeonid_t id) throws (1:ZeonException re),
 }
