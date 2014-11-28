@@ -17,8 +17,14 @@ SDIR       = src/server
 GEN_DIR    = gen-cpp
 INC        = -I./
 
-_OBJS      = CoreServer.o DataStore.o LogFile.o NodeStats.o
+IGNORE_FILES = ProximityManager.cpp
+
+___CPPS    = $(wildcard $(SDIR)/*.cpp) 
+__CPPS     = $(patsubst $(SDIR)/%,%,$(___CPPS))
+_CPPS      = $(filter-out $(IGNORE_FILES),$(__CPPS))
+_OBJS    = $(patsubst %.cpp,%.o,$(_CPPS))
 OBJS       = $(patsubst %,$(ODIR)/%,$(_OBJS))
+
 
 _GEN_OBJS  = core_constants.o core_types.o PointStore.o
 GEN_OBJS   = $(patsubst %,$(ODIR)/%,$(_GEN_OBJS))
@@ -34,7 +40,6 @@ $(ODIR)/%.o: $(GEN_DIR)/%.cpp thrift
 $(EXECUTABLE): $(OBJS) $(GEN_OBJS)
 	$(CC) $(LDFLAGS) -o $(EXECUTABLE) $(OBJS) $(GEN_OBJS)
 ################################
-
 
 default: thrift $(EXECUTABLE) client
 
