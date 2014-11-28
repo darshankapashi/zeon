@@ -22,7 +22,8 @@ class LogFile {
   // Writes the point too
   long writeValue(core::Data const& data);
 
-  void recover();
+  void recover(unordered_map<zeonid_t, vector<Data>>& pointData,
+               unordered_map<zeonid_t, string>& valueData);
 
  private:
   void consumer();
@@ -34,11 +35,4 @@ class LogFile {
   folly::ProducerConsumerQueue<core::Data> queue_;
 
   mutex valueLock_;
-
-  // Map of key -> list of Data objects, value is undefined here
-  unordered_map<zeonid_t, vector<Data>> pointData_;
-
-  // Map from key -> value (this doesn't change often)
-  // TODO: convert this into LRU cache since valueData_ could be large
-  unordered_map<zeonid_t, string> valueData_;
 };

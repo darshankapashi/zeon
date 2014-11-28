@@ -18,9 +18,7 @@ using core::zeonid_t;
 
 class DataStore {
  public:
-  DataStore(DataStoreConfig* config) 
-    : logFile_(config) {}
-
+  DataStore(DataStoreConfig* config); 
   ~DataStore() = default;
 
   int storeMetaData(zeonid_t key, Point point, int64_t timestamp);

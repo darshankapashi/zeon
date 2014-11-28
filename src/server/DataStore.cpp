@@ -6,6 +6,11 @@ using core::ErrorCode;
 #define LOCK(key) if (!lockKey(key)) return ErrorCode::FAILED_TO_LOCK;
 #define UNLOCK(key) unlockKey(key)
 
+DataStore::DataStore(DataStoreConfig* config) 
+  : logFile_(config) {
+  logFile_.recover(metaData_, valueData_);
+}
+
 void DataStore::setPersistance(Persistance option) {
   persist_ = option;
 }

@@ -65,8 +65,6 @@ LogFile::LogFile(DataStoreConfig* config)
     throw std::runtime_error("Could not open file: " + config->pointFileName);
   }
   writerThread_ = std::thread(&LogFile::consumer, this);
-
-  recover();
 }
 
 LogFile::~LogFile() {
@@ -94,12 +92,13 @@ void LogFile::consumer() {
   }
 }
 
-void LogFile::recover() {
+void LogFile::recover(unordered_map<zeonid_t, vector<Data>>& pointData,
+                      unordered_map<zeonid_t, string>& valueData) 
+{
 	lseek(pointFile_, 0, SEEK_SET);
 	size_t bytesRead = 0;
 	uint32_t len;
 	while ((bytesRead = read(pointFile_, &len, sizeof(len))) != 0) {
-    cout << "bytesRead=" << bytesRead << " errno=" << errno << " len=" << len << "\n";
 		uint8_t* buffer = new uint8_t[len];
 		bytesRead = read(pointFile_, buffer, len);
 		if (bytesRead != len) {
@@ -108,7 +107,7 @@ void LogFile::recover() {
 		Data data;
     // Deserialize will deallocate the buffer for us :)
     deserialize(data, buffer, len);
-    pointData_[data.id].emplace_back(data);
+    pointData[data.id].emplace_back(data);
     cout << "Read from disk: id=" << data.id << "\n";
 	}
 
@@ -123,7 +122,7 @@ void LogFile::recover() {
 		Data data;
     // Deserialize will deallocate the buffer for us :)
     deserialize(data, buffer, len);
-    valueData_[data.id] = data.value;
+    valueData[data.id] = data.value;
     cout << "Read from disk: id=" << data.id << "value=\n" << data.value << "\n";
 	}
 }
