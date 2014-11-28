@@ -36,7 +36,7 @@ class NodeStats {
 
   void consumer();
 
-  ProducerConsumerQueue<pair<Stat, long>> queue_;
+  folly::ProducerConsumerQueue<pair<Stat, long>> queue_;
   bool run_;
   thread consumerThread;
   map<Stat, vector<long>> stats_;

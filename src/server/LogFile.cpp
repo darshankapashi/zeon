@@ -91,7 +91,6 @@ void LogFile::consumer() {
     if (inactive > 10) {
       this_thread::sleep_for(chrono::milliseconds(10));
     }   
-    }
   }
 }
 
