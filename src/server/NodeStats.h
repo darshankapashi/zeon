@@ -20,6 +20,16 @@ enum Stat {
   STAT_MAX, // last stat
 };
 
+struct SystemStats {
+  long user_cpu;
+  long sys_cpu;
+  long max_rss;
+  long point_file_size;
+  long value_file_size;
+};
+
+struct DataStoreConfig;
+
 class NodeStats {
  public:
   NodeStats();
@@ -29,6 +39,7 @@ class NodeStats {
   long getAvg(Stat stat);
   long getLatest(Stat stat);
 
+  SystemStats getSystemStats(DataStoreConfig*);
  private:
   // Disallow copy
   NodeStats(NodeStats const&);
