@@ -4,7 +4,7 @@
 #include <unordered_map>
 
 #include "gen-cpp/core_types.h"
-#include "gen-cpp/PointStore.h"
+#include "gen-cpp/core_constants.h"
 
 using namespace std;
 using namespace ::core;
