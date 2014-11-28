@@ -21,5 +21,8 @@ server: ${SERVER_FILES}
 client: src/client/CoreClient.cpp
 	g++ ${CPP_OPTS} -o bin/client ${INCS_DIRS} src/client/CoreClient.cpp ${GEN_SRC} ${LIBS}
 
+proximity: src/server/ProximityManager.cpp
+	g++ ${CPP_OPTS} -o bin/proximity ${INCS_DIRS} src/server/ProximityManager.cpp ${GEN_SRC} ${LIBS}
+
 clean:
 	$(RM) -r bin/server bin/client gen-cpp/*

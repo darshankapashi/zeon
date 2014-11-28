@@ -16,3 +16,18 @@ struct DataStoreConfig {
   string valueFileName = "/tmp/zeon.values.txt";
   long maxBufferSize = 100;
 };
+
+enum ProximityAlgoType {
+  LINEAR = 1,
+  R_TREE = 2,
+};
+
+enum ProximityDistanceType {
+  EUCLIDEAN = 1,
+  MANHATTAN = 2,
+};
+
+struct ProximityManagerConfig {
+  ProximityAlgoType algoType;
+  ProximityDistanceType distanceType;
+};
