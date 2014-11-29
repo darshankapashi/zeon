@@ -2,7 +2,7 @@
 
 #include "gen-cpp/ServerTalk.h"
 
-namespace server {
+namespace core {
 
 class ServerTalkHandler : virtual public ServerTalkIf {
  public:

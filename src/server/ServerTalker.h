@@ -6,7 +6,7 @@
 
 using namespace apache::thrift::transport;
 using namespace apache::thrift::protocol;
-using namespace ::server;
+using namespace ::core;
 
 template<class T>
 class ServerTalker {

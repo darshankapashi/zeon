@@ -12,7 +12,6 @@
 
 using namespace std;
 using namespace core;
-using namespace metadata;
 
 #define MAX_STATS_QUEUE_SIZE 1000
 

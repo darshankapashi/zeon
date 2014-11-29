@@ -18,8 +18,8 @@ void PointStoreHandler::routeCorrectly(Point const& p, Operation op) {
 
   ZeonException ze;
   ze.what = ErrorCode::SERVER_REDIRECT;
-  ze.node = node_->getNodeForPoint(p, op);
-  ze.__isset.node = true;
+  ze.nodes = node_->getNodeForPoint(p, op);
+  ze.__isset.nodes = true;
   throw ze;
 }
 

@@ -1,8 +1,6 @@
 include "core.thrift"
 
-namespace cpp metadata
-
-typedef i64 nid_t
+namespace cpp core
 
 enum NodeMessage {
   EXISTS_NOT = 1,
@@ -14,13 +12,11 @@ enum NodeMessage {
 }
 
 struct SystemStats {
-  1: nid_t nid,
+  1: core.nid_t nid,
   2: core.timestamp_t timestamp,
   3: i64 user_cpu,
   4: i64 sys_cpu,
   5: i64 max_rss,
-  6: i64 point_file_size,
-  7: i64 value_file_size,
 }
 
 struct RectangleStats {
@@ -29,17 +25,17 @@ struct RectangleStats {
 }
 
 struct NodeDataStats {
-  1: nid_t nid,
+  1: core.nid_t nid,
   // time when this struct was constructed
   2: core.timestamp_t timestamp,
   // region managed by this node
   3: core.Region region,
-  // map from rectangle to zids managed by this region
+  // map from rectangle to number of zids managed by this region
   4: list<RectangleStats> rectangleStats,
   // replicas for this node
-  5: list<nid_t> replicatedServers, 
+  5: list<core.nid_t> replicatedServers, 
   // nodes with their replica on this node
-  6: list<nid_t> replicasFor,
+  6: list<core.nid_t> replicasFor,
 }
 
 struct NodeInfo {
@@ -50,7 +46,7 @@ struct NodeInfo {
 }
 
 struct RoutingInfo {
-  1: map <nid_t, NodeInfo> nodeRegionMap,
+  1: map <core.nid_t, NodeInfo> nodeRegionMap,
   // timestamp when routingInfo was updated
   2: core.timestamp_t timestamp,
 }
@@ -64,7 +60,7 @@ struct MetaDataConfig {
   1: list<core.NodeId> allNodes,
   2: core.Region globalRegion,
   // Only some nodes may be assigned some particular region
-  3: map<nid_t, core.Region> nodeRegionMap,
+  3: map<core.nid_t, core.Region> nodeRegionMap,
   4: i32 replicationFactor,
 }
 

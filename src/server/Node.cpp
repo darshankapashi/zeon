@@ -1,6 +1,6 @@
 #include "Node.h"
 
-Node::Node(NodeId id) {
+Node::Node(NodeInfo id) {
   me_ = id;
 }
 
@@ -13,20 +13,30 @@ bool inRectangle(Rectangle const& r, Point const& p) {
   }
 }
 
-NodeId Node::getNodeForPoint(Point const& p, Operation op) {
-  // TODO: Handle READ_OP, WRITE_OP differently
-  for (auto const& kv: routes_) {
-    for (auto const& rect: kv.second.rectangles) {
+vector<NodeId> Node::getNodeForPoint(Point const& p, Operation op) {
+  // TODO: Maybe handle READ_OP, WRITE_OP differently
+  vector<NodeId> nodes;
+  for (auto const& nodeKV: nodeRegionMap_) {
+    auto const& nodeInfo = nodeKV.second;
+    for (auto const& rect: nodeInfo.nodeDataStats.region.rectangles) {
       if (inRectangle(rect, p)) {
-        return kv.first;
+        nodes.push_back(nodeInfo.nodeId);
+        for (auto const& replica: nodeInfo.nodeDataStats.replicatedServers) {
+          nodes.push_back(nodeRegionMap_.at(replica).nodeId);
+        }
+        break;
       }
     }
   }
-  throw out_of_range("not found");
+  if (nodes.size() > 0) {
+    return nodes;
+  } else {
+    throw out_of_range("not found");
+  }
 }
 
 bool Node::canIHandleThis(Point const& p, Operation op) {
-  for (auto const& rect: region_.rectangles) {
+  for (auto const& rect: me_.nodeDataStats.region.rectangles) {
     if (inRectangle(rect, p))
       return true;
   }

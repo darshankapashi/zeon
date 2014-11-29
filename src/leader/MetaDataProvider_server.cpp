@@ -13,7 +13,6 @@ using namespace ::apache::thrift::server;
 
 using boost::shared_ptr;
 
-using namespace  ::metadata;
 using namespace ::core;
 
 class MetaDataProviderHandler : virtual public MetaDataProviderIf {

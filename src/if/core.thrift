@@ -2,11 +2,10 @@ namespace cpp core
 
 typedef i64 zeonid_t
 typedef i64 timestamp_t
-
-typedef i32 nodeid_t
+typedef i64 nid_t
 
 struct NodeId {
-  1: nodeid_t nid,
+  1: nid_t nid,
   2: i32 ipv4,
   3: i16 port,
 }
@@ -58,7 +57,7 @@ enum ErrorCode {
 exception ZeonException {
   1: i32 what,
   2: string why,
-  3: optional NodeId node,
+  3: optional list<NodeId> nodes,
 }
 
 service PointStore {

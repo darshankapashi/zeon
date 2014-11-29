@@ -1,6 +1,6 @@
 #include "ServerTalkHandler.h"
 
-namespace server {
+namespace core {
 
 ServerTalkHandler::ServerTalkHandler() {
     // Your initialization goes here

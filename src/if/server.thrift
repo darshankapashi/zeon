@@ -1,6 +1,6 @@
-namespace cpp server
-
 include "core.thrift"
+
+namespace cpp core
 
 service ServerTalk {
   void replicate (1: core.Data data) 

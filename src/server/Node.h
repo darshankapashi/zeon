@@ -23,20 +23,18 @@ enum Operation {
 
 class Node {
  public:
-  Node(NodeId id);
+  Node(NodeInfo id);
   ~Node() = default;
  
-  NodeId getNodeForPoint(Point const& p, Operation op);
+  vector<NodeId> getNodeForPoint(Point const& p, Operation op);
   bool canIHandleThis(Point const& p, Operation op);
   bool doIHaveThisId(zeonid_t zid, Operation op);
   void addId(zeonid_t zid);
 
  private:
-  NodeId me_;
-  Region region_;
+  NodeInfo me_;
   unordered_set<zeonid_t> zids_;
 
-  // Routing table
-  unordered_map<NodeId, Region> routes_;
-  //unordered_map<nodeid_t, NodeId> 
+  // Routing information
+  map<nid_t, NodeInfo> nodeRegionMap_;
 };

@@ -2,7 +2,6 @@
 #include "gen-cpp/MetaDataProvider.h"
 
 using namespace core;
-using namespace metadata;
 
 struct RectangleHasher {
   hash<int64_t> hash_fn;
