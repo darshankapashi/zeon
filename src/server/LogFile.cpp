@@ -122,7 +122,7 @@ void LogFile::recover(unordered_map<zeonid_t, vector<Data>>& pointData,
     deserialize(data, b);
     valueData[data.id] = data.value;
     cout << "Read from disk: id=" << data.id << " value=\"" << data.value << "\"\n";    
-  }	
+  }  
 }
 
 void LogFile::writePoint(core::Data const& data) {

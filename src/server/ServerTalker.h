@@ -16,8 +16,8 @@ class ServerTalker {
   T* get();
 
  private:
- 	boost::shared_ptr<TTransport> socket_;
- 	boost::shared_ptr<TTransport> transport_;
- 	boost::shared_ptr<TProtocol> protocol_;
- 	T client_;
+   boost::shared_ptr<TTransport> socket_;
+   boost::shared_ptr<TTransport> transport_;
+   boost::shared_ptr<TProtocol> protocol_;
+   T client_;
 };

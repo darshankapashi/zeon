@@ -3,11 +3,11 @@ CPP_OPTS   =-Wall -O2 -std=c++11
 LIBS       =-lthrift
 
 GEN_SRC    = gen-cpp/core_constants.cpp \
-						 gen-cpp/core_types.cpp \
+             gen-cpp/core_types.cpp \
              gen-cpp/PointStore.cpp \
-						 gen-cpp/leader_constants.cpp \
-						 gen-cpp/leader_types.cpp \
-						 gen-cpp/MetaDataProvider.cpp
+             gen-cpp/leader_constants.cpp \
+             gen-cpp/leader_types.cpp \
+             gen-cpp/MetaDataProvider.cpp
 
 
 ################################

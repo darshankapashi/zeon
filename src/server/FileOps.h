@@ -11,9 +11,9 @@ struct Blob {
   Blob() : data(nullptr), len(0) {}
 
   ~Blob() {
-  	if (data) {
-  		delete [] data;
-  	}
+    if (data) {
+      delete [] data;
+    }
   }
 };
 
@@ -23,8 +23,8 @@ struct Blob {
  */
 class FileOps {
  public:
- 	// TODO: In truncate mode, we actually want an atomic rename
- 	// 				which will help in the case of open and fail to write
+   // TODO: In truncate mode, we actually want an atomic rename
+   //         which will help in the case of open and fail to write
   FileOps(std::string name, bool truncate = false);
   ~FileOps();
 
@@ -34,16 +34,16 @@ class FileOps {
   // Append is not synced
   bool writeToFile(Blob const&);
  
- 	// Read from file. Make sure buffer is atleast as long as len
+   // Read from file. Make sure buffer is atleast as long as len
   bool readFromFile(Blob&);
 
   int getId() {
-  	return fd_;
+    return fd_;
   }
 
   static void getFilesInDir(std::string dir, std::vector<std::string> &files);
   static void createDir(std::string name);
 
  private:
- 	int fd_;
+   int fd_;
 };
