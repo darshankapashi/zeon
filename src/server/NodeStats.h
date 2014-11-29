@@ -8,8 +8,11 @@
 #include <vector>
 
 #include "util/ProducerConsumerQueue.h"
+#include "src/server/Structs.h"
 
 using namespace std;
+using namespace core;
+using namespace metadata;
 
 #define MAX_STATS_QUEUE_SIZE 1000
 
@@ -18,12 +21,6 @@ enum Stat {
   REQUESTS,
   EXCEPTIONS,
   STAT_MAX, // last stat
-};
-
-struct SystemStats {
-  long user_cpu;
-  long sys_cpu;
-  long max_rss;
 };
 
 struct DataStoreConfig;

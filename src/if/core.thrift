@@ -1,6 +1,7 @@
 namespace cpp core
 
 typedef i64 zeonid_t
+typedef i64 timestamp_t
 
 typedef i32 nodeid_t
 
@@ -19,7 +20,7 @@ struct Version {
   // monotonically increasing value 
   1: i64 counter = -1,
   // timestamp decided at origin of operation
-  2: i64 timestamp = 0,
+  2: timestamp_t timestamp = 0,
 }
 
 struct Data {

@@ -5,8 +5,6 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 
-#include "Structs.h"
-
 NodeStats::NodeStats() 
   : queue_(MAX_STATS_QUEUE_SIZE),
     run_(true)
