@@ -4,7 +4,8 @@
 #include <thrift/transport/TSocket.h>
 #include <thrift/transport/TTransportUtils.h>
 
-ServerTalker::ServerTalker(std::string ip, int port)
+template <class T>
+ServerTalker<T>::ServerTalker(std::string ip, int port)
   : socket_(new TSocket(ip, port)),
     transport_(new TBufferedTransport(socket_)),
     protocol_(new TBinaryProtocol(transport_)),
@@ -13,10 +14,12 @@ ServerTalker::ServerTalker(std::string ip, int port)
   transport_->open();
 }
 
-ServerTalker::~ServerTalker() {
+template <class T>
+ServerTalker<T>::~ServerTalker() {
   transport_->close();
 }
 
-ServerTalkClient* ServerTalker::get() {
+template <class T>
+T* ServerTalker<T>::get() {
   return &client_;
 }
