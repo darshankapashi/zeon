@@ -11,10 +11,6 @@ DataStore::DataStore(DataStoreConfig* config)
   logFile_.recover(metaData_, valueData_);
 }
 
-void DataStore::setPersistance(Persistance option) {
-  persist_ = option;
-}
-
 bool DataStore::lockKey(zeonid_t key) {
   try {
     lockTableLock_.lock();

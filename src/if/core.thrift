@@ -60,15 +60,6 @@ exception ZeonException {
   3: optional NodeId node,
 }
 
-enum Persistance {
-  // Guarantee that the value has been written reliably to disk
-  GUARANTEED = 1,
-  // Not needed right now, but will be nice to have
-  LATER = 2,
-  // Only use as a cache, I don't care about data loss
-  MEMORY_ONLY = 3,
-}
-
 service PointStore {
 
    // Heartbeat message
