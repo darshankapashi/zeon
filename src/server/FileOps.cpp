@@ -32,9 +32,12 @@ bool FileOps::writeToFile(Blob const& b) {
 
 bool FileOps::readFromFile(Blob& b) {
 	int ret = read(fd_, &b.len, sizeof(b.len));
+	if (ret != sizeof(b.len)) {
+		return false;
+	}
 	b.data = new uint8_t[b.len];
-	ret += read(fd_, b.data, b.len);
-	return (ret == sizeof(b.len) + b.len);
+	ret = read(fd_, b.data, b.len);
+	return (ret == b.len);
 }
 
 FileOps::~FileOps() {

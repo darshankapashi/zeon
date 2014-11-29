@@ -25,8 +25,7 @@ _CPPS      = $(filter-out $(IGNORE_FILES),$(__CPPS))
 _OBJS    = $(patsubst %.cpp,%.o,$(_CPPS))
 OBJS       = $(patsubst %,$(ODIR)/%,$(_OBJS))
 
-
-_GEN_OBJS  = core_constants.o core_types.o PointStore.o
+_GEN_OBJS  = core_constants.o core_types.o PointStore.o server_constants.o server_types.o ServerTalk.o
 GEN_OBJS   = $(patsubst %,$(ODIR)/%,$(_GEN_OBJS))
 
 EXECUTABLE = bin/server

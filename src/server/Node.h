@@ -5,6 +5,7 @@
  */
 
 #include "Structs.h"
+#include <unordered_set>
 
 namespace std {
 template<>

@@ -33,7 +33,7 @@ bool Node::canIHandleThis(Point const& p, Operation op) {
   return false;
 }
 
-bool Node::doIHaveThisId(zeonid_t zid) {
+bool Node::doIHaveThisId(zeonid_t zid, Operation op) {
   // A more thorough check would be to check the files under
   // the point and value directory
   return zids_.count(zid) > 0;

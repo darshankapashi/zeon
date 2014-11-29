@@ -99,14 +99,16 @@ void LogFile::recover(unordered_map<zeonid_t, vector<Data>>& pointData,
   
   for (auto const& file: files) {
     FileOps fileOp(pointDir_ + file);
-    Blob b;
-    if (!fileOp.readFromFile(b)) {
-      continue;
+    while(true) {
+      Blob b;
+      if (!fileOp.readFromFile(b)) {
+        break;
+      }
+      Data data;
+      deserialize(data, b);
+      pointData[data.id].emplace_back(data);
+      cout << "Read from disk: id=" << data.id << "\n";    
     }
-    Data data;
-    deserialize(data, b);
-    pointData[data.id].emplace_back(data);
-    cout << "Read from disk: id=" << data.id << "\n";    
   }
 
   FileOps::getFilesInDir(valueDir_, files);  
@@ -119,7 +121,7 @@ void LogFile::recover(unordered_map<zeonid_t, vector<Data>>& pointData,
     Data data;
     deserialize(data, b);
     valueData[data.id] = data.value;
-    cout << "Read from disk: id=" << data.id << "\n";    
+    cout << "Read from disk: id=" << data.id << " value=\"" << data.value << "\"\n";    
   }	
 }
 
