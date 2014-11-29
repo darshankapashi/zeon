@@ -13,12 +13,6 @@ enum NodeMessage {
   INITIALIZED = 6,
 }
 
-struct NodeId {
-  1: nid_t nid,
-  2: i32 ipv4,
-  3: i16 port,
-}
-
 struct SystemStats {
   1: nid_t nid,
   2: core.timestamp_t timestamp,
@@ -49,7 +43,7 @@ struct NodeDataStats {
 }
 
 struct NodeInfo {
-  1: NodeId nodeId,
+  1: core.NodeId nodeId,
   2: NodeDataStats nodeDataStats,
   3: SystemStats systemStats,
   4: core.timestamp_t timestamp,
@@ -67,7 +61,7 @@ exception MetaStoreException {
 }
 
 struct MetaDataConfig {
-  1: list<NodeId> allNodes,
+  1: list<core.NodeId> allNodes,
   2: core.Region globalRegion,
   // Only some nodes may be assigned some particular region
   3: map<nid_t, core.Region> nodeRegionMap,
@@ -79,7 +73,7 @@ service MetaDataProvider {
   void initializeConfig(1: MetaDataConfig config) throws (1: MetaStoreException me),
 
   // Periodic ping by server to master
-  void ping(1: NodeId nodeId, 2: NodeInfo nodeInfo) 
+  void ping(1: core.NodeId nodeId, 2: NodeInfo nodeInfo) 
     throws (1: MetaStoreException me),
 
   // Report to master about your managed region
@@ -90,12 +84,12 @@ service MetaDataProvider {
   RoutingInfo getRoutingInfo() throws (1: MetaStoreException me),
 
   // Node informs the leader indicating its availability 
-//  void nodeJoin (1: NodeId nodeId, 2: core.NodeDataStats nodeDataStats, 
+//  void nodeJoin (1: core.NodeId nodeId, 2: core.NodeDataStats nodeDataStats, 
   //3: core.SystemStats systemStats, 4: core.timestamp_t time ) 
   //throws (1: MetaStoreException me),
 
   // Node informs leader indicating its non-availability 
-  //void nodeRemove (1: NodeId nodeId, 2: core.NodeDataStats nodeDtaStats, 3: core.SystemStats systemStats, 4: timestamp_t timestamp) throws (1: MetaStoreException me),
+  //void nodeRemove (1: core.NodeId nodeId, 2: core.NodeDataStats nodeDtaStats, 3: core.SystemStats systemStats, 4: timestamp_t timestamp) throws (1: MetaStoreException me),
 
   // Request to load-balance particular region
   //void reShardRegion (1: core.Region region) throws (1: MetaStoreException me),
