@@ -28,9 +28,6 @@ class DataStore {
   int removeData(zeonid_t key);
   int removePersistedData(zeonid_t key);
 
-  // Not thread safe! Make sure only 1 thread is calling this!
-  void setPersistance(Persistance option);
-
   LogFile* log() { return &logFile_; }
 
  private:
@@ -50,8 +47,6 @@ class DataStore {
 
   // Lock for the lock table
   mutex lockTableLock_;
-
-  Persistance persist_;
 
   LogFile logFile_;
 };

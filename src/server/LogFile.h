@@ -20,7 +20,7 @@ class LogFile {
 
   // Returns the offset at which the record will be written
   // Writes the point too
-  long writeValue(core::Data const& data);
+  void writeValue(core::Data const& data);
 
   void recover(unordered_map<zeonid_t, vector<Data>>& pointData,
                unordered_map<zeonid_t, string>& valueData);
@@ -28,12 +28,15 @@ class LogFile {
  private:
   void consumer();
 
+  string getPointFile(zeonid_t zid);
+  string getValueFile(zeonid_t zid);
+
   thread writerThread_;
-  int valueFile_;
-  int pointFile_;
   bool run_;
   folly::ProducerConsumerQueue<core::Data> queue_;
+  string pointDir_;
+  string valueDir_;
 
-  mutex valueLock_;
   mutex pointLock_;
+  mutex valueLock_;
 };

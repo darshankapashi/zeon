@@ -29,8 +29,7 @@ _CPPS      = $(filter-out $(IGNORE_FILES),$(__CPPS))
 _OBJS    = $(patsubst %.cpp,%.o,$(_CPPS))
 OBJS       = $(patsubst %,$(ODIR)/%,$(_OBJS))
 
-
-_GEN_OBJS  = core_constants.o core_types.o PointStore.o
+_GEN_OBJS  = core_constants.o core_types.o PointStore.o server_constants.o server_types.o ServerTalk.o
 GEN_OBJS   = $(patsubst %,$(ODIR)/%,$(_GEN_OBJS))
 
 EXECUTABLE = bin/server
@@ -47,9 +46,10 @@ $(EXECUTABLE): $(OBJS) $(GEN_OBJS)
 
 default: thrift $(EXECUTABLE) client
 
-thrift: src/if/core.thrift
+thrift: src/if/core.thrift src/if/server.thrift
 	thrift --gen cpp src/if/core.thrift
 	thrift --gen cpp src/if/leader.thrift
+	thrift --gen cpp src/if/server.thrift
 
 client: src/client/CoreClient.cpp
 	g++ ${CPP_OPTS} -o bin/client ${INCS_DIRS} src/client/CoreClient.cpp ${GEN_SRC} ${LIBS}

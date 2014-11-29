@@ -62,10 +62,5 @@ SystemStats NodeStats::getSystemStats(DataStoreConfig* config) {
   sys.max_rss = r.ru_maxrss;
   sys.user_cpu = r.ru_utime.tv_sec * 1000000 + r.ru_utime.tv_usec;
   sys.sys_cpu = r.ru_stime.tv_sec * 1000000 + r.ru_stime.tv_usec;
-  struct stat stat_buf;
-  int rc = stat(config->pointFileName.c_str(), &stat_buf);
-  sys.point_file_size = rc == 0 ? stat_buf.st_size : -1;
-  rc = stat(config->valueFileName.c_str(), &stat_buf);
-  sys.value_file_size = rc == 0 ? stat_buf.st_size : -1;
   return sys;
 }
