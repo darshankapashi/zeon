@@ -24,8 +24,6 @@ struct SystemStats {
   long user_cpu;
   long sys_cpu;
   long max_rss;
-  long point_file_size;
-  long value_file_size;
 };
 
 struct DataStoreConfig;

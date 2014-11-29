@@ -12,8 +12,8 @@ using namespace ::core;
 string const DEFAULT_VALUE = "";
 
 struct DataStoreConfig {
-  string pointFileName = "/tmp/zeon.points.txt";
-  string valueFileName = "/tmp/zeon.values.txt";
+  string pointDir = "/tmp/zeon-points/";
+  string valueDir = "/tmp/zeon-values/";
   long maxBufferSize = 100;
 };
 

@@ -2,9 +2,9 @@
 
 #include <fcntl.h>
 #include <iostream>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <thrift/protocol/TJSONProtocol.h>
+
+#include "FileOps.h"
 
 using namespace apache::thrift::protocol;
 using namespace apache::thrift::transport;
@@ -16,17 +16,11 @@ template<class T>
 void serialize(T obj, WriteBlob<T>& b);
 
 template<class T>
-struct WriteBlob {
-  uint8_t* data;
-  uint32_t len;
-
-  WriteBlob(T obj) {
+struct WriteBlob : public Blob {
+  WriteBlob(T obj) 
+    : Blob()
+  {
     serialize(obj, *this);
-  }
-
-  void writeToFile(int fd) {
-    write(fd, &len, sizeof(len));
-    write(fd, data, len);
   }
 };
 
@@ -43,27 +37,30 @@ void serialize(T obj, WriteBlob<T>& b) {
 }
 
 template<class T>
-void deserialize(T& obj, uint8_t* data, uint32_t len) {
-  TMemoryBuffer* buffer = new TMemoryBuffer(data, len, TMemoryBuffer::TAKE_OWNERSHIP);
+void deserialize(T& obj, Blob const& b) {
+  TMemoryBuffer* buffer = new TMemoryBuffer(b.data, b.len, TMemoryBuffer::OBSERVE);
   boost::shared_ptr<TTransport> trans(buffer);
   TJSONProtocol protocol(trans);
 
   obj.read(&protocol);
 }
 
+string LogFile::getValueFile(zeonid_t zid) {
+  return valueDir_ + to_string(zid);
+}
+
+string LogFile::getPointFile(zeonid_t zid) {
+  return pointDir_ + to_string(zid);
+}
+
 LogFile::LogFile(DataStoreConfig* config) 
   : run_(true),
-    queue_(config->maxBufferSize)
+    queue_(config->maxBufferSize),
+    pointDir_(config->pointDir),
+    valueDir_(config->valueDir)
 {
-  valueFile_ = open(config->valueFileName.c_str(), O_APPEND | O_CREAT | O_RDWR);
-  if (valueFile_ == -1) {
-    throw std::runtime_error("Could not open file: " + config->valueFileName);
-  }
-
-  pointFile_ = open(config->pointFileName.c_str(), O_APPEND | O_CREAT | O_RDWR);
-  if (pointFile_ == -1) {
-    throw std::runtime_error("Could not open file: " + config->pointFileName);
-  }
+  FileOps::createDir(pointDir_);
+  FileOps::createDir(valueDir_);
   writerThread_ = std::thread(&LogFile::consumer, this);
 }
 
@@ -79,9 +76,10 @@ void LogFile::consumer() {
   int inactive = 0;
   while(run_) {
     if (queue_.read(data)) {
-      WriteBlob<Data> b(data);
       cout << "Writing to disk: id=" << data.id << "\n";
-      b.writeToFile(pointFile_);
+      WriteBlob<Data> b(data); // serialize
+      FileOps fileOp(getPointFile(data.id)); // open file
+      fileOp.writeToFile(b); // write
       inactive = 0;
     } else {
       inactive++;
@@ -95,36 +93,34 @@ void LogFile::consumer() {
 void LogFile::recover(unordered_map<zeonid_t, vector<Data>>& pointData,
                       unordered_map<zeonid_t, string>& valueData) 
 {
-	lseek(pointFile_, 0, SEEK_SET);
-	size_t bytesRead = 0;
-	uint32_t len;
-	while ((bytesRead = read(pointFile_, &len, sizeof(len))) != 0) {
-		uint8_t* buffer = new uint8_t[len];
-		bytesRead = read(pointFile_, buffer, len);
-		if (bytesRead != len) {
-			throw std::runtime_error("Could not recover from values file");
-		}
-		Data data;
-    // Deserialize will deallocate the buffer for us :)
-    deserialize(data, buffer, len);
+  // List all files in directories
+  vector<string> files;
+  FileOps::getFilesInDir(pointDir_, files);
+  
+  for (auto const& file: files) {
+    FileOps fileOp(pointDir_ + file);
+    Blob b;
+    if (!fileOp.readFromFile(b)) {
+      continue;
+    }
+    Data data;
+    deserialize(data, b);
     pointData[data.id].emplace_back(data);
-    cout << "Read from disk: id=" << data.id << "\n";
-	}
+    cout << "Read from disk: id=" << data.id << "\n";    
+  }
 
-	lseek(valueFile_, 0, SEEK_SET);
-	bytesRead = 0;
-	while ((bytesRead = read(valueFile_, &len, sizeof(len))) != 0) {
-		uint8_t* buffer = new uint8_t[len];
-		bytesRead = read(valueFile_, buffer, len);
-		if (bytesRead != len) {
-			throw std::runtime_error("Could not recover from values file");
-		}
-		Data data;
-    // Deserialize will deallocate the buffer for us :)
-    deserialize(data, buffer, len);
+  FileOps::getFilesInDir(valueDir_, files);  
+  for (auto const& file: files) {
+    FileOps fileOp(valueDir_ + file);
+    Blob b;
+    if (!fileOp.readFromFile(b)) {
+      continue;
+    }
+    Data data;
+    deserialize(data, b);
     valueData[data.id] = data.value;
-    cout << "Read from disk: id=" << data.id << "value=\n" << data.value << "\n";
-	}
+    cout << "Read from disk: id=" << data.id << "\n";    
+  }	
 }
 
 void LogFile::writePoint(core::Data const& data) {
@@ -136,16 +132,15 @@ void LogFile::writePoint(core::Data const& data) {
   queue_.write(smallData);
 }
 
-long LogFile::writeValue(core::Data const& data) {
+void LogFile::writeValue(core::Data const& data) {
   writePoint(data);
 
   WriteBlob<Data> b(data);
 
   lock_guard<mutex> lock(valueLock_);
-  long offset = lseek(valueFile_, 0, SEEK_CUR);
   cout << "(reliable) Writing to disk: id=" << data.id << "\n";
-  b.writeToFile(valueFile_);
-  fsync(valueFile_);
-
-  return offset;
+  FileOps file(getValueFile(data.id), /* truncate */ true);
+  if (!file.syncWriteToFile(b)) {
+    throw std::runtime_error("could not write");
+  }
 }
