@@ -4,7 +4,11 @@ LIBS       =-lthrift
 
 GEN_SRC    = gen-cpp/core_constants.cpp \
 						 gen-cpp/core_types.cpp \
-             gen-cpp/PointStore.cpp
+             gen-cpp/PointStore.cpp \
+						 gen-cpp/leader_constants.cpp \
+						 gen-cpp/leader_types.cpp \
+						 gen-cpp/MetaDataProvider.cpp
+
 
 ################################
 # A concise build for the server
@@ -45,12 +49,16 @@ default: thrift $(EXECUTABLE) client
 
 thrift: src/if/core.thrift
 	thrift --gen cpp src/if/core.thrift
+	thrift --gen cpp src/if/leader.thrift
 
 client: src/client/CoreClient.cpp
 	g++ ${CPP_OPTS} -o bin/client ${INCS_DIRS} src/client/CoreClient.cpp ${GEN_SRC} ${LIBS}
 
 proximity: src/server/ProximityManager.cpp
 	g++ ${CPP_OPTS} -o bin/proximity ${INCS_DIRS} src/server/ProximityManager.cpp ${GEN_SRC} ${LIBS}
+
+leader: src/leader/MetaDataProvider_server.cpp
+	g++ ${CPP_OPTS} -o bin/leader ${INCS_DIRS} src/leader/MetaDataProvider_server.cpp src/leader/MetaDataProviderStore.cpp ${GEN_SRC} ${LIBS}
 
 clean:
 	$(RM) -r bin/* gen-cpp/*

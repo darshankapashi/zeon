@@ -8,8 +8,11 @@
 #include <vector>
 
 #include "util/ProducerConsumerQueue.h"
+#include "src/server/Structs.h"
 
 using namespace std;
+using namespace core;
+using namespace metadata;
 
 #define MAX_STATS_QUEUE_SIZE 1000
 
@@ -20,13 +23,20 @@ enum Stat {
   STAT_MAX, // last stat
 };
 
-struct SystemStats {
-  long user_cpu;
-  long sys_cpu;
-  long max_rss;
-  long point_file_size;
-  long value_file_size;
-};
+//struct SystemStats {
+  //long user_cpu;
+  //long sys_cpu;
+  //long max_rss;
+  //long point_file_size;
+  //long value_file_size;
+//};
+
+//struct NodeDataStats {
+  //// number of zids managed by this node
+  //long totalZids;
+  
+
+//};
 
 struct DataStoreConfig;
 

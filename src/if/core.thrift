@@ -1,6 +1,7 @@
 namespace cpp core
 
 typedef i64 zeonid_t
+typedef i64 timestamp_t
 
 struct Point {
   1: i64 xCord = 0,
@@ -11,7 +12,7 @@ struct Version {
   // monotonically increasing value 
   1: i64 counter = -1,
   // timestamp decided at origin of operation
-  2: i64 timestamp = 0,
+  2: timestamp_t timestamp = 0,
 }
 
 struct Data {
@@ -74,7 +75,7 @@ service PointStore {
    (1: ReturnCode rc),
 
    // Create latest data for id with these parameters. Version.counter will be determined by server
-   void createData (1: zeonid_t id, 2: Point point, 3: i64 timestamp, 4: string value) 
+   void createData (1: zeonid_t id, 2: Point point, 3: timestamp_t timestamp, 4: string value) 
    throws (1:ReturnCode re),
 
    // Get K Data values nearest to id

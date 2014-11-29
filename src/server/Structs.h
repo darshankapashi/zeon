@@ -5,6 +5,8 @@
 
 #include "gen-cpp/core_types.h"
 #include "gen-cpp/core_constants.h"
+#include "gen-cpp/leader_types.h"
+#include "gen-cpp/leader_constants.h"
 
 using namespace std;
 using namespace ::core;
