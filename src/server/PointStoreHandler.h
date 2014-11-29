@@ -1,3 +1,5 @@
+#pragma once
+
 #include "gen-cpp/PointStore.h"
 #include "DataStore.h"
 #include "Node.h"

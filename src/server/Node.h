@@ -1,3 +1,5 @@
+#pragma once
+
 /*
  * This class encapsulates a node and keeps track of its state
  */
@@ -32,4 +34,5 @@ class Node {
 
   // Routing table
   unordered_map<NodeId, Region> routes_;
+  //unordered_map<nodeid_t, NodeId> 
 };

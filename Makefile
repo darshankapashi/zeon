@@ -43,8 +43,9 @@ $(EXECUTABLE): $(OBJS) $(GEN_OBJS)
 
 default: thrift $(EXECUTABLE) client
 
-thrift: src/if/core.thrift
+thrift: src/if/core.thrift src/if/server.thrift
 	thrift --gen cpp src/if/core.thrift
+	thrift --gen cpp src/if/server.thrift
 
 client: src/client/CoreClient.cpp
 	g++ ${CPP_OPTS} -o bin/client ${INCS_DIRS} src/client/CoreClient.cpp ${GEN_SRC} ${LIBS}

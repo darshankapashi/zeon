@@ -2,8 +2,10 @@ namespace cpp core
 
 typedef i64 zeonid_t
 
+typedef i32 nodeid_t
+
 struct NodeId {
-  1: i32 nid,
+  1: nodeid_t nid,
   2: i32 ipv4,
   3: i16 port,
 }
@@ -49,7 +51,7 @@ enum ErrorCode {
   DELETED = 6,
   SERVER_ERROR = 7,
   SERVER_NOT_READY = 8,
-  SERVER_REDIRECT = 9,
+  SERVER_REDIRECT = 9,  
 }
 
 exception ZeonException {
