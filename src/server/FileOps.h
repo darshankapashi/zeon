@@ -17,6 +17,10 @@ struct Blob {
   }
 };
 
+/*
+ * Having a separate class managing each file can help to keep some files open
+ * for a longer time. Hot keys can then be updated more efficiently.
+ */
 class FileOps {
  public:
  	// TODO: In truncate mode, we actually want an atomic rename
@@ -32,6 +36,10 @@ class FileOps {
  
  	// Read from file. Make sure buffer is atleast as long as len
   bool readFromFile(Blob&);
+
+  int getId() {
+  	return fd_;
+  }
 
   static void getFilesInDir(std::string dir, std::vector<std::string> &files);
   static void createDir(std::string name);

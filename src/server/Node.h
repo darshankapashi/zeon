@@ -27,10 +27,13 @@ class Node {
  
   NodeId getNodeForPoint(Point const& p, Operation op);
   bool canIHandleThis(Point const& p, Operation op);
+  bool doIHaveThisId(zeonid_t zid, Operation op);
+  void addId(zeonid_t zid);
 
  private:
   NodeId me_;
   Region region_;
+  unordered_set<zeonid_t> zids_;
 
   // Routing table
   unordered_map<NodeId, Region> routes_;
