@@ -16,4 +16,5 @@ class ServerTalkHandler : virtual public ServerTalkIf {
 
 };
 
+}
 
