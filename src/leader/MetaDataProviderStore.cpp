@@ -68,7 +68,8 @@ bool MetaDataProviderStore::checkRegionConsistency(const NodeInfo& nodeInfo) {
   return true;
 }
 
-int MetaDataProviderStore::processPing(const NodeId& nodeId, const NodeInfo& nodeInfo) {
+int MetaDataProviderStore::processPing(const NodeInfo& nodeInfo) {
+  auto nodeId = nodeInfo.nodeId;
   // check if nodeId info matches with info stored in leader
    if (!checkNodeId(nodeId)) {
      return NodeMessage::EXISTS_NOT; 

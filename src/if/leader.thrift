@@ -79,7 +79,7 @@ service MetaDataProvider {
   void initializeConfig(1: MetaDataConfig config) throws (1: MetaStoreException me),
 
   // Periodic ping by server to master
-  void ping(1: core.NodeId nodeId, 2: NodeInfo nodeInfo) 
+  void ping(1: NodeInfo nodeInfo) 
     throws (1: MetaStoreException me),
 
   // Report to master about your managed region

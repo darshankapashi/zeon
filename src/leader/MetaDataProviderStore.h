@@ -19,7 +19,7 @@ class MetaDataProviderStore {
   MetaDataProviderStore():
     leaderLastUpdateTime_(time(nullptr)) {}
   int initializeConfig(const MetaDataConfig& config);
-  int processPing(const NodeId& nodeId, const NodeInfo& nodeInfo);
+  int processPing(const NodeInfo& nodeInfo);
   RoutingInfo getRoutingInfo();
 
   private:
