@@ -24,6 +24,7 @@ enum Operation {
 class Node {
  public:
   Node(NodeInfo id);
+  Node(NodeInfo id, RoutingInfo routingInfo)
   ~Node() = default;
  
   vector<NodeId> getNodeForPoint(Point const& p, Operation op);
@@ -36,5 +37,5 @@ class Node {
   unordered_set<zeonid_t> zids_;
 
   // Routing information
-  map<nid_t, NodeInfo> nodeRegionMap_;
+  RoutingInfo routingInfo_;
 };

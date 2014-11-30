@@ -4,6 +4,11 @@ Node::Node(NodeInfo id) {
   me_ = id;
 }
 
+Node::Node(NodeInfo id, RoutingInfo routingInfo) {
+  me_ = id;
+  routingInfo_ = routingInfo;
+}
+
 bool inRectangle(Rectangle const& r, Point const& p) {
   if (p.xCord <= r.topRight.xCord && p.xCord >= r.bottomLeft.xCord &&
       p.yCord <= r.topRight.yCord && p.yCord >= r.bottomLeft.yCord) {
@@ -16,13 +21,13 @@ bool inRectangle(Rectangle const& r, Point const& p) {
 vector<NodeId> Node::getNodeForPoint(Point const& p, Operation op) {
   // TODO: Maybe handle READ_OP, WRITE_OP differently
   vector<NodeId> nodes;
-  for (auto const& nodeKV: nodeRegionMap_) {
+  for (auto const& nodeKV: routingInfo_.nodeRegionMap) {
     auto const& nodeInfo = nodeKV.second;
     for (auto const& rect: nodeInfo.nodeDataStats.region.rectangles) {
       if (inRectangle(rect, p)) {
         nodes.push_back(nodeInfo.nodeId);
         for (auto const& replica: nodeInfo.nodeDataStats.replicatedServers) {
-          nodes.push_back(nodeRegionMap_.at(replica).nodeId);
+          nodes.push_back(routingInfo_.nodeRegionMap.at(replica).nodeId);
         }
         break;
       }

@@ -80,7 +80,7 @@ class MetaDataProviderHandler : virtual public MetaDataProviderIf {
 };
 
 int main(int argc, char **argv) {
-  int port = 9090;
+  int port = 9990;
   boost::shared_ptr<MetaDataProviderHandler> handler(new MetaDataProviderHandler());
   boost::shared_ptr<TProcessor> processor(new MetaDataProviderProcessor(boost::dynamic_pointer_cast<MetaDataProviderIf>(handler)));
   boost::shared_ptr<TServerTransport> serverTransport(new TServerSocket(port));

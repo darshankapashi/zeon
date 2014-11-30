@@ -49,6 +49,7 @@ struct RoutingInfo {
   1: map <core.nid_t, NodeInfo> nodeRegionMap,
   // timestamp when routingInfo was updated
   2: core.timestamp_t timestamp,
+  3: i32 version,
 }
 
 exception MetaStoreException {
