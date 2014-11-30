@@ -24,7 +24,7 @@ enum Operation {
 class Node {
  public:
   Node(NodeInfo id);
-  Node(NodeInfo id, RoutingInfo routingInfo)
+  Node(NodeInfo id, RoutingInfo routingInfo);
   ~Node() = default;
  
   NodeId getMasterForPoint(Point const& p);

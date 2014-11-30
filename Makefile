@@ -1,6 +1,6 @@
 INCS_DIRS  =-I./
 CPP_OPTS   =-Wall -O2 -std=c++11
-LIBS       =-lthrift
+LIBS       =-lthrift -lgflags
 
 GEN_SRC    = gen-cpp/core_constants.cpp \
              gen-cpp/core_types.cpp \
@@ -14,7 +14,7 @@ GEN_SRC    = gen-cpp/core_constants.cpp \
 # A concise build for the server
 CC         = g++
 CFLAGS     = -c -Wall -O2 -std=c++11
-LDFLAGS    = -lthrift
+LDFLAGS    = -lthrift -lgflags
 
 ODIR       = bin
 SDIR       = src/server
@@ -29,7 +29,7 @@ _CPPS      = $(filter-out $(IGNORE_FILES),$(__CPPS))
 _OBJS    = $(patsubst %.cpp,%.o,$(_CPPS))
 OBJS       = $(patsubst %,$(ODIR)/%,$(_OBJS))
 
-_GEN_OBJS  = core_constants.o core_types.o PointStore.o server_constants.o server_types.o ServerTalk.o
+_GEN_OBJS  = core_constants.o core_types.o PointStore.o server_constants.o server_types.o ServerTalk.o leader_types.o leader_constants.o MetaDataProvider.o
 GEN_OBJS   = $(patsubst %,$(ODIR)/%,$(_GEN_OBJS))
 
 EXECUTABLE = bin/server

@@ -17,8 +17,6 @@ using namespace ::core;
 
 class MetaDataProviderHandler : virtual public MetaDataProviderIf {
  public:
-  MetaDataProviderHandler() {
-  }
 
   void initializeConfig(const MetaDataConfig& config) {
     printf("initializeConfig\n");

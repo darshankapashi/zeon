@@ -2,6 +2,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <gflags/gflags.h>
 
 #include "gen-cpp/core_types.h"
 #include "gen-cpp/core_constants.h"

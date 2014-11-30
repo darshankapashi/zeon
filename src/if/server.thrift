@@ -1,4 +1,5 @@
 include "core.thrift"
+include "leader.thrift"
 
 namespace cpp core
 
@@ -14,10 +15,9 @@ service ServerTalk {
   void replicate (1: core.Data data) 
     throws (1: core.ZeonException re),  
   // assumes routingInfo as ground truth, will be used by replicas not involved in split and merge
-  void receiveRoutingInfo(1: RoutingInfo rountingInfo) throws (1: ServerTalkException se),
+//  void receiveRoutingInfo(1: leader.RoutingInfo rountingInfo) throws (1: ServerTalkException se),
   // prepare phase for 2-phase commit to update the routing infio
   // will be used by servers involved in split and merge
-  int prepareRecvRoutingInfo(1: RoutingInfo routingInfo) throws (1: ServerTalkException se),
-  int commitRecvRoutingInfo(1:RoutingInfo routingInfo) throws (1:ServerTalkException se), 
-
+  //i32 prepareRecvRoutingInfo(1: leader.RoutingInfo routingInfo) throws (1: ServerTalkException se),
+  //i32 commitRecvRoutingInfo(1:leader.RoutingInfo routingInfo) throws (1:ServerTalkException se), 
 }

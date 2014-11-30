@@ -6,12 +6,13 @@
 
 #include "PointStoreHandler.h"
 #include "ServerTalkHandler.h"
+#include "LeaderClient.h"
 
 DEFINE_int32(client_port, 9090, "port used for client communication");
 DEFINE_int32(server_talk_port, 9091, "Port used for server-server communication");
-DEFINE_int32(my_ip_address, "localhost", "Address of my server");
+DEFINE_string(my_ip_address, "localhost", "Address of my server");
 // TODO: get this from MetaDataStoreConfig or fetch it from leader based on ip and server_port / client_port
-DEFINE_int32(my_nid, "1", "NodeId.nid_t of my server");
+DEFINE_int32(my_nid, 1, "NodeId.nid_t of my server");
 
 using namespace ::apache::thrift;
 using namespace ::apache::thrift::protocol;
@@ -35,7 +36,7 @@ void serveClients() {
 }
 
 void serveServers() {
-  int port = FLAGS_server_port;
+  int port = FLAGS_server_talk_port;
   boost::shared_ptr<ServerTalkHandler> handler(new ServerTalkHandler());
   boost::shared_ptr<TProcessor> processor(new ServerTalkProcessor(boost::dynamic_pointer_cast<ServerTalkIf>(handler)));
   boost::shared_ptr<TServerTransport> serverTransport(new TServerSocket(port));
@@ -51,13 +52,14 @@ int main(int argc, char **argv) {
   // Initialize Node class 
   // Assume that NodeId is got from gflag
   auto nodeId = NodeId();
-  nodeId.nid = FLAGS_my_nid_t;
+  nodeId.nid = FLAGS_my_nid;
   nodeId.ip = FLAGS_my_ip_address;
   nodeId.clientPort = FLAGS_client_port;
-  nodeId.serverPort = FLAGS_server_port;
+  nodeId.serverPort = FLAGS_server_talk_port;
   auto leaderClient_ = LeaderClient();
-  auto routingInfo = leaderClient_.metaDataProviderClient_.getRoutingInfo();
-  auto node = Node(nodeId_, routingInfo);
+  auto routingInfo = leaderClient_.fetchRoutingInfo();
+  auto myNodeInfo = routingInfo.nodeRegionMap[nodeId.nid];
+  auto node = Node(myNodeInfo, routingInfo);
   
   std::thread serverTalkThread(&serveServers);
   serveClients();

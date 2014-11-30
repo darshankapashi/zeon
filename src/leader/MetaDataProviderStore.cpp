@@ -47,8 +47,9 @@ int MetaDataProviderStore::initializeConfig(const MetaDataConfig& config) {
 
 bool MetaDataProviderStore::checkNodeId(const NodeId& nodeId) {
   auto nodeInfo = allNodes_[nodeId.nid];
-  if (nodeInfo.nodeId.ipv4 == nodeId.ipv4 && 
-    nodeInfo.nodeId.port == nodeId.port) {
+  if (nodeInfo.nodeId.ip == nodeId.ip && 
+    nodeInfo.nodeId.clientPort == nodeId.clientPort &&
+    nodeInfo.nodeId.serverPort == nodeId.serverPort) {
     return true;
   }
   return false;
