@@ -96,3 +96,16 @@ void Node::sendInvalidations(Point const& p) {
     walkieTalkie.get()->invalidate(p);
   }
 }
+
+void Node::buildRectangleToNodeMap() {
+  for (auto const& nodeKV: nodeRegionMap_) {
+    auto const& node = nodeKV.second.nodeDataStats;
+    for (auto const& rect: node.region.rectangles) {
+      // Add master
+      rectangleToNode_[rect].push_back(node.nid);
+      for (auto replica: node.replicatedServers) {
+        rectangleToNode_[rect].push_back(replica);
+      }
+    }
+  }
+}
