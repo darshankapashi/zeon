@@ -9,6 +9,7 @@ class ServerTalkHandler : virtual public ServerTalkIf {
   ServerTalkHandler();
   void replicate(const  ::core::Data& data);
   void invalidate(const  ::core::Point& point);
+  void getValue( ::core::Data& _return, const  ::core::zeonid_t zid);
 };
 
 }
