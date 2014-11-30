@@ -66,16 +66,24 @@ class Node {
   bool isAdjoining(Rectangle const& a, Rectangle const& b);
 
   bool isReady() {
-    return status_ == 1;
+    return status_ == NodeStatus::ACTIVE;
   }
- private:
+  void setStatus(int status) {
+    status_ = status;
+  }
+ public:
   NodeInfo me_;
+  NodeInfo updateNodeInfoTemp_;
   int status_;
+  mutex lockNode_;
+  mutex lockTempObjectsNode_;
   unordered_set<zeonid_t> zids_;
 
   // Routing information
   RoutingInfo routingInfo_;
+  RoutingInfo updateRoutingInfoTemp_;
 
+  //TODO: Need to replicate all these structs and create their temp
   unordered_map<Rectangle, vector<nid_t>> rectangleToNode_;
   vector<Rectangle> myMainRectangles_;
   unordered_map<Rectangle, nid_t> myReplicaRectangles_;

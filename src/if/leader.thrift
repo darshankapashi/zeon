@@ -9,6 +9,15 @@ enum NodeMessage {
   LESS_NODES_FOR_REPLICATION = 4,
   REGION_MISMATCH = 5,
   INITIALIZED = 6,
+  STALE_ROUTING_INFO = 7,
+  PREPARED_RECV_ROUTING_INFO = 8,
+  ABORT_RECV_ROUTING_INFO = 9,
+  COMMIT_RECV_ROUTING_INFO = 10,
+}
+
+enum NodeStatus {
+  UPDATING = 0,
+  ACTIVE = 1,
 }
 
 struct SystemStats {
