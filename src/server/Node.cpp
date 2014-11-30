@@ -22,14 +22,17 @@ bool inRectangle(Rectangle const& r, Point const& p) {
 }
 
 NodeId Node::getMasterForPoint(Point const& p) {
-  for (auto const& nodeKV: routingInfo_.nodeRegionMap) {
-    auto const& nodeInfo = nodeKV.second;
-    for (auto const& rect: nodeInfo.nodeDataStats.region.rectangles) {
-      if (inRectangle(rect, p)) {
-        return nodeInfo.nodeId;
-      }
+  if (amITheMaster(p)) {
+    return me_.nodeId;
+  }
+
+  for (auto const& rectKV: rectangleToNode_) {
+    if (inRectangle(rectKV.first, p)) {
+      auto nid = rectKV.second[0];
+      return routingInfo_.nodeRegionMap.at(nid).nodeId;
     }
   }
+
   throw out_of_range("not found");
 }
 
@@ -45,7 +48,7 @@ vector<NodeId> Node::getNodeForPoint(Point const& p, Operation op) {
 }
 
 bool Node::amITheMaster(Point const& p) {
-  for (auto const& rect: me_.nodeDataStats.region.rectangles) {
+  for (auto const& rect: myMainRectangles_) {
     if (inRectangle(rect, p))
       return true;
   }
@@ -62,11 +65,9 @@ bool Node::canIHandleThis(Point const& p, Operation op) {
       return true;
     }
     
-    for (auto const& master: me_.nodeDataStats.replicasFor) {
-      for (auto const& rect: routingInfo_.nodeRegionMap.at(master).nodeDataStats.region.rectangles) {
-        if (inRectangle(rect, p)) {
+    for (auto const& rectKV: myReplicaRectangles_) {
+      if (inRectangle(rectKV.first, p)) {
           return true;
-        }
       }
     }
   }
@@ -102,11 +103,30 @@ void Node::sendInvalidations(Point const& p, zeonid_t const& zid) {
 void Node::buildRectangleToNodeMap() {
   for (auto const& nodeKV: routingInfo_.nodeRegionMap) {
     auto const& node = nodeKV.second.nodeDataStats;
-    for (auto const& rect: node.region.rectangles) {
-      // Add master
-      rectangleToNode_[rect].push_back(node.nid);
-      for (auto replica: node.replicatedServers) {
-        rectangleToNode_[rect].push_back(replica);
+    if (me_.nodeDataStats.nid == node.nid) {
+      // This is myself
+      for (auto const& rect: node.region.rectangles) {
+        // Add master
+        myMainRectangles_.push_back(rect);
+      }      
+    } else {
+      auto const& replicaFor = me_.nodeDataStats.replicasFor;
+      bool amIReplica = find(replicaFor.begin(), replicaFor.end(), node.nid) != replicaFor.end();
+      if (amIReplica) {
+        // I am a replica for this node
+        for (auto const& rect: node.region.rectangles) {
+          for (auto replica: node.replicatedServers) {
+            myReplicaRectangles_[rect] = replica;
+          }
+        }
+      } else {
+        for (auto const& rect: node.region.rectangles) {
+          // Add master
+          rectangleToNode_[rect].push_back(node.nid);
+          for (auto replica: node.replicatedServers) {
+            rectangleToNode_[rect].push_back(replica);
+          }
+        }
       }
     }
   }

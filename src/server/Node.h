@@ -69,4 +69,6 @@ class Node {
   RoutingInfo routingInfo_;
 
   unordered_map<Rectangle, vector<nid_t>> rectangleToNode_;
+  vector<Rectangle> myMainRectangles_;
+  unordered_map<Rectangle, nid_t> myReplicaRectangles_;
 };
