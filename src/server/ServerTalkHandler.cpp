@@ -33,16 +33,18 @@ void ServerTalkHandler::invalidate(const core::Point& point) {
 void ServerTalkHandler::receiveRoutingInfo(const  ::core::RoutingInfo& rountingInfo) {
     // Your implementation goes here
     printf("receiveRoutingInfo\n");
-  }
+}
 
-  int32_t ServerTalkHandler::prepareRecvRoutingInfo(const  ::core::RoutingInfo& routingInfo) {
-    // Your implementation goes here
-    printf("prepareRecvRoutingInfo\n");
-  }
+int32_t ServerTalkHandler::prepareRecvRoutingInfo(const  ::core::RoutingInfo& routingInfo) {
+  // Your implementation goes here
+  printf("prepareRecvRoutingInfo\n");
+  return 0;
+}
 
-  int32_t ServerTalkHandler::commitRecvRoutingInfo(const  ::core::RoutingInfo& routingInfo) {
-    // Your implementation goes here
-    printf("commitRecvRoutingInfo\n");
-  }
+int32_t ServerTalkHandler::commitRecvRoutingInfo(const  ::core::RoutingInfo& routingInfo) {
+  // Your implementation goes here
+  printf("commitRecvRoutingInfo\n");
+  return 0;
+}
 
 }

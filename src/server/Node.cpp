@@ -1,6 +1,8 @@
 #include "Node.h"
 #include "ServerTalker.h"
 
+Node* myNode;
+
 Node::Node(NodeInfo id) {
   me_ = id;
 }

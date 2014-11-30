@@ -7,6 +7,7 @@
 #include "PointStoreHandler.h"
 #include "ServerTalkHandler.h"
 #include "LeaderClient.h"
+#include "StateObjects.h"
 
 DEFINE_int32(client_port, 9090, "port used for client communication");
 DEFINE_int32(server_talk_port, 9091, "Port used for server-server communication");
@@ -59,7 +60,9 @@ int main(int argc, char **argv) {
   auto leaderClient_ = LeaderClient();
   auto routingInfo = leaderClient_.fetchRoutingInfo();
   auto myNodeInfo = routingInfo.nodeRegionMap[nodeId.nid];
-  auto node = Node(myNodeInfo, routingInfo);
+  myNode = new Node(myNodeInfo, routingInfo);
+  DataStoreConfig* config = new DataStoreConfig();
+  myDataStore = new DataStore(config);
   
   std::thread serverTalkThread(&serveServers);
   serveClients();

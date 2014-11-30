@@ -1,8 +1,7 @@
 #pragma once
 
-#include "DataStore.h"
-#include "Node.h"
-using namespace core;
+class Node;
+class DataStore;
 
-DataStore myDataStore_;
-Node myNode_;
+extern DataStore* myDataStore;
+extern Node* myNode;

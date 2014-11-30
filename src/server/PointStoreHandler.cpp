@@ -5,22 +5,21 @@
 namespace core {
 
 PointStoreHandler::PointStoreHandler()
-  : PointStoreIf(),
-    myDataStore_(new DataStoreConfig())
+  : PointStoreIf()
 {}
 
 void PointStoreHandler::routeCorrectly(Point const& p, Operation op) {
-  if (!myNode_.status) {
+  if (!myNode->isReady()) {
     throwError(ErrorCode::SERVER_NOT_READY);
   }
 
-  if (myNode_.canIHandleThis(p, op)) {
+  if (myNode->canIHandleThis(p, op)) {
     return;
   }
 
   ZeonException ze;
   ze.what = ErrorCode::SERVER_REDIRECT;
-  ze.nodes = myNode_.getNodeForPoint(p, op);
+  ze.nodes = myNode->getNodeForPoint(p, op);
   ze.__isset.nodes = true;
   throw ze;
 }
@@ -42,7 +41,7 @@ void PointStoreHandler::getData(Data& _return, const zeonid_t id, const bool val
   // TODO: How do you route this!!!!
   int ret;
   try {
-    ret = myDataStore_.get(id, _return, valuePresent);
+    ret = myDataStore->get(id, _return, valuePresent);
   } catch (exception const& e) {
     throwError(ErrorCode::SERVER_ERROR);
   }
@@ -58,12 +57,12 @@ void PointStoreHandler::getData(Data& _return, const zeonid_t id, const bool val
 void PointStoreHandler::setData(const Data& data, const bool valuePresent) {
   printf("setData\n");
   routeCorrectly(data.point, WRITE_OP);
-  bool haveThisId = myNode_.doIHaveThisId(data.id, WRITE_OP);
+  bool haveThisId = myNode->doIHaveThisId(data.id, WRITE_OP);
   if (!haveThisId) {
     // I don't have this id locally
 
     // Fetch from previous server
-    NodeId prevNode = myNode_.getMasterForPoint(data.prevPoint);
+    NodeId prevNode = myNode->getMasterForPoint(data.prevPoint);
     ServerTalker walkieTalkie(prevNode.ip, prevNode.serverPort);
     ServerTalkClient* client = walkieTalkie.get();
     // client->getValue(....);
@@ -75,13 +74,13 @@ void PointStoreHandler::setData(const Data& data, const bool valuePresent) {
   // Update the data store
   int resMeta, resValue;
   try {
-    resMeta = myDataStore_.storeMetaData(data.id, data.point, data.version.timestamp); 
+    resMeta = myDataStore->storeMetaData(data.id, data.point, data.version.timestamp); 
     resValue = ErrorCode::STORED;
     if (valuePresent) {
-      myDataStore_.log()->writeValue(data);
-      resValue = myDataStore_.storeValue(data.id, data.value);
+      myDataStore->log()->writeValue(data);
+      resValue = myDataStore->storeValue(data.id, data.value);
     } else {
-      myDataStore_.log()->writePoint(data);
+      myDataStore->log()->writePoint(data);
     }
   } catch (exception const& e) {
     throwError(ErrorCode::SERVER_ERROR);
@@ -93,10 +92,10 @@ void PointStoreHandler::setData(const Data& data, const bool valuePresent) {
   }
 
   // Send invalidations
-  myNode_.sendInvalidations(data.prevPoint);
+  myNode->sendInvalidations(data.prevPoint);
 
   // Replication
-  myNode_.replicate(data);
+  myNode->replicate(data);
 }
 
 void PointStoreHandler::createData(const zeonid_t id, const Point& point, const int64_t timestamp, const std::string& value) {
@@ -107,13 +106,13 @@ void PointStoreHandler::createData(const zeonid_t id, const Point& point, const 
   data.point = point;
   data.version.timestamp = timestamp;
   data.value = value;
-  int metaRes = myDataStore_.storeMetaData(data.id, 
+  int metaRes = myDataStore->storeMetaData(data.id, 
     data.point, 
     data.version.timestamp);
-  int valueRes = myDataStore_.storeValue(data.id, data.value);
+  int valueRes = myDataStore->storeValue(data.id, data.value);
   if (metaRes == ErrorCode::STORED && valueRes == ErrorCode::STORED) {
     try {
-      myDataStore_.log()->writeValue(data);
+      myDataStore->log()->writeValue(data);
     } catch (exception const& e) {
       throwError(ErrorCode::SERVER_ERROR);
     }
@@ -140,7 +139,7 @@ void PointStoreHandler::getPointsInRegion(std::vector<Data> & _return, const Reg
 void PointStoreHandler::removeData(const zeonid_t id) {
   printf("removeData\n");
   // TODO: How do you route this!!!
-  int ret = myDataStore_.removeData(id);
+  int ret = myDataStore->removeData(id);
   if (ret != ErrorCode::DELETED) {
     ZeonException ze;
     ze.what = ret;

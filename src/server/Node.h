@@ -57,6 +57,9 @@ class Node {
 
   void buildRectangleToNodeMap();
 
+  bool isReady() {
+    return status_ == 1;
+  }
  private:
   NodeInfo me_;
   int status_;

@@ -3,6 +3,8 @@
 using namespace ::core;
 using core::ErrorCode;
 
+DataStore* myDataStore;
+
 #define LOCK(key) if (!lockKey(key)) return ErrorCode::FAILED_TO_LOCK;
 #define UNLOCK(key) unlockKey(key)
 
