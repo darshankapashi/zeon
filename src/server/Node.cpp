@@ -1,4 +1,5 @@
 #include "Node.h"
+#include "ServerTalker.h"
 
 Node::Node(NodeInfo id) {
   me_ = id;
@@ -13,32 +14,54 @@ bool inRectangle(Rectangle const& r, Point const& p) {
   }
 }
 
-vector<NodeId> Node::getNodeForPoint(Point const& p, Operation op) {
-  // TODO: Maybe handle READ_OP, WRITE_OP differently
-  vector<NodeId> nodes;
+NodeId Node::getMasterForPoint(Point const& p) {
   for (auto const& nodeKV: nodeRegionMap_) {
     auto const& nodeInfo = nodeKV.second;
     for (auto const& rect: nodeInfo.nodeDataStats.region.rectangles) {
       if (inRectangle(rect, p)) {
-        nodes.push_back(nodeInfo.nodeId);
-        for (auto const& replica: nodeInfo.nodeDataStats.replicatedServers) {
-          nodes.push_back(nodeRegionMap_.at(replica).nodeId);
-        }
-        break;
+        return nodeInfo.nodeId;
       }
     }
   }
-  if (nodes.size() > 0) {
-    return nodes;
-  } else {
-    throw out_of_range("not found");
-  }
+  throw out_of_range("not found");
 }
 
-bool Node::canIHandleThis(Point const& p, Operation op) {
+vector<NodeId> Node::getNodeForPoint(Point const& p, Operation op) {
+  // TODO: Maybe handle READ_OP, WRITE_OP differently
+  NodeId master = getMasterForPoint(p);
+  vector<NodeId> nodes = {master};
+  // Add the replicas
+  for (auto const& replica: nodeRegionMap_.at(master.nid).nodeDataStats.replicatedServers) {
+    nodes.push_back(nodeRegionMap_.at(replica).nodeId);
+  }
+  return nodes;
+}
+
+bool Node::amITheMaster(Point const& p) {
   for (auto const& rect: me_.nodeDataStats.region.rectangles) {
     if (inRectangle(rect, p))
       return true;
+  }
+  return false;
+}
+
+bool Node::canIHandleThis(Point const& p, Operation op) {
+  // If it is a WRITE_OP, I need to be the master
+  // If it is a READ_OP, I can be a replica
+  if (op == WRITE_OP) {
+    return amITheMaster(p);
+  } else {
+    if (amITheMaster(p)) {
+      return true;
+    }
+    
+    for (auto const& master: me_.nodeDataStats.replicasFor) {
+      for (auto const& rect: nodeRegionMap_.at(master).nodeDataStats.region.rectangles) {
+        if (inRectangle(rect, p)) {
+          return true;
+        }
+      }
+    }
   }
   return false;
 }
@@ -51,4 +74,20 @@ bool Node::doIHaveThisId(zeonid_t zid, Operation op) {
 
 void Node::addId(zeonid_t zid) {
   zids_.insert(zid);
+}
+
+void Node::replicate(Data const& data) {
+  for (auto const& replica: me_.nodeDataStats.replicatedServers) {
+    auto const& node = nodeRegionMap_.at(replica).nodeId;
+    ServerTalker walkieTalkie(node.ip, node.serverPort);
+    walkieTalkie.get()->replicate(data);
+  }
+}
+
+void Node::sendInvalidations(Point const& p) {
+  auto nodes = getNodeForPoint(p, READ_OP);
+  for (auto const& node: nodes) {
+    ServerTalker walkieTalkie(node.ip, node.serverPort);
+    walkieTalkie.get()->invalidate(p);
+  }
 }
