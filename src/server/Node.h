@@ -57,6 +57,11 @@ class Node {
 
   void buildRectangleToNodeMap();
 
+  // Returns a list of nodes to query in order to query for nearest points
+  vector<vector<nid_t>> getNodesToQuery(Point const& p);
+
+  bool isAdjoining(Rectangle const& a, Rectangle const& b);
+
   bool isReady() {
     return status_ == 1;
   }
