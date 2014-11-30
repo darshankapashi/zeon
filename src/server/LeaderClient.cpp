@@ -1,6 +1,8 @@
 #include "LeaderClient.h"
 #include "Node.h"
 
+DEFINE_int64(heartbeat_interval, 5, "Time interval between periodic heartbeats between server and leader"); 
+
 using namespace core;
 
 RoutingInfo LeaderClient::fetchRoutingInfo() {
@@ -9,9 +11,12 @@ RoutingInfo LeaderClient::fetchRoutingInfo() {
   return routingInfo;
 }
 
-void LeaderClient::sendHearBeat() {
-  auto nodeInfo = myNode->me_;
-  return metaDataProviderClient_->ping(nodeInfo);
+void LeaderClient::sendHeartBeat() {
+  while(1) {
+    auto nodeInfo = myNode->me_;
+    metaDataProviderClient_->ping(nodeInfo);
+    sleep(FLAGS_heartbeat_interval);
+  }
 }
 
 

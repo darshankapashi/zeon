@@ -67,6 +67,8 @@ int main(int argc, char **argv) {
   ProximityManagerConfig proximityConfig;
   proximity = new ProximityManager(proximityConfig);
   
+  auto sendHeartBeat = &LeaderClient::sendHeartBeat;
+  std::thread leaderHeartBeatThread(sendHeartBeat, leaderClient_);
   std::thread serverTalkThread(&serveServers);
   serveClients();
   return 0;
