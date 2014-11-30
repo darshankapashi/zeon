@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 #include <thrift/protocol/TBinaryProtocol.h>
 #include <thrift/transport/TSocket.h>
@@ -30,7 +32,7 @@ class LeaderClient {
     metaDataProviderClient_ = new MetaDataProviderClient(protocol);
   }
 
-  public:
+  private:
   MetaDataProviderClient* metaDataProviderClient_;
   RoutingInfo fetchRoutingInfo();
   void sendHearBeat(NodeId nodeId, NodeInfo nodeInfo);

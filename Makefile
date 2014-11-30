@@ -26,7 +26,7 @@ IGNORE_FILES = ProximityManager.cpp
 ___CPPS    = $(wildcard $(SDIR)/*.cpp) 
 __CPPS     = $(patsubst $(SDIR)/%,%,$(___CPPS))
 _CPPS      = $(filter-out $(IGNORE_FILES),$(__CPPS))
-_OBJS    = $(patsubst %.cpp,%.o,$(_CPPS))
+_OBJS      = $(patsubst %.cpp,%.o,$(_CPPS))
 OBJS       = $(patsubst %,$(ODIR)/%,$(_OBJS))
 
 _GEN_OBJS  = core_constants.o core_types.o PointStore.o server_constants.o server_types.o ServerTalk.o leader_types.o leader_constants.o MetaDataProvider.o
@@ -35,10 +35,10 @@ GEN_OBJS   = $(patsubst %,$(ODIR)/%,$(_GEN_OBJS))
 EXECUTABLE = bin/server
 
 $(ODIR)/%.o: $(SDIR)/%.cpp thrift
-	$(CC) -c $(INC) -o $@ $< $(CFLAGS) ${LIBS} 
+	$(CC) -c $(INC) -o $@ $< $(CFLAGS)
 
 $(ODIR)/%.o: $(GEN_DIR)/%.cpp thrift
-	$(CC) -c $(INC) -o $@ $< $(CFLAGS) ${LIBS}
+	$(CC) -c $(INC) -o $@ $< $(CFLAGS)
 
 $(EXECUTABLE): $(OBJS) $(GEN_OBJS)
 	$(CC) $(LDFLAGS) -o $(EXECUTABLE) $(OBJS) $(GEN_OBJS) ${LIBS}

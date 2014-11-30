@@ -1,3 +1,5 @@
+#pragma once
+
 #include "DataStore.h"
 #include "Node.h"
 using namespace core;
