@@ -16,7 +16,7 @@ using namespace apache::thrift::transport;
 using namespace core;
 
 class LeaderClient {
-  public:
+ public:
   LeaderClient() {
     boost::shared_ptr<TTransport> socket(new TSocket("localhost", 9990));
     boost::shared_ptr<TTransport> transport(new TBufferedTransport(socket));
@@ -32,7 +32,6 @@ class LeaderClient {
     metaDataProviderClient_ = new MetaDataProviderClient(protocol);
   }
 
-  private:
   MetaDataProviderClient* metaDataProviderClient_;
   RoutingInfo fetchRoutingInfo();
   void sendHearBeat(NodeId nodeId, NodeInfo nodeInfo);
