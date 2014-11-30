@@ -5,13 +5,15 @@
 using namespace std;
 using namespace core;
 
+ProximityManager* proximity;
+
 void LinearProximityCompute::insertPoint(Data data) {
   dataList_->emplace_back(data);
 }
 
 void LinearProximityCompute::removePoint(Data data) {
-  for (std::vector<Data>::iterator it =  (*dataList_).begin();
-       it != (*dataList_).end(); ++it) {
+  for (std::vector<Data>::iterator it =  dataList_->begin();
+       it != dataList_->end(); ++it) {
     if (it->id == data.id && 
         it->point.xCord == data.point.xCord && 
         it->point.yCord == data.point.yCord) {
@@ -56,6 +58,7 @@ vector<Data> LinearProximityCompute::getInternalPoints(const Region& region) {
   return vector<Data>(); 
 }
 
+/*
 int main(int argc, char** argv) {
   printf("Starting proximityManager");
   auto config = ProximityManagerConfig();
@@ -65,16 +68,16 @@ int main(int argc, char** argv) {
   auto p1 = constructData(1,2,2,123,"first");
   auto p2 = constructData(2,3,3,124, "second");
   auto p3 = constructData(3,4,4,124, "second");
-  pManager.proximityCompute_->insertPoint(p1);
-  pManager.proximityCompute_->insertPoint(p2);
-  pManager.proximityCompute_->insertPoint(p3);
+  pManager.proximityCompute->insertPoint(p1);
+  pManager.proximityCompute->insertPoint(p2);
+  pManager.proximityCompute->insertPoint(p3);
   auto point1 = Point();
   point1.xCord = 1;
   point1.yCord = 1;
-  auto res = pManager.proximityCompute_->getKNearestPoints(point1, 3);
+  auto res = pManager.proximityCompute->getKNearestPoints(point1, 3);
   cout<<"res size: "<<res.size();
   cout<<"p1: "<<res[0].point.xCord<<" "<<res[0].point.yCord;
   cout<<"p2: "<<res[1].point.xCord<<" "<<res[1].point.yCord;
-  pManager.proximityCompute_->removePoint(p1);
-
+  pManager.proximityCompute->removePoint(p1);
 }
+*/

@@ -59,6 +59,9 @@ class Node {
 
   // Returns a list of nodes to query in order to query for nearest points
   vector<vector<nid_t>> getNodesToQuery(Point const& p);
+  NodeId getNode(nid_t nid) {
+    return routingInfo_.nodeRegionMap.at(nid).nodeId;
+  }
 
   bool isAdjoining(Rectangle const& a, Rectangle const& b);
 

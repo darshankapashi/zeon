@@ -5,6 +5,9 @@
 using namespace std;
 using namespace core;
 
+//TODO: ProximityManager should insert <point,zid>. *Data* should not be stored here.
+//TODO: Make this work for multiple threads
+
 class ProximityDistance {
   public: 
   ProximityDistance(){}
@@ -57,9 +60,9 @@ class LinearProximityCompute: public ProximityCompute {
 };
 
 class ProximityManager {
-  public:
+ public:
   ProximityManager() {}
-  ProximityManager(ProximityManagerConfig& config):
+  ProximityManager(ProximityManagerConfig const& config):
     config_(config) {
       switch(config.distanceType) {
         case ProximityDistanceType::EUCLIDEAN:
@@ -69,14 +72,17 @@ class ProximityManager {
       }
       switch(config.algoType) {
         case ProximityAlgoType::LINEAR:
-          proximityCompute_ = 
+          proximityCompute = 
             new LinearProximityCompute(proximityDistance_);
         case ProximityAlgoType::R_TREE:
-          proximityCompute_ = 
+          proximityCompute = 
             new LinearProximityCompute(proximityDistance_);
       }
   }
+  
+  ProximityCompute* proximityCompute;
+
+ private:
   ProximityManagerConfig config_;
-  ProximityCompute* proximityCompute_;
   ProximityDistance* proximityDistance_;
 };

@@ -31,8 +31,8 @@ enum ProximityDistanceType {
 };
 
 struct ProximityManagerConfig {
-  ProximityAlgoType algoType;
-  ProximityDistanceType distanceType;
+  ProximityAlgoType algoType = LINEAR;
+  ProximityDistanceType distanceType = EUCLIDEAN;
 };
 
 void throwError(ErrorCode what, string why = "");

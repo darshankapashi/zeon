@@ -16,7 +16,11 @@ service ServerTalk {
     throws (1: core.ZeonException ze),
 
   void replicate (1: core.Data data, 2: bool valuePresent) 
-    throws (1: core.ZeonException re),  
+    throws (1: core.ZeonException ze),  
+
+  // Get K Data values nearest to point
+  list<core.Data> getNearestKByPoint (1: core.Point point, 2: i32 k) 
+    throws (1: core.ZeonException ze),
 
   // assumes routingInfo as ground truth, will be used by replicas not involved in split and merge
   void receiveRoutingInfo(1: leader.RoutingInfo rountingInfo) throws (1: ServerTalkException se),
