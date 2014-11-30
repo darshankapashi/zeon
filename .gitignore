@@ -29,6 +29,7 @@
 
 # Temporaries
 *.swp
+*.swo
 
 gen-cpp/*
 bin/*
