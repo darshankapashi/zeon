@@ -50,3 +50,5 @@ class DataStore {
 
   LogFile logFile_;
 };
+
+void storeData(Data const& d, bool valuePresent);

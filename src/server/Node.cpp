@@ -83,19 +83,19 @@ void Node::addId(zeonid_t zid) {
   zids_.insert(zid);
 }
 
-void Node::replicate(Data const& data) {
+void Node::replicate(Data const& data, bool valuePresent) {
   for (auto const& replica: me_.nodeDataStats.replicatedServers) {
     auto const& node = routingInfo_.nodeRegionMap.at(replica).nodeId;
     ServerTalker walkieTalkie(node.ip, node.serverPort);
-    walkieTalkie.get()->replicate(data);
+    walkieTalkie.get()->replicate(data, valuePresent);
   }
 }
 
-void Node::sendInvalidations(Point const& p) {
+void Node::sendInvalidations(Point const& p, zeonid_t const& zid) {
   auto nodes = getNodeForPoint(p, READ_OP);
   for (auto const& node: nodes) {
     ServerTalker walkieTalkie(node.ip, node.serverPort);
-    walkieTalkie.get()->invalidate(p);
+    walkieTalkie.get()->invalidate(zid);
   }
 }
 

@@ -52,8 +52,8 @@ class Node {
   bool doIHaveThisId(zeonid_t zid, Operation op);
   void addId(zeonid_t zid);
 
-  void replicate(Data const& data);
-  void sendInvalidations(Point const& p);
+  void replicate(Data const& data, bool valuePresent);
+  void sendInvalidations(Point const& p, zeonid_t const& zid);
 
   void buildRectangleToNodeMap();
 

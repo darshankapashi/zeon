@@ -5,7 +5,7 @@ using core::ErrorCode;
 
 DataStore* myDataStore;
 
-#define LOCK(key) if (!lockKey(key)) return ErrorCode::FAILED_TO_LOCK;
+#define LOCK(key) if (!lockKey(key)) return FAILED_TO_LOCK;
 #define UNLOCK(key) unlockKey(key)
 
 DataStore::DataStore(DataStoreConfig* config) 
@@ -45,24 +45,24 @@ int DataStore::storeMetaData(zeonid_t key, Point point, int64_t timestamp) {
   data.value = DEFAULT_VALUE;
   metaData_[key].emplace_back(data);
   UNLOCK(key);
-  return ErrorCode::STORED;
+  return STORED;
 }
 
 int DataStore::storeValue(zeonid_t key, string val) {
   LOCK(key);
   valueData_[key] = val;
   UNLOCK(key);
-  return ErrorCode::STORED;
+  return STORED;
 }
 
 int DataStore::get(zeonid_t key, Data& data, bool valuePresent) {
-  int ret = ErrorCode::FOUND;
+  int ret = FOUND;
   LOCK(key);
   auto dataIt = metaData_.find(key);
   if (dataIt == metaData_.end()) {
-    ret = ErrorCode::NOT_FOUND;
+    ret = NOT_FOUND;
   } else if (dataIt->second.size() == 0) {
-    ret = ErrorCode::FOUND_EMPTY;
+    ret = FOUND_EMPTY;
   } else {
     data = dataIt->second.back();
     if (valuePresent) {
@@ -75,11 +75,11 @@ int DataStore::get(zeonid_t key, Data& data, bool valuePresent) {
 }
 
 int DataStore::history(zeonid_t key, vector<Data>& history) {
-  int ret = ErrorCode::FOUND;
+  int ret = FOUND;
   LOCK(key);
   auto dataIt = metaData_.find(key);
   if (dataIt == metaData_.end()) {
-    ret = ErrorCode::NOT_FOUND;
+    ret = NOT_FOUND;
   } else {
     history = dataIt->second;
   }
@@ -93,13 +93,34 @@ int DataStore::removeData(zeonid_t key) {
   int valueEraseStatus = valueData_.erase(key);
   removePersistedData(key);
   if (metaDataEraseStatus || valueEraseStatus) {
-    return ErrorCode::NOT_FOUND;
+    return NOT_FOUND;
   } else {
-    return ErrorCode::DELETED;
+    return DELETED;
   }
 }
 
 int DataStore::removePersistedData(zeonid_t key) {
   // TODO: Delete this key from both log files or invalidate them 
-  return ErrorCode::DELETED;
+  return DELETED;
+}
+
+void storeData(Data const& data, bool valuePresent) {
+  int resMeta, resValue;
+  try {
+    resMeta = myDataStore->storeMetaData(data.id, data.point, data.version.timestamp); 
+    resValue = STORED;
+    if (valuePresent) {
+      myDataStore->log()->writeValue(data);
+      resValue = myDataStore->storeValue(data.id, data.value);
+    } else {
+      myDataStore->log()->writePoint(data);
+    }
+  } catch (exception const& e) {
+    throwError(SERVER_ERROR);
+  }
+  if (resValue != STORED || 
+      resMeta != STORED) {
+    // TODO: might do better error resolution
+    throwError(SERVER_ERROR);
+  }
 }

@@ -47,7 +47,7 @@ $(EXECUTABLE): $(OBJS) $(GEN_OBJS)
 default: thrift $(EXECUTABLE) client
 
 thrift: src/if/core.thrift src/if/server.thrift
-	thrift --gen cpp src/if/core.thrift
+	thrift --gen cpp:pure_enums src/if/core.thrift
 	thrift --gen cpp src/if/leader.thrift
 	thrift --gen cpp src/if/server.thrift
 

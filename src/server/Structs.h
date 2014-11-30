@@ -34,3 +34,5 @@ struct ProximityManagerConfig {
   ProximityAlgoType algoType;
   ProximityDistanceType distanceType;
 };
+
+void throwError(ErrorCode what, string why = "");
