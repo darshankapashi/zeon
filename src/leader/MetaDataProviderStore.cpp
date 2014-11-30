@@ -1,5 +1,12 @@
 #include "src/leader/MetaDataProviderStore.h"
 
+int64_t getRegionHash(const Region& reg) const {
+  int64_t hashRes = 0;
+  for (auto r : reg.rectangles) {
+    hashRes += getRegionHash(r);
+  }
+  return hashRes;
+}
 
 int MetaDataProviderStore::initializeConfig(const MetaDataConfig& config) {
   auto initializedTime = time(nullptr);
@@ -64,11 +71,13 @@ bool MetaDataProviderStore::checkNodeTimestamp(const NodeInfo& nodeInfo) {
 }
 
 bool MetaDataProviderStore::checkRegionConsistency(const NodeInfo& nodeInfo) {
-  //TODO:
-  return true;
+  auto regionLeader = allNodes_[nodeInfo.nodeId.nid].nodeDataStats.region;
+  auto region = nodeInfo.nodeDataStats.region;
+  return getRegionHash(regionLeader) == getRegionHash(region);
 }
 
-int MetaDataProviderStore::processPing(const NodeId& nodeId, const NodeInfo& nodeInfo) {
+int MetaDataProviderStore::processPing(const NodeInfo& nodeInfo) {
+  auto nodeId = nodeInfo.nodeId;
   // check if nodeId info matches with info stored in leader
    if (!checkNodeId(nodeId)) {
      return NodeMessage::EXISTS_NOT; 

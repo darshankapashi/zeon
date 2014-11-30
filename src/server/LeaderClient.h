@@ -7,6 +7,7 @@
 
 #include "gen-cpp/MetaDataProvider.h"
 #include "src/server/DataStore.h"
+#include "src/server/StateObjects.h"
 
 using namespace std;
 using namespace apache::thrift;
@@ -34,5 +35,5 @@ class LeaderClient {
 
   MetaDataProviderClient* metaDataProviderClient_;
   RoutingInfo fetchRoutingInfo();
-  void sendHearBeat(NodeId nodeId, NodeInfo nodeInfo);
+  void sendHeartBeat();
 };

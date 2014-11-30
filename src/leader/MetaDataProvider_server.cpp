@@ -29,7 +29,7 @@ class MetaDataProviderHandler : virtual public MetaDataProviderIf {
     }
   }
 
-  void ping(const NodeId& node, const NodeInfo& nodeInfo) {
+  void ping(const NodeInfo& nodeInfo) {
     printf("processing ping");
     auto res = metaDataProviderStore_.processPing(node, nodeInfo);
     if (res == NodeMessage::EXISTS_NOT) {
@@ -45,8 +45,8 @@ class MetaDataProviderHandler : virtual public MetaDataProviderIf {
   }
 
   void getRoutingInfo(RoutingInfo& _return) {
-    // Your implementation goes here
     printf("getRoutingInfo\n");
+    return metaDataProviderStore_.getRoutingInfo();
   }
 
   void nodeJoin(const NodeId& nodeId) {
