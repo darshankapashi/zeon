@@ -29,6 +29,13 @@ int main() {
     p.yCord = 3;
     client.createData(1, p, time(NULL), "hello world");
 
+    Data received;
+    client.getData(received, 1, false);
+    cout << "Received: id=" << received.id << " (" << received.point.xCord << "," << received.point.yCord << ") value=" << received.value;
+    client.getData(received, 1, true);
+    cout << "Received: id=" << received.id << " (" << received.point.xCord << "," << received.point.yCord << ") value=" << received.value;
+
+    /*
     Data data;
     data.point = p;
     data.value = "hello world 2";
@@ -39,6 +46,7 @@ int main() {
     p.yCord = 7;
     data.point = p;
     client.setData(data, false);
+    */
 
     transport->close();
   } catch (ZeonException const& ze) {

@@ -53,22 +53,24 @@ void serveServers() {
 int main(int argc, char **argv) {
   // Initialize Node class 
   // Assume that NodeId is got from gflag
-  auto nodeId = NodeId();
+  NodeId nodeId;
   nodeId.nid = FLAGS_my_nid;
   nodeId.ip = FLAGS_my_ip_address;
   nodeId.clientPort = FLAGS_client_port;
   nodeId.serverPort = FLAGS_server_talk_port;
-  auto leaderClient_ = LeaderClient();
+  
+  LeaderClient leaderClient_;
   auto routingInfo = leaderClient_.fetchRoutingInfo();
   auto myNodeInfo = routingInfo.nodeRegionMap[nodeId.nid];
+  
   myNode = new Node(myNodeInfo, routingInfo);
+  leaderClient_.startHeartBeats();
+
   DataStoreConfig* config = new DataStoreConfig();
   myDataStore = new DataStore(config);
   ProximityManagerConfig proximityConfig;
   proximity = new ProximityManager(proximityConfig);
   
-  auto sendHeartBeat = &LeaderClient::sendHeartBeat;
-  std::thread leaderHeartBeatThread(sendHeartBeat, leaderClient_);
   std::thread serverTalkThread(&serveServers);
   serveClients();
   return 0;
