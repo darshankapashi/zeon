@@ -5,15 +5,33 @@
  */
 
 #include "Structs.h"
+#include <boost/functional/hash.hpp>
 #include <unordered_set>
 
 namespace std {
+
 template<>
 struct hash<NodeId> {
   size_t operator() (NodeId const& n) const {
     return std::hash<int>()(n.nid);
   }
 };
+
+template<>
+struct hash<Rectangle> {
+  size_t operator() (Rectangle const& r) const {
+    using boost::hash_value;
+    using boost::hash_combine;
+
+    size_t seed = 0;
+    hash_combine(seed, hash_value(r.bottomLeft.xCord));
+    hash_combine(seed, hash_value(r.bottomLeft.yCord));
+    hash_combine(seed, hash_value(r.topRight.xCord));
+    hash_combine(seed, hash_value(r.topRight.yCord));
+    return seed;    
+  }
+};
+
 }
 
 enum Operation {
@@ -36,10 +54,14 @@ class Node {
   void replicate(Data const& data);
   void sendInvalidations(Point const& p);
 
+  void buildRectangleToNodeMap();
+
  private:
   NodeInfo me_;
   unordered_set<zeonid_t> zids_;
 
   // Routing information
   map<nid_t, NodeInfo> nodeRegionMap_;
+
+  unordered_map<Rectangle, vector<nid_t>> rectangleToNode_;
 };
