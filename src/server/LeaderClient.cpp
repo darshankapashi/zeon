@@ -13,13 +13,17 @@ RoutingInfo LeaderClient::fetchRoutingInfo() {
 
 void LeaderClient::sendHeartBeat() {
   while(runThread_) {
-    auto& nodeInfo = myNode->me_;
-    // set the current timestamp for ping node
-    nodeInfo.timestamp = time(nullptr);
-    try {
-      metaDataProviderClient_->ping(nodeInfo);
-    } catch (exception e) {
-      printf("Ping not succesful\n");
+    if (myNode) {
+      auto& nodeInfo = myNode->me_;
+      // set the current timestamp for ping node
+      nodeInfo.timestamp = time(nullptr);
+      try {
+        metaDataProviderClient_->ping(nodeInfo);
+      } catch (exception e) {
+        printf("Ping not succesful\n");
+      }
+    } else {
+      printf("Node is not initialized\n");
     }
     sleep(FLAGS_heartbeat_interval);
   }

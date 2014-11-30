@@ -59,12 +59,18 @@ int main(int argc, char **argv) {
   nodeId.clientPort = FLAGS_client_port;
   nodeId.serverPort = FLAGS_server_talk_port;
   
-  LeaderClient leaderClient_;
-  auto routingInfo = leaderClient_.fetchRoutingInfo();
-  auto myNodeInfo = routingInfo.nodeRegionMap[nodeId.nid];
-  
-  myNode = new Node(myNodeInfo, routingInfo);
-  leaderClient_.startHeartBeats();
+  try {
+    LeaderClient leaderClient_;
+    //auto routingInfo = leaderClient_.fetchRoutingInfo();
+    //auto myNodeInfo = routingInfo.nodeRegionMap[nodeId.nid];
+    
+    //myNode = new Node(myNodeInfo, routingInfo);
+    //leaderClient_.startHeartBeats();
+    NodeInfo nodeInfo;
+    myNode = new Node(nodeInfo);
+  } catch (exception const& e) {
+    printf("Failed to talk to leader\n");
+  }
 
   DataStoreConfig* config = new DataStoreConfig();
   myDataStore = new DataStore(config);

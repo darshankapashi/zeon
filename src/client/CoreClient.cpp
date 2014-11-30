@@ -31,9 +31,9 @@ int main() {
 
     Data received;
     client.getData(received, 1, false);
-    cout << "Received: id=" << received.id << " (" << received.point.xCord << "," << received.point.yCord << ") value=" << received.value;
+    cout << "Received: id=" << received.id << " (" << received.point.xCord << "," << received.point.yCord << ") value=" << received.value << endl;
     client.getData(received, 1, true);
-    cout << "Received: id=" << received.id << " (" << received.point.xCord << "," << received.point.yCord << ") value=" << received.value;
+    cout << "Received: id=" << received.id << " (" << received.point.xCord << "," << received.point.yCord << ") value=" << received.value << endl;
 
     /*
     Data data;
