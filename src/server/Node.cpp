@@ -98,7 +98,7 @@ void Node::sendInvalidations(Point const& p) {
 }
 
 void Node::buildRectangleToNodeMap() {
-  for (auto const& nodeKV: nodeRegionMap_) {
+  for (auto const& nodeKV: routingInfo_.nodeRegionMap) {
     auto const& node = nodeKV.second.nodeDataStats;
     for (auto const& rect: node.region.rectangles) {
       // Add master
