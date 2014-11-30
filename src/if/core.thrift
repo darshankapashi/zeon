@@ -54,7 +54,8 @@ enum ErrorCode {
   DELETED = 6,
   SERVER_ERROR = 7,
   SERVER_NOT_READY = 8,
-  SERVER_REDIRECT = 9,  
+  SERVER_REDIRECT = 9,
+  ALREADY_EXISTS = 10, 
 }
 
 exception ZeonException {
@@ -86,7 +87,7 @@ service PointStore {
     throws (1:ZeonException re),
 
   // Get K Data values nearest to point
-  list<Data> getNearestKByPoint (1: Point point) 
+  list<Data> getNearestKByPoint (1: Point point, 2: i32 k) 
     throws (1:ZeonException re),
 
   // Get all Data values inside region

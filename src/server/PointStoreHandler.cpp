@@ -1,6 +1,7 @@
 #include "PointStoreHandler.h"
 #include "ServerTalker.h"
 #include "StateObjects.h"
+#include "ProximityManager.h"
 
 namespace core {
 
@@ -75,6 +76,11 @@ void PointStoreHandler::setData(const Data& data, const bool valuePresent) {
 
   // Update the data store
   storeData(dataToStore, valueGiven);
+  // proximity manager uses data.point, data.id
+  Data d = data;
+  proximity->proximityCompute->insertPoint(d);
+  d.point = d.prevPoint;
+  proximity->proximityCompute->removePoint(d);
 
   // Send invalidations
   myNode->sendInvalidations(data.prevPoint, data.id);
@@ -86,12 +92,16 @@ void PointStoreHandler::setData(const Data& data, const bool valuePresent) {
 void PointStoreHandler::createData(const zeonid_t id, const Point& point, const int64_t timestamp, const std::string& value) {
   printf("createData\n");
   routeCorrectly(point, WRITE_OP);
+  if (myNode->doIHaveThisId(id, WRITE_OP)) {
+    throwError(ALREADY_EXISTS);
+  }
   Data data;
   data.id = id;
   data.point = point;
   data.version.timestamp = timestamp;
   data.value = value;
   storeData(data, true);
+  proximity->proximityCompute->insertPoint(data);
 }
 
 void PointStoreHandler::getNearestKById(std::vector<Data> & _return, const zeonid_t id) {
@@ -99,9 +109,25 @@ void PointStoreHandler::getNearestKById(std::vector<Data> & _return, const zeoni
   printf("getNearestKById\n");
 }
 
-void PointStoreHandler::getNearestKByPoint(std::vector<Data> & _return, const Point& point) {
-  // Your implementation goes here
+void PointStoreHandler::getNearestKByPoint(std::vector<Data> & _return, const Point& point, const int k) {
   printf("getNearestKByPoint\n");
+  routeCorrectly(point, READ_OP);
+  auto compute = proximity->proximityCompute;
+  _return = compute->getKNearestPoints(point, k);
+
+  // Query neighbours
+  auto neighbouringNodes = myNode->getNodesToQuery(point);
+  for (auto const& nids: neighbouringNodes) {
+    // Get master node
+    auto node = myNode->getNode(nids[0]);
+    ServerTalker walkieTalkie(node.ip, node.serverPort);
+    ServerTalkClient* client = walkieTalkie.get();
+
+    vector<Data> moreData;
+    client->getNearestKByPoint(moreData, point, k);
+    _return.insert(_return.begin(), moreData.begin(), moreData.end());
+  }
+  // TODO: Prune _return to contain <= K point based on distance
 }
 
 void PointStoreHandler::getPointsInRegion(std::vector<Data> & _return, const Region& region) {

@@ -3,6 +3,11 @@
 
 Node* myNode;
 
+template <class Container, class ValueType>
+bool contains(Container c, ValueType v) {
+  return find(c.begin(), c.end(), v) != c.end();
+}
+
 Node::Node(NodeInfo id) {
   me_ = id;
 }
@@ -109,25 +114,71 @@ void Node::buildRectangleToNodeMap() {
         // Add master
         myMainRectangles_.push_back(rect);
       }      
-    } else {
-      auto const& replicaFor = me_.nodeDataStats.replicasFor;
-      bool amIReplica = find(replicaFor.begin(), replicaFor.end(), node.nid) != replicaFor.end();
-      if (amIReplica) {
-        // I am a replica for this node
-        for (auto const& rect: node.region.rectangles) {
-          for (auto replica: node.replicatedServers) {
-            myReplicaRectangles_[rect] = replica;
-          }
-        }
-      } else {
-        for (auto const& rect: node.region.rectangles) {
-          // Add master
-          rectangleToNode_[rect].push_back(node.nid);
-          for (auto replica: node.replicatedServers) {
-            rectangleToNode_[rect].push_back(replica);
-          }
+    } else if (contains(me_.nodeDataStats.replicasFor, node.nid)) {
+      // I am a replica for this node
+      for (auto const& rect: node.region.rectangles) {
+        for (auto replica: node.replicatedServers) {
+          myReplicaRectangles_[rect] = replica;
         }
       }
     }
+    // Store all rectangles in the main map
+    for (auto const& rect: node.region.rectangles) {
+      // Add master
+      rectangleToNode_[rect].push_back(node.nid);
+      for (auto replica: node.replicatedServers) {
+        rectangleToNode_[rect].push_back(replica);
+      }
+    }
   }
+}
+
+bool Node::isAdjoining(Rectangle const& a, Rectangle const& b) {
+  return
+    ((a.bottomLeft.xCord == b.topRight.xCord) && (b.bottomLeft.yCord < a.topRight.yCord) && (b.topRight.yCord > a.bottomLeft.yCord)) ||
+    ((b.bottomLeft.xCord == a.topRight.xCord) && (a.bottomLeft.yCord < b.topRight.yCord) && (a.topRight.yCord > b.bottomLeft.yCord)) ||
+    ((a.bottomLeft.yCord == b.topRight.yCord) && (b.bottomLeft.xCord < a.topRight.xCord) && (b.topRight.xCord > a.bottomLeft.xCord)) ||
+    ((b.bottomLeft.yCord == a.topRight.yCord) && (a.bottomLeft.xCord < b.topRight.xCord) && (a.topRight.xCord > b.bottomLeft.xCord));
+}
+
+vector<vector<nid_t>> Node::getNodesToQuery(Point const& p) {
+  if (!canIHandleThis(p, READ_OP)) {
+    throw runtime_error("This method is only valid to be called from a responsible node");
+  }
+
+  Rectangle base;
+  bool found = false;
+  for (auto const& rect: myMainRectangles_) {
+    if (inRectangle(rect, p)) {
+      base = rect;
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    for (auto const& rectKV: myReplicaRectangles_) {
+      if (inRectangle(rectKV.first, p)) {
+        base = rectKV.first;
+        found = true;
+        break;
+      }
+    }
+  }
+  if (!found) {
+    throw out_of_range("could not find base rectangle");
+  }
+
+  // We have the base rectangle
+  vector<vector<nid_t>> nodes;
+  for (auto const& rectKV: rectangleToNode_) {
+    if (contains(rectKV.second, me_.nodeId.nid)) {
+      continue;
+    }
+    if (isAdjoining(base, rectKV.first)) {
+      nodes.push_back(rectKV.second);
+    }
+  }
+  // TODO: This can be smarter when we get to that stage
+
+  return nodes;
 }

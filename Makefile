@@ -21,7 +21,7 @@ SDIR       = src/server
 GEN_DIR    = gen-cpp
 INC        = -I./
 
-IGNORE_FILES = ProximityManager.cpp
+IGNORE_FILES = 
 
 ___CPPS    = $(wildcard $(SDIR)/*.cpp) 
 __CPPS     = $(patsubst $(SDIR)/%,%,$(___CPPS))

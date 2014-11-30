@@ -3,6 +3,7 @@
 #include "ServerTalkHandler.h"
 #include "StateObjects.h"
 #include "Structs.h"
+#include "ProximityManager.h"
 
 namespace core {
 
@@ -11,7 +12,6 @@ ServerTalkHandler::ServerTalkHandler() {
 }
 
 void ServerTalkHandler::getValue(std::string& _return, const zeonid_t zid) {
-  // Your implementation goes here
   printf("getValue\n");
 
   // Return the value from the Datastore
@@ -25,7 +25,6 @@ void ServerTalkHandler::getValue(std::string& _return, const zeonid_t zid) {
 
 
 void ServerTalkHandler::replicate(const Data& data, const bool valuePresent) {
-  // Your implementation goes here
   printf("replicate\n");
 
   // Add it to Datastore
@@ -34,13 +33,17 @@ void ServerTalkHandler::replicate(const Data& data, const bool valuePresent) {
 }
 
 void ServerTalkHandler::invalidate(const zeonid_t zid) {
-  // Your implementation goes here
   printf("invalidate\n");
 
   // Remove from Datastore
   // Remove from Log
   myDataStore->removeData(zid);
   myDataStore->removePersistedData(zid);
+}
+
+void ServerTalkHandler::getNearestKByPoint(std::vector<Data> & _return, const Point& point, const int k) {
+  printf("getNearestKByPoint\n");
+  _return = proximity->proximityCompute->getKNearestPoints(point, k);
 }
 
 void ServerTalkHandler::receiveRoutingInfo(const RoutingInfo& routingInfo) {
