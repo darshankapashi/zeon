@@ -59,6 +59,7 @@ class Node {
 
  private:
   NodeInfo me_;
+  int status_;
   unordered_set<zeonid_t> zids_;
 
   // Routing information

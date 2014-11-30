@@ -35,13 +35,13 @@ GEN_OBJS   = $(patsubst %,$(ODIR)/%,$(_GEN_OBJS))
 EXECUTABLE = bin/server
 
 $(ODIR)/%.o: $(SDIR)/%.cpp thrift
-	$(CC) -c $(INC) -o $@ $< $(CFLAGS) 
+	$(CC) -c $(INC) -o $@ $< $(CFLAGS) ${LIBS} 
 
 $(ODIR)/%.o: $(GEN_DIR)/%.cpp thrift
-	$(CC) -c $(INC) -o $@ $< $(CFLAGS) 
+	$(CC) -c $(INC) -o $@ $< $(CFLAGS) ${LIBS}
 
 $(EXECUTABLE): $(OBJS) $(GEN_OBJS)
-	$(CC) $(LDFLAGS) -o $(EXECUTABLE) $(OBJS) $(GEN_OBJS)
+	$(CC) $(LDFLAGS) -o $(EXECUTABLE) $(OBJS) $(GEN_OBJS) ${LIBS}
 ################################
 
 default: thrift $(EXECUTABLE) client

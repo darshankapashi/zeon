@@ -1,25 +1,26 @@
 #include "PointStoreHandler.h"
 #include "ServerTalker.h"
+#include "StateObjects.h"
 
 namespace core {
 
 PointStoreHandler::PointStoreHandler()
   : PointStoreIf(),
-    dataStore_(new DataStoreConfig())
+    myDataStore_(new DataStoreConfig())
 {}
 
 void PointStoreHandler::routeCorrectly(Point const& p, Operation op) {
-  if (!node_) {
+  if (!myNode_.status) {
     throwError(ErrorCode::SERVER_NOT_READY);
   }
 
-  if (node_->canIHandleThis(p, op)) {
+  if (myNode_.canIHandleThis(p, op)) {
     return;
   }
 
   ZeonException ze;
   ze.what = ErrorCode::SERVER_REDIRECT;
-  ze.nodes = node_->getNodeForPoint(p, op);
+  ze.nodes = myNode_.getNodeForPoint(p, op);
   ze.__isset.nodes = true;
   throw ze;
 }
@@ -41,7 +42,7 @@ void PointStoreHandler::getData(Data& _return, const zeonid_t id, const bool val
   // TODO: How do you route this!!!!
   int ret;
   try {
-    ret = dataStore_.get(id, _return, valuePresent);
+    ret = myDataStore_.get(id, _return, valuePresent);
   } catch (exception const& e) {
     throwError(ErrorCode::SERVER_ERROR);
   }
@@ -57,12 +58,12 @@ void PointStoreHandler::getData(Data& _return, const zeonid_t id, const bool val
 void PointStoreHandler::setData(const Data& data, const bool valuePresent) {
   printf("setData\n");
   routeCorrectly(data.point, WRITE_OP);
-  bool haveThisId = node_->doIHaveThisId(data.id, WRITE_OP);
+  bool haveThisId = myNode_.doIHaveThisId(data.id, WRITE_OP);
   if (!haveThisId) {
     // I don't have this id locally
 
     // Fetch from previous server
-    NodeId prevNode = node_->getMasterForPoint(data.prevPoint);
+    NodeId prevNode = myNode_.getMasterForPoint(data.prevPoint);
     ServerTalker walkieTalkie(prevNode.ip, prevNode.serverPort);
     ServerTalkClient* client = walkieTalkie.get();
     // client->getValue(....);
@@ -74,13 +75,13 @@ void PointStoreHandler::setData(const Data& data, const bool valuePresent) {
   // Update the data store
   int resMeta, resValue;
   try {
-    resMeta = dataStore_.storeMetaData(data.id, data.point, data.version.timestamp); 
+    resMeta = myDataStore_.storeMetaData(data.id, data.point, data.version.timestamp); 
     resValue = ErrorCode::STORED;
     if (valuePresent) {
-      dataStore_.log()->writeValue(data);
-      resValue = dataStore_.storeValue(data.id, data.value);
+      myDataStore_.log()->writeValue(data);
+      resValue = myDataStore_.storeValue(data.id, data.value);
     } else {
-      dataStore_.log()->writePoint(data);
+      myDataStore_.log()->writePoint(data);
     }
   } catch (exception const& e) {
     throwError(ErrorCode::SERVER_ERROR);
@@ -92,10 +93,10 @@ void PointStoreHandler::setData(const Data& data, const bool valuePresent) {
   }
 
   // Send invalidations
-  node_->sendInvalidations(data.prevPoint);
+  myNode_.sendInvalidations(data.prevPoint);
 
   // Replication
-  node_->replicate(data);
+  myNode_.replicate(data);
 }
 
 void PointStoreHandler::createData(const zeonid_t id, const Point& point, const int64_t timestamp, const std::string& value) {
@@ -106,13 +107,13 @@ void PointStoreHandler::createData(const zeonid_t id, const Point& point, const 
   data.point = point;
   data.version.timestamp = timestamp;
   data.value = value;
-  int metaRes = dataStore_.storeMetaData(data.id, 
+  int metaRes = myDataStore_.storeMetaData(data.id, 
     data.point, 
     data.version.timestamp);
-  int valueRes = dataStore_.storeValue(data.id, data.value);
+  int valueRes = myDataStore_.storeValue(data.id, data.value);
   if (metaRes == ErrorCode::STORED && valueRes == ErrorCode::STORED) {
     try {
-      dataStore_.log()->writeValue(data);
+      myDataStore_.log()->writeValue(data);
     } catch (exception const& e) {
       throwError(ErrorCode::SERVER_ERROR);
     }
@@ -139,7 +140,7 @@ void PointStoreHandler::getPointsInRegion(std::vector<Data> & _return, const Reg
 void PointStoreHandler::removeData(const zeonid_t id) {
   printf("removeData\n");
   // TODO: How do you route this!!!
-  int ret = dataStore_.removeData(id);
+  int ret = myDataStore_.removeData(id);
   if (ret != ErrorCode::DELETED) {
     ZeonException ze;
     ze.what = ret;

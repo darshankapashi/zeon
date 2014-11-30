@@ -21,8 +21,6 @@ class PointStoreHandler : virtual public PointStoreIf {
   void removeData(const zeonid_t id);
 
  private:
-  DataStore dataStore_;
-  Node* node_;
 };
 
 }
