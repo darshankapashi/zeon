@@ -27,10 +27,15 @@ class Node {
   Node(NodeInfo id, RoutingInfo routingInfo)
   ~Node() = default;
  
+  NodeId getMasterForPoint(Point const& p);
   vector<NodeId> getNodeForPoint(Point const& p, Operation op);
+  bool amITheMaster(Point const& p);
   bool canIHandleThis(Point const& p, Operation op);
   bool doIHaveThisId(zeonid_t zid, Operation op);
   void addId(zeonid_t zid);
+
+  void replicate(Data const& data);
+  void sendInvalidations(Point const& p);
 
  private:
   NodeInfo me_;

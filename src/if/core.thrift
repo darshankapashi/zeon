@@ -6,8 +6,9 @@ typedef i64 nid_t
 
 struct NodeId {
   1: nid_t nid,
-  2: i32 ipv4,
-  3: i16 port,
+  2: string ip,
+  3: i16 serverPort,
+  4: i16 clientPort,
 }
 
 struct Point {
@@ -26,11 +27,13 @@ struct Data {
   // unique id for Data
   1: zeonid_t id = 0,
   // last-updated location of id
-  2: Point point,
+  2: Point prevPoint,
+  // last-updated location of id
+  3: Point point,
   // latest version recoreded for id
-  3: Version version,
+  4: Version version,
   // payload for id
-  4: string value = "",
+  5: string value = "",
 }
 
 struct Rectangle {

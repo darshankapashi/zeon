@@ -8,6 +8,9 @@ exception ServerTalkException {
 }
 
 service ServerTalk {
+  void invalidate (1: core.Point point) 
+    throws (1: core.ZeonException re),
+
   void replicate (1: core.Data data) 
     throws (1: core.ZeonException re),  
   // assumes routingInfo as ground truth, will be used by replicas not involved in split and merge

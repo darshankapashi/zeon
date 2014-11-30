@@ -1,4 +1,5 @@
 #include "PointStoreHandler.h"
+#include "ServerTalker.h"
 
 namespace core {
 
@@ -52,9 +53,25 @@ void PointStoreHandler::getData(Data& _return, const zeonid_t id, const bool val
   }
 }
 
+// TODO: Handle various failure scenarios, maybe use PREPARE-COMMIT
 void PointStoreHandler::setData(const Data& data, const bool valuePresent) {
   printf("setData\n");
   routeCorrectly(data.point, WRITE_OP);
+  bool haveThisId = node_->doIHaveThisId(data.id, WRITE_OP);
+  if (!haveThisId) {
+    // I don't have this id locally
+
+    // Fetch from previous server
+    NodeId prevNode = node_->getMasterForPoint(data.prevPoint);
+    ServerTalker walkieTalkie(prevNode.ip, prevNode.serverPort);
+    ServerTalkClient* client = walkieTalkie.get();
+    // client->getValue(....);
+    // data.value = ...
+  } 
+
+  // I have this id locally
+
+  // Update the data store
   int resMeta, resValue;
   try {
     resMeta = dataStore_.storeMetaData(data.id, data.point, data.version.timestamp); 
@@ -73,6 +90,12 @@ void PointStoreHandler::setData(const Data& data, const bool valuePresent) {
     // TODO: might do better error resolution
     throwError(ErrorCode::SERVER_ERROR);
   }
+
+  // Send invalidations
+  node_->sendInvalidations(data.prevPoint);
+
+  // Replication
+  node_->replicate(data);
 }
 
 void PointStoreHandler::createData(const zeonid_t id, const Point& point, const int64_t timestamp, const std::string& value) {
