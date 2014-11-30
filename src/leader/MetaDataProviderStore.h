@@ -3,13 +3,17 @@
 
 using namespace core;
 
+int64_t getRectangleHash(const Rectangle& r) const {
+  return ((((51 + hash_fn(r.bottomLeft.xCord)) * 51) +
+          hash_fn(r.bottomLeft.yCord)) * 51 + 
+          hash_fn(r.topRight.xCord)) * 51 + 
+          hash_fn(r.topRight.yCord);
+}
+
 struct RectangleHasher {
   hash<int64_t> hash_fn;
   size_t operator()(const Rectangle& r) const {
-    return ((((51 + hash_fn(r.bottomLeft.xCord)) * 51) +
-            hash_fn(r.bottomLeft.yCord)) * 51 + 
-            hash_fn(r.topRight.xCord)) * 51 + 
-            hash_fn(r.topRight.yCord);
+    return getRectangleHash(r);
   }
 };
 
