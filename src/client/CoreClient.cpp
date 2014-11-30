@@ -27,14 +27,23 @@ int main() {
     auto p = Point();
     p.xCord = 2;
     p.yCord = 3;
+    client.createData(1, p, time(NULL), "hello world");
+
     Data data;
     data.point = p;
-    data.value = "hello world";
+    data.value = "hello world 2";
+    data.id = 1;
     client.setData(data, true);
+
+    p.xCord = 9;
+    p.yCord = 7;
+    data.point = p;
     client.setData(data, false);
 
     transport->close();
-  } catch (TException& tx) {
+  } catch (ZeonException const& ze) {
+    cout << "ZeonException: " << ze.what << " " << ze.why << endl;
+  } catch (TException const& tx) {
     cout << "ERROR: " << tx.what() << endl;
   }
 

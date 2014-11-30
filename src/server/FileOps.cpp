@@ -11,33 +11,33 @@ FileOps::FileOps(std::string name, bool truncate) {
   if (truncate) {
     flags |= O_TRUNC;
   }
-  fd_ = open(name.c_str(), flags);
+  fd_ = open(name.c_str(), flags, S_IRWXU);
   if (fd_ == -1) {
     throw std::runtime_error("Could not open file: " + name);
   }
 }
 
-bool FileOps::syncWriteToFile(Blob const& b) {
-  int ret = write(fd_, &b.len, sizeof(b.len));
-  ret +=  write(fd_, b.data, b.len);
+bool FileOps::syncWriteToFile(Blob* b) {
+  int ret = write(fd_, &b->len, sizeof(b->len));
+  ret +=  write(fd_, b->data, b->len);
   int sync = fsync(fd_);
-  return (ret == sizeof(b.len) + b.len) && (sync == 0);
+  return (ret == sizeof(b->len) + b->len) && (sync == 0);
 }
 
-bool FileOps::writeToFile(Blob const& b) {
-  int ret = write(fd_, &b.len, sizeof(b.len));
-  ret +=  write(fd_, b.data, b.len);
-  return (ret == sizeof(b.len) + b.len);
+bool FileOps::writeToFile(Blob* b) {
+  int ret = write(fd_, &b->len, sizeof(b->len));
+  ret +=  write(fd_, b->data, b->len);
+  return (ret == sizeof(b->len) + b->len);
 }
 
-bool FileOps::readFromFile(Blob& b) {
-  int ret = read(fd_, &b.len, sizeof(b.len));
-  if (ret != sizeof(b.len)) {
+bool FileOps::readFromFile(Blob* b) {
+  int ret = read(fd_, &b->len, sizeof(b->len));
+  if (ret != sizeof(b->len)) {
     return false;
   }
-  b.data = new uint8_t[b.len];
-  ret = read(fd_, b.data, b.len);
-  return (ret == b.len);
+  b->data = new uint8_t[b->len];
+  ret = read(fd_, b->data, b->len);
+  return (ret == b->len);
 }
 
 FileOps::~FileOps() {

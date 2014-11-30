@@ -5,16 +5,8 @@
 #include <vector>
 
 struct Blob {
-  uint8_t* data;
-  uint32_t len;
-
-  Blob() : data(nullptr), len(0) {}
-
-  ~Blob() {
-    if (data) {
-      delete [] data;
-    }
-  }
+  uint8_t* data = nullptr;
+  uint32_t len = 0;
 };
 
 /*
@@ -29,13 +21,13 @@ class FileOps {
   ~FileOps();
 
   // Replace is always synced
-  bool syncWriteToFile(Blob const&);
+  bool syncWriteToFile(Blob*);
 
   // Append is not synced
-  bool writeToFile(Blob const&);
+  bool writeToFile(Blob*);
  
    // Read from file. Make sure buffer is atleast as long as len
-  bool readFromFile(Blob&);
+  bool readFromFile(Blob*);
 
   int getId() {
     return fd_;

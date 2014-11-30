@@ -10,35 +10,28 @@ using namespace apache::thrift::protocol;
 using namespace apache::thrift::transport;
 
 template<class T>
-struct WriteBlob;
-
-template<class T>
-void serialize(T obj, WriteBlob<T>& b);
-
-template<class T>
 struct WriteBlob : public Blob {
-  WriteBlob(T obj) 
-    : Blob()
-  {
-    serialize(obj, *this);
+  WriteBlob(T obj) {
+    serialize(obj);
   }
+
+  void serialize(T obj) {
+    TMemoryBuffer* buffer = new TMemoryBuffer();
+    trans_.reset(buffer);
+    TJSONProtocol protocol(trans_);
+
+    obj.write(&protocol);
+
+    buffer->getBuffer(&data, &len);
+    cout << "Serialized id=" << obj.id << " len=" << len << "\n";
+  }
+
+  boost::shared_ptr<TTransport> trans_;
 };
 
 template<class T>
-void serialize(T obj, WriteBlob<T>& b) {
-  TMemoryBuffer* buffer = new TMemoryBuffer;
-  boost::shared_ptr<TTransport> trans(buffer);
-  TJSONProtocol protocol(trans);
-
-  obj.write(&protocol);
-
-  buffer->getBuffer(&b.data, &b.len);
-  cout << "Serialized id=" << obj.id << " len=" << b.len << "\n";
-}
-
-template<class T>
 void deserialize(T& obj, Blob const& b) {
-  TMemoryBuffer* buffer = new TMemoryBuffer(b.data, b.len, TMemoryBuffer::OBSERVE);
+  TMemoryBuffer* buffer = new TMemoryBuffer(b.data, b.len, TMemoryBuffer::TAKE_OWNERSHIP);
   boost::shared_ptr<TTransport> trans(buffer);
   TJSONProtocol protocol(trans);
 
@@ -79,7 +72,7 @@ void LogFile::consumer() {
       cout << "Writing to disk: id=" << data.id << "\n";
       WriteBlob<Data> b(data); // serialize
       FileOps fileOp(getPointFile(data.id)); // open file
-      fileOp.writeToFile(b); // write
+      fileOp.writeToFile(&b); // write
       inactive = 0;
     } else {
       inactive++;
@@ -101,7 +94,7 @@ void LogFile::recover(unordered_map<zeonid_t, vector<Data>>& pointData,
     FileOps fileOp(pointDir_ + file);
     while(true) {
       Blob b;
-      if (!fileOp.readFromFile(b)) {
+      if (!fileOp.readFromFile(&b)) {
         break;
       }
       Data data;
@@ -115,7 +108,7 @@ void LogFile::recover(unordered_map<zeonid_t, vector<Data>>& pointData,
   for (auto const& file: files) {
     FileOps fileOp(valueDir_ + file);
     Blob b;
-    if (!fileOp.readFromFile(b)) {
+    if (!fileOp.readFromFile(&b)) {
       continue;
     }
     Data data;
@@ -142,7 +135,7 @@ void LogFile::writeValue(core::Data const& data) {
   lock_guard<mutex> lock(valueLock_);
   cout << "(reliable) Writing to disk: id=" << data.id << "\n";
   FileOps file(getValueFile(data.id), /* truncate */ true);
-  if (!file.syncWriteToFile(b)) {
+  if (!file.syncWriteToFile(&b)) {
     throw std::runtime_error("could not write");
   }
 }

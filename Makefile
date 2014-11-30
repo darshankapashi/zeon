@@ -1,5 +1,8 @@
 INCS_DIRS  =-I./
-CPP_OPTS   =-Wall -O2 -std=c++11
+OPT        = -O2
+DBG        = -g
+BUILD      = $(DBG)
+CPP_OPTS   =-Wall -std=c++11 $(BUILD)
 LIBS       =-lthrift -lgflags
 
 GEN_SRC    = gen-cpp/core_constants.cpp \
@@ -13,7 +16,7 @@ GEN_SRC    = gen-cpp/core_constants.cpp \
 ################################
 # A concise build for the server
 CC         = g++
-CFLAGS     = -c -Wall -O2 -std=c++11
+CFLAGS     = -c -Wall -std=c++11 $(BUILD)
 LDFLAGS    = -lthrift -lgflags
 
 ODIR       = bin
@@ -41,7 +44,7 @@ $(ODIR)/%.o: $(GEN_DIR)/%.cpp thrift
 	$(CC) -c $(INC) -o $@ $< $(CFLAGS)
 
 $(EXECUTABLE): $(OBJS) $(GEN_OBJS)
-	$(CC) $(LDFLAGS) -o $(EXECUTABLE) $(OBJS) $(GEN_OBJS) ${LIBS}
+	$(CC) $(LDFLAGS) -o $(EXECUTABLE) $(OBJS) $(GEN_OBJS) 
 ################################
 
 all: thrift $(EXECUTABLE) client

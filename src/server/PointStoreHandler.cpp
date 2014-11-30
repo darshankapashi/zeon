@@ -50,7 +50,7 @@ void PointStoreHandler::getData(Data& _return, const zeonid_t id, const bool val
 // TODO: Handle various failure scenarios, maybe use PREPARE-COMMIT
 void PointStoreHandler::setData(const Data& data, const bool valuePresent) {
   printf("setData\n");
-  routeCorrectly(data.point, WRITE_OP);
+  //routeCorrectly(data.point, WRITE_OP);
 
   Data dataToStore = data;
   bool valueGiven = valuePresent;
@@ -91,7 +91,7 @@ void PointStoreHandler::setData(const Data& data, const bool valuePresent) {
 
 void PointStoreHandler::createData(const zeonid_t id, const Point& point, const int64_t timestamp, const std::string& value) {
   printf("createData\n");
-  routeCorrectly(point, WRITE_OP);
+  //routeCorrectly(point, WRITE_OP);
   if (myNode->doIHaveThisId(id, WRITE_OP)) {
     throwError(ALREADY_EXISTS);
   }
@@ -101,6 +101,7 @@ void PointStoreHandler::createData(const zeonid_t id, const Point& point, const 
   data.version.timestamp = timestamp;
   data.value = value;
   storeData(data, true);
+  myNode->addId(id);
   proximity->proximityCompute->insertPoint(data);
 }
 
