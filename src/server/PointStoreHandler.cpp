@@ -91,19 +91,7 @@ void PointStoreHandler::createData(const zeonid_t id, const Point& point, const 
   data.point = point;
   data.version.timestamp = timestamp;
   data.value = value;
-  int metaRes = myDataStore->storeMetaData(data.id, 
-    data.point, 
-    data.version.timestamp);
-  int valueRes = myDataStore->storeValue(data.id, data.value);
-  if (metaRes == STORED && valueRes == STORED) {
-    try {
-      myDataStore->log()->writeValue(data);
-    } catch (exception const& e) {
-      throwError(SERVER_ERROR);
-    }
-  } else {
-    throwError(SERVER_ERROR);
-  }
+  storeData(data, true);
 }
 
 void PointStoreHandler::getNearestKById(std::vector<Data> & _return, const zeonid_t id) {
