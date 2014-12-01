@@ -13,6 +13,7 @@ enum NodeMessage {
   PREPARED_RECV_ROUTING_INFO = 8,
   ABORT_RECV_ROUTING_INFO = 9,
   COMMIT_RECV_ROUTING_INFO = 10,
+  ERROR = 11,
 }
 
 enum NodeStatus {

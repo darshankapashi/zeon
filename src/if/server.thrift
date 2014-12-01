@@ -26,11 +26,11 @@ service ServerTalk {
     throws (1: core.ZeonException ze),
 
   // assumes routingInfo as ground truth, will be used by replicas not involved in split and merge
-  void receiveRoutingInfo(1: leader.RoutingInfo rountingInfo) throws (1: ServerTalkException se),
+  void receiveRoutingInfo(1: leader.RoutingInfo routingInfo) throws (1: ServerTalkException se),
 
   // prepare phase for 2-phase commit to update the routing infio
   // will be used by servers involved in split and merge
-  i32 prepareRecvRoutingInfo(1: leader.RoutingInfo routingInfo) throws (1: ServerTalkException se),
+  i32 prepareRecvNodeInfo(1: leader.NodeInfo nodeInfo) throws (1: ServerTalkException se),
 
-  i32 commitRecvRoutingInfo(1:leader.RoutingInfo routingInfo) throws (1:ServerTalkException se), 
+  i32 commitRecvNodeInfo(1:leader.NodeInfo nodeInfo) throws (1:ServerTalkException se), 
 }
