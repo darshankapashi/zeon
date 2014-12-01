@@ -56,5 +56,5 @@ class MetaDataProviderStore {
   // last updated timestamp
   timestamp_t leaderLastUpdateTime_;
   int32_t replicationFactor_;
-  unordered_map<nid_t, ServerTalkClient> clientToServers_;
+  unordered_map<nid_t, ServerTalkClient*> clientToServers_;
 };
