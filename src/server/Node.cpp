@@ -70,6 +70,9 @@ vector<NodeId> Node::getNodeForPoint(Point const& p, Operation op) {
 
 bool Node::amITheMaster(Point const& p) {
   for (auto const& rect: myMainRectangles_) {
+    printf("amITheMaster: checking rectangle (%lld,%lld) (%lld,%lld), point (%lld,%lld)\n",
+            rect.bottomLeft.xCord, rect.bottomLeft.yCord, rect.topRight.xCord, rect.topRight.yCord,
+            p.xCord, p.yCord);
     if (inRectangle(rect, p))
       return true;
   }
@@ -126,17 +129,24 @@ void Node::sendInvalidations(Point const& p, zeonid_t const& zid) {
 void Node::buildRectangleToNodeMap() {
   for (auto const& nodeKV: routingInfo_.nodeRegionMap) {
     auto const& node = nodeKV.second.nodeDataStats;
+    printf("=> nid = %lld %lld %lld\n", nodeKV.first, node.nid, nodeKV.second.nodeId.nid);
     if (me_.nodeDataStats.nid == node.nid) {
       // This is myself
       for (auto const& rect: node.region.rectangles) {
         // Add master
         myMainRectangles_.push_back(rect);
+        printf("MAIN Rectangle: (%lld,%lld) (%lld,%lld)\n", 
+              rect.bottomLeft.xCord, rect.bottomLeft.yCord,
+              rect.topRight.xCord, rect.topRight.yCord);
       }      
     } else if (contains(me_.nodeDataStats.replicasFor, node.nid)) {
       // I am a replica for this node
       for (auto const& rect: node.region.rectangles) {
         for (auto replica: node.replicatedServers) {
           myReplicaRectangles_[rect] = replica;
+          printf("REPLICA Rectangle: (%lld,%lld) (%lld,%lld)\n", 
+              rect.bottomLeft.xCord, rect.bottomLeft.yCord,
+              rect.topRight.xCord, rect.topRight.yCord);
         }
       }
     }

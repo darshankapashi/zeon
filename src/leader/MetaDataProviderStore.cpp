@@ -16,10 +16,11 @@ int64_t getRegionHash(const Region& reg) {
 int MetaDataProviderStore::initializeConfig(const MetaDataConfig& config) {
   auto initializedTime = time(nullptr);
   for (auto node : config.allNodes) {
-    auto nodeInfo = NodeInfo();
+    NodeInfo nodeInfo;
     nodeInfo.nodeId = node;
     nodeInfo.timestamp = initializedTime;
     allNodes_[node.nid] = nodeInfo;
+    nodeInfo.nodeDataStats.nid = node.nid;
   }
   globalRegion_ = config.globalRegion;
   for (auto nodeRegion : config.nodeRegionMap) {

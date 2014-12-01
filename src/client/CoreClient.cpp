@@ -27,10 +27,15 @@ int main(int argc, char **argv) {
 
     //client.ping();
     //cout << "ping()" << endl;
+
     Point p;
     p.xCord = 2;
     p.yCord = 3;
-    client.createData(1, p, time(nullptr), "hello world");
+    try {
+      client.createData(1, p, time(nullptr), "hello world");
+    } catch (exception const& e) {
+      printf("createData failed: %s\n", e.what());
+    }
 
     Data received;
     client.getData(received, 1, false);
