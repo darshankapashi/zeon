@@ -16,7 +16,7 @@ using namespace core;
 DEFINE_int32(port, 9090, "Server port to connect to");
 
 int main(int argc, char **argv) {
-  gflags::ParseCommandLineFlags(&argc, &argv, true);
+  google::ParseCommandLineFlags(&argc, &argv, true);
   boost::shared_ptr<TTransport> socket(new TSocket("localhost", FLAGS_port));
   boost::shared_ptr<TTransport> transport(new TBufferedTransport(socket));
   boost::shared_ptr<TProtocol> protocol(new TBinaryProtocol(transport));
@@ -27,10 +27,15 @@ int main(int argc, char **argv) {
 
     //client.ping();
     //cout << "ping()" << endl;
+
     Point p;
     p.xCord = 2;
     p.yCord = 3;
-    client.createData(1, p, time(nullptr), "hello world");
+    try {
+      client.createData(1, p, time(nullptr), "hello world");
+    } catch (exception const& e) {
+      printf("createData failed: %s\n", e.what());
+    }
 
     Data received;
     client.getData(received, 1, false);

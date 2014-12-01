@@ -17,9 +17,10 @@ int64_t getRegionHash(const Region& reg) {
 int MetaDataProviderStore::initializeConfig(const MetaDataConfig& config) {
   auto initializedTime = time(nullptr);
   for (auto node : config.allNodes) {
-    auto nodeInfo = NodeInfo();
+    NodeInfo nodeInfo;
     nodeInfo.nodeId = node;
     nodeInfo.timestamp = initializedTime;
+    nodeInfo.nodeDataStats.nid = node.nid;
     allNodes_[node.nid] = nodeInfo;
   }
   globalRegion_ = config.globalRegion;
@@ -112,7 +113,7 @@ int MetaDataProviderStore::processPing(const NodeInfo& nodeInfo) {
 }
 
 RoutingInfo MetaDataProviderStore::getRoutingInfo() {
-  auto routingInfo = RoutingInfo();
+  RoutingInfo routingInfo;
   for (auto node : allNodes_) {
     routingInfo.nodeRegionMap[node.first] = node.second;
   }
