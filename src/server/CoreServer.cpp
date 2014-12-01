@@ -3,6 +3,7 @@
 #include <thrift/server/TSimpleServer.h>
 #include <thrift/transport/TServerSocket.h>
 #include <thrift/transport/TBufferTransports.h>
+#include <gflags/gflags.h>
 
 #include "PointStoreHandler.h"
 #include "ServerTalkHandler.h"
@@ -51,7 +52,7 @@ void serveServers() {
 }
 
 int main(int argc, char **argv) {
-  gflags::ParseCommandLineFlags(&argc, &argv, true);
+  google::ParseCommandLineFlags(&argc, &argv, true);
   printf("Starting CoreServer...\n");
   // Initialize Node class 
   // Assume that NodeId is got from gflag

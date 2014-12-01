@@ -10,7 +10,10 @@ GEN_SRC    = gen-cpp/core_constants.cpp \
              gen-cpp/PointStore.cpp \
              gen-cpp/leader_constants.cpp \
              gen-cpp/leader_types.cpp \
-             gen-cpp/MetaDataProvider.cpp
+             gen-cpp/MetaDataProvider.cpp \
+						 gen-cpp/server_types.cpp \
+						 gen-cpp/server_constants.cpp \
+						 gen-cpp/ServerTalk.cpp
 
 
 ################################

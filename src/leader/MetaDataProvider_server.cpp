@@ -4,6 +4,7 @@
 #include <thrift/transport/TBufferTransports.h>
 
 #include "src/leader/MetaDataProviderStore.h"
+#include <gflags/gflags.h>
 #include <ctime>
 
 using namespace ::apache::thrift;
@@ -94,7 +95,7 @@ NodeId makeNode(nid_t id, string ip, int port) {
 }
 
 int main(int argc, char **argv) {
-  gflags::ParseCommandLineFlags(&argc, &argv, true);
+  google::ParseCommandLineFlags(&argc, &argv, true);
   int port = 9990;
   boost::shared_ptr<MetaDataProviderHandler> handler(new MetaDataProviderHandler());
   boost::shared_ptr<TProcessor> processor(new MetaDataProviderProcessor(boost::dynamic_pointer_cast<MetaDataProviderIf>(handler)));
