@@ -14,14 +14,17 @@ bool containsKey(Container c, KeyType k) {
   return c.find(k) != c.end();
 }
 
-
-Node::Node(NodeInfo id) {
-  me_ = id;
-}
-
 Node::Node(NodeInfo id, RoutingInfo routingInfo) {
   me_ = id;
   routingInfo_ = routingInfo;
+  printf("Node object created: %lld %s:%d\n", id.nodeId.nid, id.nodeId.ip.c_str(), id.nodeId.serverPort);
+  for (auto const& kv: routingInfo_.nodeRegionMap) {
+    printf("All nodes: %lld %s:%d -> %d rectangles\n", 
+            kv.first, 
+            kv.second.nodeId.ip.c_str(), 
+            kv.second.nodeId.serverPort,
+            kv.second.nodeDataStats.region.rectangles.size());
+  }
 }
 
 bool inRectangle(Rectangle const& r, Point const& p) {

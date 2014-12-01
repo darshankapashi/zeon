@@ -7,10 +7,6 @@
 #include "Structs.h"
 #include <unordered_set>
 
-namespace std {
-
-}
-
 enum Operation {
   READ_OP,
   WRITE_OP,
@@ -18,7 +14,6 @@ enum Operation {
 
 class Node {
  public:
-  Node(NodeInfo id);
   Node(NodeInfo id, RoutingInfo routingInfo);
   ~Node() = default;
  

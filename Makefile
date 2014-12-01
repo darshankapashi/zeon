@@ -47,7 +47,7 @@ $(EXECUTABLE): $(OBJS) $(GEN_OBJS)
 	$(CC) $(LDFLAGS) -o $(EXECUTABLE) $(OBJS) $(GEN_OBJS) 
 ################################
 
-all: thrift $(EXECUTABLE) client
+all: thrift $(EXECUTABLE) client leader
 
 thrift: src/if/core.thrift src/if/server.thrift
 	thrift --gen cpp:pure_enums src/if/core.thrift

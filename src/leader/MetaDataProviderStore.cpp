@@ -34,10 +34,10 @@ int MetaDataProviderStore::initializeConfig(const MetaDataConfig& config) {
     return NodeMessage::LESS_NODES_FOR_REPLICATION;
   }
   auto startIt  = allNodes_.begin();
-  int i = 0;
+  //int i = 0;
   for (auto& node: allNodes_) {
     for (int j = 1; j < replicationFactor_ + 1;  j++ ) {
-      long long itOffset = (i + j) % allNodeSize;
+      //long long itOffset = (i + j) % allNodeSize;
       //auto tempId = (startIt + itOffset)->first;
       auto tempId = (startIt)->first;
       node.second.nodeDataStats.replicatedServers.emplace_back(tempId);
