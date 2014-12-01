@@ -20,7 +20,7 @@ using namespace core;
 class LeaderClient {
  public:
   LeaderClient(NodeId leaderNodeId) {
-    //printf("Creating LeaderClient object this=%d\n", this);
+    printf("Creating LeaderClient object this=%d\n", this);
     socket_.reset(new TSocket(leaderNodeId.ip, leaderNodeId.serverPort));
     transport_.reset(new TBufferedTransport(socket_));
     protocol_.reset(new TBinaryProtocol(transport_));
@@ -32,12 +32,12 @@ class LeaderClient {
   RoutingInfo fetchRoutingInfo();
 
   ~LeaderClient() {
-    transport_->close();
-    //printf("Destroying LeaderClient object this=%d\n", this);
+    printf("Destroying LeaderClient object this=%d\n", this);
     if (runThread_) {
       runThread_ = false;
       heartBeatThread_.join();
     }
+    transport_->close();
   }
 
   void startHeartBeats() {

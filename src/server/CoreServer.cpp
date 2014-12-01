@@ -51,6 +51,31 @@ void serveServers() {
   server.serve();  
 }
 
+void initFromLeader(NodeId const& nodeId, std::unique_ptr<LeaderClient>* leaderClient) {
+  bool success = false;
+  while (!success) {
+    try {
+      printf("Contacting the Leader...\n");
+      NodeId leaderNode;
+      leaderNode.ip = "localhost";
+      leaderNode.serverPort = 9990;
+      (*leaderClient).reset(new LeaderClient(leaderNode));
+      auto routingInfo = (*leaderClient)->fetchRoutingInfo();
+      auto myNodeInfo = routingInfo.nodeRegionMap[nodeId.nid];
+      
+      myNode = new Node(myNodeInfo, routingInfo);
+      myNode->setStatus(NodeStatus::ACTIVE);
+      (*leaderClient)->startHeartBeats();
+      //NodeInfo nodeInfo;
+      //myNode = new Node(nodeInfo);
+      success = true;
+    } catch (exception const& e) {
+      printf("Failed to contact the leader: %s\n", e.what());
+    }
+    this_thread::sleep_for(chrono::seconds(5));
+  }
+}
+
 int main(int argc, char **argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
   printf("Starting CoreServer...\n");
@@ -62,26 +87,15 @@ int main(int argc, char **argv) {
   nodeId.clientPort = FLAGS_client_port;
   nodeId.serverPort = FLAGS_server_talk_port;
   
-  printf("Contacting the Leader...\n");
-  NodeId leaderNode;
-  leaderNode.ip = "localhost";
-  leaderNode.serverPort = 9990;
-  LeaderClient leaderClient_(leaderNode);
-  auto routingInfo = leaderClient_.fetchRoutingInfo();
-  auto myNodeInfo = routingInfo.nodeRegionMap[nodeId.nid];
-  
-  myNode = new Node(myNodeInfo, routingInfo);
-  myNode->setStatus(NodeStatus::ACTIVE);
-  leaderClient_.startHeartBeats();
-  //NodeInfo nodeInfo;
-  //myNode = new Node(nodeInfo);
-
   printf("Creating state objects...\n");
   DataStoreConfig* config = new DataStoreConfig();
   myDataStore = new DataStore(config);
   ProximityManagerConfig proximityConfig;
   proximity = new ProximityManager(proximityConfig);
   
+  std::unique_ptr<LeaderClient> leaderClient;
+  std::thread leaderInitThread(&initFromLeader, nodeId, &leaderClient);
+
   printf("Spawning ServerTalkThread (port %d)...\n", FLAGS_server_talk_port);
   std::thread serverTalkThread(&serveServers);
 
