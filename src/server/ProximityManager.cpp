@@ -31,7 +31,7 @@ vector<Data> LinearProximityCompute::getKNearestPoints(const Point& point, int k
   vector<Data> results;
   for(auto d: dataList_) {
     cout<<"distance: "<<proximityDistance_->getDistance(
-                      point, d.point)<<" id: "<<d.id;
+                      point, d.point)<<" id: "<<d.id << "\n";
     distanceVector.emplace_back(
       std::make_pair(proximityDistance_->getDistance(
                       point, d.point),

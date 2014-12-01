@@ -15,6 +15,21 @@ using namespace core;
 
 DEFINE_int32(port, 9090, "Server port to connect to");
 
+Point makePoint(int x, int y) {
+  Point p;
+  p.xCord = x;
+  p.yCord = y;
+  return p;
+}
+
+Data makeData(int id, Point p, string value = "") {
+  Data d;
+  d.id = id;
+  d.point = p;
+  d.value = value;
+  return d;
+}
+
 int main(int argc, char **argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
   boost::shared_ptr<TTransport> socket(new TSocket("localhost", FLAGS_port));
@@ -25,39 +40,33 @@ int main(int argc, char **argv) {
   try {
     transport->open();
 
-    //client.ping();
-    //cout << "ping()" << endl;
-
-    Point p;
-    p.xCord = 2;
-    p.yCord = 3;
+    // Create 3 points
+    Data d1 = makeData(1, makePoint(10, 10), "Point1");
+    Data d2 = makeData(2, makePoint(20, 20), "Point2");
+    Data d3 = makeData(3, makePoint(10, 20), "Point3");
     try {
-      client.createData(1, p, time(nullptr), "hello world");
-    } catch (exception const& e) {
-      printf("createData failed: %s\n", e.what());
+      printf("Creating d1\n");
+      client.createData(d1.id, d1.point, time(nullptr), d1.value);
+      printf("Creating d2\n");
+      client.createData(d2.id, d2.point, time(nullptr), d2.value);
+      printf("Creating d3\n");
+      client.createData(d3.id, d3.point, time(nullptr), d3.value);
+    } catch (ZeonException const& ze) {
+      printf("Create failed: %d %s\n", ze.what, ze.why.c_str());
     }
 
-    Data received;
-    client.getData(received, 1, false);
-    cout << "Received: id=" << received.id << " (" << received.point.xCord << "," << received.point.yCord << ") value=" << received.value << endl;
-    client.getData(received, 1, true);
-    cout << "Received: id=" << received.id << " (" << received.point.xCord << "," << received.point.yCord << ") value=" << received.value << endl;
+    vector<Data> ret;
+    printf("Getting 3 nearest points to (15,15)\n");
+    client.getNearestKByPoint(ret, makePoint(15, 15), 3);
+    for (auto const& d: ret) {
+      cout << "Recv: " << d.id << " (" << d.point.xCord << "," << d.point.yCord << ") " << d.value << "\n";
+    }
 
-    Data data;
-    data.point = p;
-    data.value = "hello world 2";
-    data.id = 1;
-    client.setData(data, true);
-
-    p.xCord = 9;
-    p.yCord = 7;
-    data.point = p;
-    client.setData(data, false);
-
-    p.xCord = 130;
-    p.yCord = 50;
-    data.point = p;
-    client.setData(data, false);
+    printf("Getting 1 nearest points to (15,15)\n");
+    client.getNearestKByPoint(ret, makePoint(15, 15), 1);
+    for (auto const& d: ret) {
+      cout << "Recv: " << d.id << " (" << d.point.xCord << "," << d.point.yCord << ") " << d.value << "\n";
+    }
 
     transport->close();
   } catch (ZeonException const& ze) {
