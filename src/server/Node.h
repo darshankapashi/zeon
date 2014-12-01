@@ -52,6 +52,7 @@ class Node {
   // Helper methods when region changes
   void fetchAndStoreInTemp(Rectangle const& r);
   void fetchNewData();
+  void commitNewData();
 
  public:
   NodeInfo me_;

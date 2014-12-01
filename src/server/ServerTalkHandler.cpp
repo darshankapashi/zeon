@@ -107,6 +107,7 @@ int32_t ServerTalkHandler::commitRecvRoutingInfo(const RoutingInfo& routingInfo)
   myNode->routingInfo_ = myNode->updateRoutingInfoTemp_;
   myNode->setStatus(NodeStatus::ACTIVE);
   // TODO: Use the temporary data and input it to the data store
+  myNode->commitNewData();
   return NodeMessage::COMMIT_RECV_ROUTING_INFO;
 }
 }

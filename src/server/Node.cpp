@@ -1,5 +1,6 @@
 #include "Node.h"
 #include "ServerTalker.h"
+#include "Datastore.h"
 
 Node* myNode;
 
@@ -224,6 +225,14 @@ void Node::fetchNewData() {
         // Need to fetch this
         fetchAndStoreInTemp(rect);
       }
+    }
+  }
+}
+
+void Node::commitNewData() {
+  for (auto const& kv: tempData_) {
+    for (auto const& data: kv.second) {
+      storeData(data, true);
     }
   }
 }
