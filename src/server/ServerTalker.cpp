@@ -4,6 +4,10 @@
 #include <thrift/transport/TSocket.h>
 #include <thrift/transport/TTransportUtils.h>
 
+ServerTalker::ServerTalker(NodeId node)
+  : ServerTalker(node.ip, node.serverPort)
+{}
+
 ServerTalker::ServerTalker(std::string ip, int port)
   : socket_(new TSocket(ip, port)),
     transport_(new TBufferedTransport(socket_)),

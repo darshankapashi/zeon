@@ -54,8 +54,14 @@ vector<Data> LinearProximityCompute::getKNearestPoints(const Point& point, int k
   return results;
 }
 
-vector<Data> LinearProximityCompute::getInternalPoints(const Region& region) {
-  return vector<Data>(); 
+void LinearProximityCompute::getInternalPoints(vector<Data>& data, const Region& region) {
+  for (auto const& rect: region.rectangles) {
+    getInternalPoints(data, rect);
+  }
+}
+
+void LinearProximityCompute::getInternalPoints(vector<Data>& data, const Rectangle& rectangle) {
+  // TODO: Implement this!
 }
 
 /*

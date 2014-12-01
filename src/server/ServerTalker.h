@@ -10,6 +10,7 @@ using namespace ::core;
 
 class ServerTalker {
  public:
+  ServerTalker(NodeId node);
   ServerTalker(std::string ip, int port);
   ~ServerTalker();
   ServerTalkClient* get();
