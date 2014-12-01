@@ -31,6 +31,13 @@ int MetaDataProviderStore::initializeConfig(const MetaDataConfig& config) {
       //rectangleToKeyCount_[rec] = rectStats;
     //}
   }
+
+  // create connection to each client
+  
+  
+  
+
+
   // Based on replication Factor assign replicas uniformly
   // TODO: decide replicas based on load 
   auto allNodeSize = allNodes_.size();
