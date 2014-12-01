@@ -71,6 +71,7 @@ int main(int argc, char **argv) {
   auto myNodeInfo = routingInfo.nodeRegionMap[nodeId.nid];
   
   myNode = new Node(myNodeInfo, routingInfo);
+  myNode->setStatus(NodeStatus::ACTIVE);
   leaderClient_.startHeartBeats();
   //NodeInfo nodeInfo;
   //myNode = new Node(nodeInfo);

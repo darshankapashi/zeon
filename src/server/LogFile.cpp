@@ -123,6 +123,7 @@ void LogFile::writePoint(core::Data const& data) {
   smallData.id = data.id;
   smallData.point = data.point;
   smallData.version = data.version;
+  printf("Point enqueued for writing...\n");
   lock_guard<mutex> lock(pointLock_);
   queue_.write(smallData);
 }

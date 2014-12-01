@@ -50,13 +50,14 @@ void PointStoreHandler::getData(Data& _return, const zeonid_t id, const bool val
 // TODO: Handle various failure scenarios, maybe use PREPARE-COMMIT
 void PointStoreHandler::setData(const Data& data, const bool valuePresent) {
   printf("setData\n");
-  //routeCorrectly(data.point, WRITE_OP);
+  routeCorrectly(data.point, WRITE_OP);
 
   Data dataToStore = data;
   bool valueGiven = valuePresent;
   // TODO: Maybe we don't need to do the below steps in case the value
   //       is present in this request too.
   bool haveThisId = myNode->doIHaveThisId(data.id, WRITE_OP);
+  printf("setData: haveThisId=%d\n", haveThisId);
   if (!haveThisId) {
     // I don't have this id locally
 
@@ -66,6 +67,7 @@ void PointStoreHandler::setData(const Data& data, const bool valuePresent) {
     ServerTalkClient* client = walkieTalkie.get();
     
     // TODO: This should really be get *all* data
+    printf("Getting value from nid=%lld\n", prevNode.nid);
     client->getValue(dataToStore.value, data.id);
 
     // Store the old value
@@ -83,7 +85,9 @@ void PointStoreHandler::setData(const Data& data, const bool valuePresent) {
   proximity->proximityCompute->removePoint(d);
 
   // Send invalidations
-  myNode->sendInvalidations(data.prevPoint, data.id);
+  if (!haveThisId) {
+    myNode->sendInvalidations(data.prevPoint, data.id);
+  }
 
   // Replication
   myNode->replicate(dataToStore, valueGiven);

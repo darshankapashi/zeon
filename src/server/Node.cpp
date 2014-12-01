@@ -24,7 +24,13 @@ Node::Node(NodeInfo id, RoutingInfo routingInfo) {
             kv.second.nodeId.ip.c_str(), 
             kv.second.nodeId.serverPort,
             kv.second.nodeDataStats.region.rectangles.size());
+    for (auto const& rect: kv.second.nodeDataStats.region.rectangles) {
+      printf("\tRectangle: (%lld,%lld) (%lld,%lld)\n", 
+              rect.bottomLeft.xCord, rect.bottomLeft.yCord,
+              rect.topRight.xCord, rect.topRight.yCord);
+    }
   }
+  buildRectangleToNodeMap();
 }
 
 bool inRectangle(Rectangle const& r, Point const& p) {
@@ -102,6 +108,7 @@ void Node::addId(zeonid_t zid) {
 void Node::replicate(Data const& data, bool valuePresent) {
   for (auto const& replica: me_.nodeDataStats.replicatedServers) {
     auto const& node = routingInfo_.nodeRegionMap.at(replica).nodeId;
+    printf("Sending replicate to nid=%lld for zid=%lld\n", node.nid, data.id);
     ServerTalker walkieTalkie(node.ip, node.serverPort);
     walkieTalkie.get()->replicate(data, valuePresent);
   }
@@ -110,6 +117,7 @@ void Node::replicate(Data const& data, bool valuePresent) {
 void Node::sendInvalidations(Point const& p, zeonid_t const& zid) {
   auto nodes = getNodeForPoint(p, READ_OP);
   for (auto const& node: nodes) {
+    printf("Sending invalidation to nid=%lld for zid=%lld\n", node.nid, zid);
     ServerTalker walkieTalkie(node.ip, node.serverPort);
     walkieTalkie.get()->invalidate(zid);
   }

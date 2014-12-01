@@ -1,5 +1,5 @@
 #include <iostream>
-
+#include <gflags/gflags.h>
 #include <thrift/protocol/TBinaryProtocol.h>
 #include <thrift/transport/TSocket.h>
 #include <thrift/transport/TTransportUtils.h>
@@ -13,8 +13,11 @@ using namespace apache::thrift::transport;
 
 using namespace core;
 
-int main() {
-  boost::shared_ptr<TTransport> socket(new TSocket("localhost", 9090));
+DEFINE_int32(port, 9090, "Server port to connect to");
+
+int main(int argc, char **argv) {
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
+  boost::shared_ptr<TTransport> socket(new TSocket("localhost", FLAGS_port));
   boost::shared_ptr<TTransport> transport(new TBufferedTransport(socket));
   boost::shared_ptr<TProtocol> protocol(new TBinaryProtocol(transport));
   PointStoreClient client(protocol);
@@ -22,12 +25,12 @@ int main() {
   try {
     transport->open();
 
-    client.ping();
-    cout << "ping()" << endl;
-    auto p = Point();
+    //client.ping();
+    //cout << "ping()" << endl;
+    Point p;
     p.xCord = 2;
     p.yCord = 3;
-    client.createData(1, p, time(NULL), "hello world");
+    client.createData(1, p, time(nullptr), "hello world");
 
     Data received;
     client.getData(received, 1, false);
@@ -35,7 +38,6 @@ int main() {
     client.getData(received, 1, true);
     cout << "Received: id=" << received.id << " (" << received.point.xCord << "," << received.point.yCord << ") value=" << received.value << endl;
 
-    /*
     Data data;
     data.point = p;
     data.value = "hello world 2";
@@ -46,7 +48,11 @@ int main() {
     p.yCord = 7;
     data.point = p;
     client.setData(data, false);
-    */
+
+    p.xCord = 130;
+    p.yCord = 50;
+    data.point = p;
+    client.setData(data, false);
 
     transport->close();
   } catch (ZeonException const& ze) {
