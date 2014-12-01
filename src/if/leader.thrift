@@ -31,6 +31,7 @@ struct SystemStats {
 struct RectangleStats {
   1: core.Rectangle rectangle,
   2: i64 zidCount,
+  3: i32 queryRate,
 }
 
 struct NodeDataStats {
