@@ -30,7 +30,7 @@ class MetaDataProviderHandler : virtual public MetaDataProviderIf {
   }
 
   void ping(const NodeInfo& nodeInfo) {
-    printf("processing ping\n");
+    //printf("processing ping\n");
     auto res = metaDataProviderStore_.processPing(nodeInfo);
     if (res == NodeMessage::EXISTS_NOT) {
       auto me = MetaStoreException();
@@ -107,11 +107,11 @@ int main(int argc, char **argv) {
   config.replicationFactor = 1;
 
   Region r1;
-  Rectangle a1 = makeRectangle(0, 0, 1, 1);
+  Rectangle a1 = makeRectangle(0, 0, 100, 100);
   r1.rectangles = {a1};
   config.nodeRegionMap[1] = r1;
   Region r2;
-  Rectangle b1 = makeRectangle(1, 0, 2, 1);
+  Rectangle b1 = makeRectangle(100, 0, 200, 100);
   r2.rectangles = {b1};
   config.nodeRegionMap[2] = r2;
 

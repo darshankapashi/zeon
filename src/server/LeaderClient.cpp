@@ -18,7 +18,7 @@ void LeaderClient::sendHeartBeat() {
       // set the current timestamp for ping node
       nodeInfo.timestamp = time(nullptr);
       try {
-        printf("Pinging leader\n");
+        //printf("Pinging leader\n");
         metaDataProviderClient_->ping(nodeInfo);
       } catch (exception const& e) {
         printf("Ping not succesful: %s\n", e.what());
