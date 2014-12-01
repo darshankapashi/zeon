@@ -95,7 +95,7 @@ NodeId makeNode(nid_t id, string ip, int port) {
 }
 
 int main(int argc, char **argv) {
-  google::ParseCommandLineFlags(&argc, &argv, true);
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
   int port = 9990;
   boost::shared_ptr<MetaDataProviderHandler> handler(new MetaDataProviderHandler());
   boost::shared_ptr<TProcessor> processor(new MetaDataProviderProcessor(boost::dynamic_pointer_cast<MetaDataProviderIf>(handler)));

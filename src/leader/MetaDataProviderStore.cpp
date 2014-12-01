@@ -19,8 +19,8 @@ int MetaDataProviderStore::initializeConfig(const MetaDataConfig& config) {
     NodeInfo nodeInfo;
     nodeInfo.nodeId = node;
     nodeInfo.timestamp = initializedTime;
-    allNodes_[node.nid] = nodeInfo;
     nodeInfo.nodeDataStats.nid = node.nid;
+    allNodes_[node.nid] = nodeInfo;
   }
   globalRegion_ = config.globalRegion;
   for (auto nodeRegion : config.nodeRegionMap) {
@@ -114,7 +114,7 @@ int MetaDataProviderStore::processPing(const NodeInfo& nodeInfo) {
 }
 
 RoutingInfo MetaDataProviderStore::getRoutingInfo() {
-  auto routingInfo = RoutingInfo();
+  RoutingInfo routingInfo;
   for (auto node : allNodes_) {
     routingInfo.nodeRegionMap[node.first] = node.second;
   }
