@@ -31,7 +31,7 @@ class MetaDataProviderHandler : virtual public MetaDataProviderIf {
 
   void ping(const NodeInfo& nodeInfo) {
     printf("processing ping");
-    auto res = metaDataProviderStore_.processPing(node, nodeInfo);
+    auto res = metaDataProviderStore_.processPing(nodeInfo);
     if (res == NodeMessage::EXISTS_NOT) {
       auto me = MetaStoreException();
       me.why = "Node not registered yet";
@@ -46,7 +46,7 @@ class MetaDataProviderHandler : virtual public MetaDataProviderIf {
 
   void getRoutingInfo(RoutingInfo& _return) {
     printf("getRoutingInfo\n");
-    return metaDataProviderStore_.getRoutingInfo();
+    _return = metaDataProviderStore_.getRoutingInfo();
   }
 
   void nodeJoin(const NodeId& nodeId) {

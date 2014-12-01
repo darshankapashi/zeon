@@ -1,9 +1,10 @@
 #include "src/leader/MetaDataProviderStore.h"
 
-int64_t getRegionHash(const Region& reg) const {
+int64_t getRegionHash(const Region& reg) {
   int64_t hashRes = 0;
+  hash<Rectangle> hash_fn;
   for (auto r : reg.rectangles) {
-    hashRes += getRegionHash(r);
+    hashRes += hash_fn(r);
   }
   return hashRes;
 }
