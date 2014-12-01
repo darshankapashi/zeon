@@ -1,6 +1,5 @@
 2-Dimensional Dynamically Partitioned Distributed Hash Table
 
 Dependencies:
-- thrift
-- gflags
-- glog
+- thrift 0.9.1
+- gflags 2.0

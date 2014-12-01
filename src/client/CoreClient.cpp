@@ -16,7 +16,7 @@ using namespace core;
 DEFINE_int32(port, 9090, "Server port to connect to");
 
 int main(int argc, char **argv) {
-  gflags::ParseCommandLineFlags(&argc, &argv, true);
+  google::ParseCommandLineFlags(&argc, &argv, true);
   boost::shared_ptr<TTransport> socket(new TSocket("localhost", FLAGS_port));
   boost::shared_ptr<TTransport> transport(new TBufferedTransport(socket));
   boost::shared_ptr<TProtocol> protocol(new TBinaryProtocol(transport));
