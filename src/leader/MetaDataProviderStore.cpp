@@ -114,7 +114,7 @@ RoutingInfo MetaDataProviderStore::getRoutingInfo() {
   return routingInfo;
 }
 
-bool statsComparator(pair<SystemStats, list<RectangleStats>> statsA, pair<SystemStats, list<RectangleStats>> statsB) {
+bool statsComparator(pair<SystemStats, vector<RectangleStats>> statsA, pair<SystemStats, vector<RectangleStats>> statsB) {
   // TODO: Use more complex notion for deciding load based
   return statsA.first.user_cpu > statsB.first.user_cpu;
 }
@@ -123,7 +123,7 @@ bool recStatsSorter(RectangleStats ra, RectangleStats rb) {
   return ra.zidCount < rb.zidCount;
 }
 
-bool statsThresholdChecker(pair<SystemStats, list<RectangleStats>> stats) {
+bool statsThresholdChecker(pair<SystemStats, vector<RectangleStats>> stats) {
   return stats.first.user_cpu > FLAGS_user_cpu_threshold_for_split;
 }
 
@@ -137,9 +137,9 @@ int64_t totalQueryRate(const vector<RectangleStats>& recStatsList) {
 
 bool  MetaDataProviderStore::loadBalance() { 
 
-  vector<pair<SystemStats, list<RectangleStats> >> statsVector;
+  vector<pair<SystemStats, vector<RectangleStats> >> statsVector;
   for (auto node: allNodes_) {
-    statsVector.emplace_back(
+    statsVector.push_back(
       make_pair(node.second.systemStats, 
                 node.second.nodeDataStats.rectangleStats));
   }
@@ -167,8 +167,8 @@ bool  MetaDataProviderStore::loadBalance() {
   auto queryRateDifference = 100;
   for (auto rectStat: busyNodeRectStats) {
     if (rectStat.queryRate < queryRateDifference / 2) {
-      toMoveRectangles.emplace_back(rectStat);
-      queryRateDifference - 2 * rectStat.queryRate; 
+      toMoveRectangles.push_back(rectStat.rectangle);
+      queryRateDifference -= 2 * rectStat.queryRate; 
     }
   }
 
@@ -184,13 +184,13 @@ bool  MetaDataProviderStore::loadBalance() {
     auto toUpdateRectangle = toSplitRec;
     toUpdateRectangle.bottomLeft.xCord = toAddRectangle.topRight.xCord;
 
-    updateFreeNodeInfo.nodeDataStats.region.rectangles.emplace_back(toAddRectangle);
+    updateFreeNodeInfo.nodeDataStats.region.rectangles.push_back(toAddRectangle);
     auto toAddRectangleStats = RectangleStats();
     toAddRectangleStats.rectangle = toAddRectangle;
     // -1 indicates unknown information
     toAddRectangleStats.zidCount = -1;
     toAddRectangleStats.queryRate = -1;
-    updateFreeNodeInfo.nodeDataStats.rectangleStats.emplace_back(toAddRectangleStats);
+    updateFreeNodeInfo.nodeDataStats.rectangleStats.push_back(toAddRectangleStats);
 
     // remove rectangle based on regionHash
     // TODO: set this updateBusyNodeInfo
@@ -203,30 +203,34 @@ bool  MetaDataProviderStore::loadBalance() {
   }
 
   // send the prepareRecvRoutingInfo to free and busy node
-  auto& clientFreeNode = clientToServers_[updateFreeNodeInfo.nodeId.nid];
-  auto& clientBusyNode = clientToServers_[updateBusyNodeInfo.nodeId.nid];
+  //auto& clientFreeNode = clientToServers_[updateFreeNodeInfo.nodeId.nid];
+  //auto& clientBusyNode = clientToServers_[updateBusyNodeInfo.nodeId.nid];
 
-  int freeNodePrepareStatus = clientFreeNode.prepareRecvRoutingInfo(updateFreeNodeInfo);
-  int busyNodePrepareStatus = clientBusyNode.prepareRecvRoutingInfo(updateBusyNodeInfo);
+  //int freeNodePrepareStatus = clientFreeNode.prepareRecvNodeInfo(updateFreeNodeInfo);
+  //int busyNodePrepareStatus = clientBusyNode.prepareRecvNodeInfo(updateBusyNodeInfo);
 
-  if (freeNodePrepareStatus != NodeMessage::PREPARED_RECV_ROUTING_INFO
-    || busyNodePrepareStatus != NodeMessage::PREPARED_RECV_ROUTING_INFO) {
-    return false;
-  }
+  //if (freeNodePrepareStatus != NodeMessage::PREPARED_RECV_ROUTING_INFO
+    //|| busyNodePrepareStatus != NodeMessage::PREPARED_RECV_ROUTING_INFO) {
+    //return false;
+  //}
 
-  clientFreeNode.commitRecvRoutingInfo(updateFreeNodeInfo);
-  allNodes_[updateFreeNodeInfo.nodeId.nid] = updateFreeNodeInfo;
-  clientBusyNode.commitRecvRoutingInfo(updateBusyNodeInfo);
-  allNodes_[updateBusyNodeInfo.nodeId.nid] = updateBusyNodeInfo;
+  //clientFreeNode.commitRecvNodeInfo(updateFreeNodeInfo);
+  //allNodes_[updateFreeNodeInfo.nodeId.nid] = updateFreeNodeInfo;
+  //clientBusyNode.commitRecvNodeInfo(updateBusyNodeInfo);
+  //allNodes_[updateBusyNodeInfo.nodeId.nid] = updateBusyNodeInfo;
 
-  // update routing table at all nodes
-  auto updatedRoutingInfo = RoutingInfo();
-  updatedRoutingInfo.nodeRegionMap = allNodes_;
-  updatedRoutingInfo.timestamp = time(nullptr);
-  for (auto client : clientToServers_) {
-    if (client.first != freeNodeId && 
-        client.first != busyNodeId) {
-      client.second.receiveRoutingInfo(updatedRoutingInfo);
-    }
-  }
+  //// update routing table at all nodes
+  //RoutingInfo updatedRoutingInfo;
+  //for (auto node : allNodes_) {
+    //updatedRoutingInfo.nodeRegionMap[node.first] = node.second;
+  //}
+  ////updatedRoutingInfo.nodeRegionMap = allNodes_;
+  //updatedRoutingInfo.timestamp = time(nullptr);
+  //for (auto client : clientToServers_) {
+    //if (client.first != freeNodeId && 
+        //client.first != busyNodeId) {
+      //client.second.receiveRoutingInfo(updatedRoutingInfo);
+    //}
+  //}
+  return true;
 }

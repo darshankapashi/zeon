@@ -3,6 +3,7 @@
 #include <thrift/server/TSimpleServer.h>
 #include <thrift/transport/TServerSocket.h>
 #include <thrift/transport/TBufferTransports.h>
+#include <gflags/gflags.h>
 
 #include "PointStoreHandler.h"
 #include "ServerTalkHandler.h"

@@ -4,6 +4,7 @@
 #include <thrift/transport/TBufferTransports.h>
 
 #include "src/leader/MetaDataProviderStore.h"
+#include <gflags/gflags.h>
 #include <ctime>
 
 using namespace ::apache::thrift;
