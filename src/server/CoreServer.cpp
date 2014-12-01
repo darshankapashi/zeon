@@ -51,6 +51,8 @@ void serveServers() {
 }
 
 int main(int argc, char **argv) {
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
+  printf("Starting CoreServer...\n");
   // Initialize Node class 
   // Assume that NodeId is got from gflag
   NodeId nodeId;
@@ -59,6 +61,7 @@ int main(int argc, char **argv) {
   nodeId.clientPort = FLAGS_client_port;
   nodeId.serverPort = FLAGS_server_talk_port;
   
+  printf("Contacting the Leader...\n");
   NodeId leaderNode;
   leaderNode.ip = "localhost";
   leaderNode.serverPort = 9990;
@@ -71,12 +74,16 @@ int main(int argc, char **argv) {
   //NodeInfo nodeInfo;
   //myNode = new Node(nodeInfo);
 
+  printf("Creating state objects...\n");
   DataStoreConfig* config = new DataStoreConfig();
   myDataStore = new DataStore(config);
   ProximityManagerConfig proximityConfig;
   proximity = new ProximityManager(proximityConfig);
   
+  printf("Spawning ServerTalkThread (port %d)...\n", FLAGS_server_talk_port);
   std::thread serverTalkThread(&serveServers);
+
+  printf("Ready to serve clients (port %d)...\n", FLAGS_client_port);
   serveClients();
   return 0;
 }

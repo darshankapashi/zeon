@@ -1,5 +1,5 @@
 #include <thrift/protocol/TBinaryProtocol.h>
-#include <thrift/server/TSimpleServer.h>
+#include <thrift/server/TThreadedServer.h>
 #include <thrift/transport/TServerSocket.h>
 #include <thrift/transport/TBufferTransports.h>
 
@@ -94,6 +94,7 @@ NodeId makeNode(nid_t id, string ip, int port) {
 }
 
 int main(int argc, char **argv) {
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
   int port = 9990;
   boost::shared_ptr<MetaDataProviderHandler> handler(new MetaDataProviderHandler());
   boost::shared_ptr<TProcessor> processor(new MetaDataProviderProcessor(boost::dynamic_pointer_cast<MetaDataProviderIf>(handler)));
@@ -116,7 +117,7 @@ int main(int argc, char **argv) {
 
 
   handler->initializeConfig(config);
-  TSimpleServer server(processor, serverTransport, transportFactory, protocolFactory);
+  TThreadedServer server(processor, serverTransport, transportFactory, protocolFactory);
   server.serve();
   return 0;
 }
