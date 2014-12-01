@@ -33,15 +33,6 @@ Node::Node(NodeInfo id, RoutingInfo routingInfo) {
   buildRectangleToNodeMap();
 }
 
-bool inRectangle(Rectangle const& r, Point const& p) {
-  if (p.xCord <= r.topRight.xCord && p.xCord >= r.bottomLeft.xCord &&
-      p.yCord <= r.topRight.yCord && p.yCord >= r.bottomLeft.yCord) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
 NodeId Node::getMasterForPoint(Point const& p) {
   if (amITheMaster(p)) {
     return me_.nodeId;

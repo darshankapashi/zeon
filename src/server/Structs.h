@@ -59,3 +59,4 @@ struct hash<Rectangle> {
 };
 
 void throwError(ErrorCode what, string why = "");
+bool inRectangle(Rectangle const& r, Point const& p);

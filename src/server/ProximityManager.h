@@ -43,7 +43,7 @@ class ProximityCompute {
   virtual void getInternalPoints(vector<Data>& data, const Region& region) = 0;
   virtual void getInternalPoints(vector<Data>& data, const Rectangle& rectangle) = 0;
 
-  vector<Data>* dataList_;
+  vector<Data> dataList_;
   ProximityDistance* proximityDistance_;
   // Datastructure for Rtree
 };
@@ -51,9 +51,8 @@ class ProximityCompute {
 class LinearProximityCompute: public ProximityCompute {
   public:
   LinearProximityCompute(ProximityDistance* proximityDistance) :
-    ProximityCompute(proximityDistance) {
-      dataList_ = new vector<Data>();
-  }
+    ProximityCompute(proximityDistance) {}
+  
   void insertPoint(Data point);
   void removePoint(Data point);
   vector<Data> getKNearestPoints(const Point& point, int k);
