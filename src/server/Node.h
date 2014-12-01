@@ -48,6 +48,12 @@ class Node {
   void setStatus(int status) {
     status_ = status;
   }
+ 
+  // Helper methods when region changes
+  void fetchAndStoreInTemp(Rectangle const& r);
+  void fetchNewData();
+  void commitNewData();
+
  public:
   NodeInfo me_;
   NodeInfo updateNodeInfoTemp_;
@@ -64,4 +70,7 @@ class Node {
   unordered_map<Rectangle, vector<nid_t>> rectangleToNode_;
   vector<Rectangle> myMainRectangles_;
   unordered_map<Rectangle, nid_t> myReplicaRectangles_;
+
+  // Temporary store for data
+  unordered_map<Rectangle, vector<Data>> tempData_;
 };

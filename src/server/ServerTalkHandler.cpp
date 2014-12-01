@@ -23,6 +23,20 @@ void ServerTalkHandler::getValue(std::string& _return, const zeonid_t zid) {
   _return = data.value;
 }
 
+void ServerTalkHandler::getDataForRectangle(vector<Data>& _return, const Rectangle& rect) {
+  printf("getDataForRectangle\n");
+
+  // Find all the zids in this rectangle and return that.
+  vector<Data> datas;
+  proximity->proximityCompute->getInternalPoints(datas, rect);
+  for (auto const& data: datas) {
+    _return.emplace_back();
+    int ret = myDataStore->get(data.id, _return.back(), true);
+    if (ret != FOUND) {
+      printf("Could not find %lld in myDataStore, error=%d\n", data.id, ret);
+    }
+  }
+}
 
 void ServerTalkHandler::replicate(const Data& data, const bool valuePresent) {
   printf("replicate\n");
@@ -69,13 +83,12 @@ int32_t ServerTalkHandler::prepareRecvRoutingInfo(const RoutingInfo& routingInfo
     return NodeMessage::STALE_ROUTING_INFO; 
   }
   myNode->updateRoutingInfoTemp_ = routingInfo;
-  auto it = myNode->updateRoutingInfoTemp_.nodeRegionMap.find(
-  myNode->me_.nodeId.nid);
+  auto it = myNode->updateRoutingInfoTemp_.nodeRegionMap.find(myNode->me_.nodeId.nid);
   if (it != myNode->updateRoutingInfoTemp_.nodeRegionMap.end()) {
     myNode->updateNodeInfoTemp_ = 
       myNode->updateRoutingInfoTemp_.nodeRegionMap[myNode->me_.nodeId.nid]; 
   }
-  // TODO(darshan): call function to fetch all new keys, values, and update various objects in Node.h and DataStore.h. You would need to create temp copy of all structs, fill them as per updateNodeInfoTemp_ 
+  myNode->fetchNewData();
   return NodeMessage::PREPARED_RECV_ROUTING_INFO;
 }
 
@@ -93,6 +106,8 @@ int32_t ServerTalkHandler::commitRecvRoutingInfo(const RoutingInfo& routingInfo)
   myNode->me_ = myNode->updateNodeInfoTemp_; 
   myNode->routingInfo_ = myNode->updateRoutingInfoTemp_;
   myNode->setStatus(NodeStatus::ACTIVE);
+  // TODO: Use the temporary data and input it to the data store
+  myNode->commitNewData();
   return NodeMessage::COMMIT_RECV_ROUTING_INFO;
 }
 }

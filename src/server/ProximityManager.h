@@ -40,7 +40,8 @@ class ProximityCompute {
   virtual void insertPoint(Data data) = 0; 
   virtual void removePoint(Data data) = 0;
   virtual vector<Data> getKNearestPoints(const Point& point, int k) = 0;
-  virtual vector<Data> getInternalPoints(const Region& region) = 0;
+  virtual void getInternalPoints(vector<Data>& data, const Region& region) = 0;
+  virtual void getInternalPoints(vector<Data>& data, const Rectangle& rectangle) = 0;
 
   vector<Data>* dataList_;
   ProximityDistance* proximityDistance_;
@@ -56,7 +57,8 @@ class LinearProximityCompute: public ProximityCompute {
   void insertPoint(Data point);
   void removePoint(Data point);
   vector<Data> getKNearestPoints(const Point& point, int k);
-  vector<Data> getInternalPoints(const Region& region);
+  void getInternalPoints(vector<Data>& data, const Region& region);
+  void getInternalPoints(vector<Data>& data, const Rectangle& rectangle);
 };
 
 class ProximityManager {

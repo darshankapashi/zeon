@@ -1,5 +1,6 @@
 #include "Node.h"
 #include "ServerTalker.h"
+#include "Datastore.h"
 
 Node* myNode;
 
@@ -7,6 +8,12 @@ template <class Container, class ValueType>
 bool contains(Container c, ValueType v) {
   return find(c.begin(), c.end(), v) != c.end();
 }
+
+template <class Container, class KeyType>
+bool containsKey(Container c, KeyType k) {
+  return c.find(k) != c.end();
+}
+
 
 Node::Node(NodeInfo id) {
   me_ = id;
@@ -181,4 +188,51 @@ vector<vector<nid_t>> Node::getNodesToQuery(Point const& p) {
   // TODO: This can be smarter when we get to that stage
 
   return nodes;
+}
+
+void Node::fetchAndStoreInTemp(Rectangle const& r) {
+  auto const& nodes = rectangleToNode_[r];
+  bool found = false;
+  for (auto const& node: nodes) {
+    try {
+      ServerTalker walkieTalkie(routingInfo_.nodeRegionMap.at(node).nodeId);
+      auto& datas = tempData_[r];
+      walkieTalkie.get()->getDataForRectangle(datas, r);
+      found = true;
+    } catch (exception const& e) {
+      // Try another node
+      continue;
+    }
+  }
+  if (!found) {
+    throw out_of_range("not found");
+  }
+}
+
+void Node::fetchNewData() {
+  // New rectangles for which I am the master
+  for (auto const& rect: updateNodeInfoTemp_.nodeDataStats.region.rectangles) {
+    if (!contains(myMainRectangles_, rect) && !containsKey(myReplicaRectangles_, rect)) {
+      // Need to fetch this
+      fetchAndStoreInTemp(rect);
+    }
+  }
+
+  // New rectangles for which I am the replica
+  for (auto const& master: updateNodeInfoTemp_.nodeDataStats.replicasFor) {
+    for (auto const& rect: updateRoutingInfoTemp_.nodeRegionMap.at(master).nodeDataStats.region.rectangles) {
+      if (!contains(myMainRectangles_, rect) && !containsKey(myReplicaRectangles_, rect)) {
+        // Need to fetch this
+        fetchAndStoreInTemp(rect);
+      }
+    }
+  }
+}
+
+void Node::commitNewData() {
+  for (auto const& kv: tempData_) {
+    for (auto const& data: kv.second) {
+      storeData(data, true);
+    }
+  }
 }

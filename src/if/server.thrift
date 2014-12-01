@@ -12,6 +12,9 @@ service ServerTalk {
   string getValue(1: core.zeonid_t zid)
     throws (1: core.ZeonException ze),
 
+  list<core.Data> getDataForRectangle(1: core.Rectangle rect)
+    throws (1: core.ZeonException ze),
+
   void invalidate (1: core.zeonid_t zid) 
     throws (1: core.ZeonException ze),
 
