@@ -142,8 +142,9 @@ int64_t totalQueryRate(const vector<RectangleStats>& recStatsList) {
   return res;
 }
 
-bool  MetaDataProviderStore::loadBalance() { 
+bool  MetaDataProviderStore::loadBalance(bool test = false) { 
 
+  printf("Starting load balance\n");
   vector<pair<SystemStats, vector<RectangleStats> >> statsVector;
   for (auto node: allNodes_) {
     statsVector.push_back(
@@ -152,7 +153,8 @@ bool  MetaDataProviderStore::loadBalance() {
   }
   sort(statsVector.begin(), statsVector.end(), statsComparator);
   // Fetch only busiest and move its load on least busiest node incase it exceeds the threshold
-  if (!statsThresholdChecker(statsVector.front()) || statsThresholdChecker(statsVector.back())) {
+  if (!test && (!statsThresholdChecker(statsVector.front()) || statsThresholdChecker(statsVector.back()))) {
+    printf("Stats threshold check failed\n");
     return false;
   }
 
@@ -162,6 +164,7 @@ bool  MetaDataProviderStore::loadBalance() {
   auto busyNodeId = busyNode.first.nid;
   auto& freeNode = statsVector.back();
   auto freeNodeId = freeNode.first.nid;
+  printf("Busy node: %lld Free node: %lld \n", busyNodeId, freeNodeId);
   auto updateFreeNodeInfo = allNodes_[freeNode.first.nid];
   auto updateBusyNodeInfo = allNodes_[busyNode.first.nid];
 
@@ -181,7 +184,12 @@ bool  MetaDataProviderStore::loadBalance() {
 
    // incase no rectangle found split randomly, load balance the first one
   if (toMoveRectangles.empty()) {
+    printf("No rectangles found in busy node, splitting the rectangle\n");
     auto& toSplitRec = busyNodeRectStats.front().rectangle; 
+    if (test)
+      printf("\tRectangle: (%lld,%lld) (%lld,%lld)\n",  
+                     toSplitRec.bottomLeft.xCord, toSplitRec.bottomLeft.yCord, 
+                     toSplitRec.topRight.xCord, toSplitRec.topRight.yCord); 
 
     // rectangle to be added in freeNode.
     auto toAddRectangle = toSplitRec;
@@ -198,6 +206,10 @@ bool  MetaDataProviderStore::loadBalance() {
     toAddRectangleStats.zidCount = -1;
     toAddRectangleStats.queryRate = -1;
     updateFreeNodeInfo.nodeDataStats.rectangleStats.push_back(toAddRectangleStats);
+    if (test)
+      printf("\tAdd Rectangle: (%lld,%lld) (%lld,%lld)\n",  
+                     toAddRectangle.bottomLeft.xCord, toAddRectangle.bottomLeft.yCord, 
+                     toAddRectangle.topRight.xCord, toAddRectangle.topRight.yCord); 
 
     // remove rectangle based on regionHash
     vector<RectangleStats> updatedBusyRectangleStats;
@@ -217,6 +229,10 @@ bool  MetaDataProviderStore::loadBalance() {
     updatedBusyRegion.rectangles.emplace_back(toUpdateRectangleStats.rectangle);
     updateBusyNodeInfo.nodeDataStats.rectangleStats = updatedBusyRectangleStats;
     updateBusyNodeInfo.nodeDataStats.region = updatedBusyRegion;
+    if (test) 
+      printf("To Update Rectangle: (%lld,%lld) (%lld,%lld)\n",  
+                     toUpdateRectangle.bottomLeft.xCord, toUpdateRectangle.bottomLeft.yCord, 
+                     toUpdateRectangle.topRight.xCord, toUpdateRectangle.topRight.yCord); 
   } 
   else {
   // TODO: updateFreeNodeInfo and updateBusyNodeInfo based on toMoveRec_

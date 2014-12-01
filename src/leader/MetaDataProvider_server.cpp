@@ -16,8 +16,19 @@ using boost::shared_ptr;
 
 using namespace ::core;
 
+DEFINE_bool(load_balance_enabled, true, "Control whether load balancing is enabled");
+
 class MetaDataProviderHandler : virtual public MetaDataProviderIf {
  public:
+
+  void startLoadBalancing() {
+    bool status = false;
+    while(!status && FLAGS_load_balance_enabled) {
+      sleep(10);
+      metaDataProviderStore_.loadBalance(true);
+      status = true;
+    }
+  }
 
   void initializeConfig(const MetaDataConfig& config) {
     printf("initializeConfig\n");
@@ -28,6 +39,7 @@ class MetaDataProviderHandler : virtual public MetaDataProviderIf {
       me.why = "Error in initialization";
       throw me;
     }
+    //thread(startLoadBalancing(this));
   }
 
   void ping(const NodeInfo& nodeInfo) {
@@ -120,6 +132,8 @@ int main(int argc, char **argv) {
   handler->initializeConfig(config);
   TThreadedServer server(processor, serverTransport, transportFactory, protocolFactory);
   server.serve();
+  printf("Leader server started\n");
+  handler->startLoadBalancing();
   return 0;
 }
 

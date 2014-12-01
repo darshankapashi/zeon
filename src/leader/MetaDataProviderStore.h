@@ -11,9 +11,6 @@ class MetaDataProviderStore {
   int initializeConfig(const MetaDataConfig& config);
   int processPing(const NodeInfo& nodeInfo);
   RoutingInfo getRoutingInfo();
-
-  private:
-
   bool checkNodeId(const NodeId& nodeId);
   bool checkNodeTimestamp(const NodeInfo& nodeInfo);
   bool checkRegionConsistency(const NodeInfo& nodeInfo);
@@ -30,7 +27,7 @@ class MetaDataProviderStore {
   // - send message to busy node to delete values for transfered region
   // Will need 2-phase commit for this entire transaction.
   // Will Need to figure out about replicas 
-  bool loadBalance();
+  bool loadBalance(bool test);
 
   // runs periodically in background thread
   // checks:
