@@ -13,6 +13,7 @@ enum NodeMessage {
   PREPARED_RECV_ROUTING_INFO = 8,
   ABORT_RECV_ROUTING_INFO = 9,
   COMMIT_RECV_ROUTING_INFO = 10,
+  ERROR = 11,
 }
 
 enum NodeStatus {
@@ -31,6 +32,7 @@ struct SystemStats {
 struct RectangleStats {
   1: core.Rectangle rectangle,
   2: i64 zidCount,
+  3: i32 queryRate,
 }
 
 struct NodeDataStats {

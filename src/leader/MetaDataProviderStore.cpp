@@ -1,5 +1,9 @@
 #include "src/leader/MetaDataProviderStore.h"
 
+using namespace core;
+
+DEFINE_int32(user_cpu_threshold_for_split, 90, "percent threshold");
+
 int64_t getRegionHash(const Region& reg) {
   int64_t hashRes = 0;
   hash<Rectangle> hash_fn;
@@ -108,4 +112,121 @@ RoutingInfo MetaDataProviderStore::getRoutingInfo() {
   }
   routingInfo.timestamp = leaderLastUpdateTime_;
   return routingInfo;
+}
+
+bool statsComparator(pair<SystemStats, list<RectangleStats>> statsA, pair<SystemStats, list<RectangleStats>> statsB) {
+  // TODO: Use more complex notion for deciding load based
+  return statsA.first.user_cpu > statsB.first.user_cpu;
+}
+
+bool recStatsSorter(RectangleStats ra, RectangleStats rb) {
+  return ra.zidCount < rb.zidCount;
+}
+
+bool statsThresholdChecker(pair<SystemStats, list<RectangleStats>> stats) {
+  return stats.first.user_cpu > FLAGS_user_cpu_threshold_for_split;
+}
+
+int64_t totalQueryRate(const vector<RectangleStats>& recStatsList) {
+  int64_t res = 0;
+  for (auto recStat : recStatsList) {
+    res += recStat.queryRate;
+  }
+  return res;
+}
+
+bool  MetaDataProviderStore::loadBalance() { 
+
+  vector<pair<SystemStats, list<RectangleStats> >> statsVector;
+  for (auto node: allNodes_) {
+    statsVector.emplace_back(
+      make_pair(node.second.systemStats, 
+                node.second.nodeDataStats.rectangleStats));
+  }
+  sort(statsVector.begin(), statsVector.end(), statsComparator);
+  // Fetch only busiest and move its load on least busiest node incase it exceeds the threshold
+  if (!statsThresholdChecker(statsVector.front()) || statsThresholdChecker(statsVector.back())) {
+    return false;
+  }
+
+  // TODO: If more than 1 rectangle then transfer rectangles to make number of zids managed by each of them comparable
+  // Else split the rectangle
+  auto& busyNode = statsVector.front();
+  auto busyNodeId = busyNode.first.nid;
+  auto& freeNode = statsVector.back();
+  auto freeNodeId = freeNode.first.nid;
+  auto updateFreeNodeInfo = allNodes_[freeNode.first.nid];
+  auto updateBusyNodeInfo = allNodes_[busyNode.first.nid];
+
+  vector<Rectangle> toMoveRectangles;
+
+  auto busyNodeRectStats = busyNode.second; 
+  sort(busyNodeRectStats.begin(), busyNodeRectStats.end(), recStatsSorter);
+  // TODO: queryRateDifference correction
+  //auto queryRateDifference = totalQueryRate(busyNode.second) - totalQueryRate(freeNode.second); 
+  auto queryRateDifference = 100;
+  for (auto rectStat: busyNodeRectStats) {
+    if (rectStat.queryRate < queryRateDifference / 2) {
+      toMoveRectangles.emplace_back(rectStat);
+      queryRateDifference - 2 * rectStat.queryRate; 
+    }
+  }
+
+   // incase no rectangle found split randomly, load balance the first one
+  if (toMoveRectangles.empty()) {
+    auto& toSplitRec = busyNodeRectStats.front().rectangle; 
+
+    // rectangle to be added in freeNode.
+    auto toAddRectangle = toSplitRec;
+    toAddRectangle.topRight.xCord = toAddRectangle.bottomLeft.xCord + 
+    (toAddRectangle.topRight.xCord - toAddRectangle.bottomLeft.xCord) / 2;
+    // rectangle to be updated with in busyNode
+    auto toUpdateRectangle = toSplitRec;
+    toUpdateRectangle.bottomLeft.xCord = toAddRectangle.topRight.xCord;
+
+    updateFreeNodeInfo.nodeDataStats.region.rectangles.emplace_back(toAddRectangle);
+    auto toAddRectangleStats = RectangleStats();
+    toAddRectangleStats.rectangle = toAddRectangle;
+    // -1 indicates unknown information
+    toAddRectangleStats.zidCount = -1;
+    toAddRectangleStats.queryRate = -1;
+    updateFreeNodeInfo.nodeDataStats.rectangleStats.emplace_back(toAddRectangleStats);
+
+    // remove rectangle based on regionHash
+    // TODO: set this updateBusyNodeInfo
+    //for (auto rec: updateBusyNodeInfo.nodeDataStats.region.rectangles) {
+     
+    //}
+  } 
+  else {
+  // TODO: updateFreeNodeInfo and updateBusyNodeInfo based on toMoveRec_
+  }
+
+  // send the prepareRecvRoutingInfo to free and busy node
+  auto& clientFreeNode = clientToServers_[updateFreeNodeInfo.nodeId.nid];
+  auto& clientBusyNode = clientToServers_[updateBusyNodeInfo.nodeId.nid];
+
+  int freeNodePrepareStatus = clientFreeNode.prepareRecvRoutingInfo(updateFreeNodeInfo);
+  int busyNodePrepareStatus = clientBusyNode.prepareRecvRoutingInfo(updateBusyNodeInfo);
+
+  if (freeNodePrepareStatus != NodeMessage::PREPARED_RECV_ROUTING_INFO
+    || busyNodePrepareStatus != NodeMessage::PREPARED_RECV_ROUTING_INFO) {
+    return false;
+  }
+
+  clientFreeNode.commitRecvRoutingInfo(updateFreeNodeInfo);
+  allNodes_[updateFreeNodeInfo.nodeId.nid] = updateFreeNodeInfo;
+  clientBusyNode.commitRecvRoutingInfo(updateBusyNodeInfo);
+  allNodes_[updateBusyNodeInfo.nodeId.nid] = updateBusyNodeInfo;
+
+  // update routing table at all nodes
+  auto updatedRoutingInfo = RoutingInfo();
+  updatedRoutingInfo.nodeRegionMap = allNodes_;
+  updatedRoutingInfo.timestamp = time(nullptr);
+  for (auto client : clientToServers_) {
+    if (client.first != freeNodeId && 
+        client.first != busyNodeId) {
+      client.second.receiveRoutingInfo(updatedRoutingInfo);
+    }
+  }
 }

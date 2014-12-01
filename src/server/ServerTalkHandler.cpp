@@ -61,44 +61,46 @@ void ServerTalkHandler::getNearestKByPoint(std::vector<Data> & _return, const Po
 }
 
 void ServerTalkHandler::receiveRoutingInfo(const RoutingInfo& routingInfo) {
-  int retStatus = prepareRecvRoutingInfo(routingInfo);
-  if (retStatus == NodeMessage::PREPARED_RECV_ROUTING_INFO) {
-    retStatus = commitRecvRoutingInfo(routingInfo);
-  }
-  if (retStatus != NodeMessage::COMMIT_RECV_ROUTING_INFO) {
-    auto se = ServerTalkException();
-    se.what = NodeMessage::STALE_ROUTING_INFO;
-    se.why = "timestamp or version is stale";
-    throw se;
-  }
+  //int retStatus = prepareRecvRoutingInfo(routingInfo);
+  //if (retStatus == NodeMessage::PREPARED_RECV_ROUTING_INFO) {
+    //retStatus = commitRecvRoutingInfo(routingInfo);
+  //}
+  //if (retStatus != NodeMessage::COMMIT_RECV_ROUTING_INFO) {
+    //auto se = ServerTalkException();
+    //se.what = NodeMessage::STALE_ROUTING_INFO;
+    //se.why = "timestamp or version is stale";
+    //throw se;
+  //}
 }
 
-int32_t ServerTalkHandler::prepareRecvRoutingInfo(const RoutingInfo& routingInfo) {
+int32_t ServerTalkHandler::prepareRecvNodeInfo(const NodeInfo& nodeInfo) {
   printf("prepareRecvRoutingInfo\n");
   // check if version for latest copy of routingInfo
   // Copy this in tempStateObjects
   // Atomically replace the routing info based on lock
   lock_guard<mutex> tempObjectsLock(myNode->lockTempObjectsNode_);
-  if (routingInfo.timestamp < myNode->routingInfo_.timestamp) {
+  if (nodeInfo.timestamp < myNode->me_.timestamp) {
     return NodeMessage::STALE_ROUTING_INFO; 
   }
-  myNode->updateRoutingInfoTemp_ = routingInfo;
-  auto it = myNode->updateRoutingInfoTemp_.nodeRegionMap.find(myNode->me_.nodeId.nid);
-  if (it != myNode->updateRoutingInfoTemp_.nodeRegionMap.end()) {
-    myNode->updateNodeInfoTemp_ = 
-      myNode->updateRoutingInfoTemp_.nodeRegionMap[myNode->me_.nodeId.nid]; 
+  myNode->updateNodeInfoTemp_ = nodeInfo;
+  myNode->updateRoutingInfoTemp_ = myNode->routingInfo_;
+  auto it = myNode->updateRoutingInfoTemp_.nodeRegionMap.
+    find(myNode->me_.nodeId.nid);
+  if (it == myNode->updateRoutingInfoTemp_.nodeRegionMap.end()) {
+    return NodeMessage::ERROR;
   }
+  myNode->updateRoutingInfoTemp_.nodeRegionMap[myNode->me_.nodeId.nid] = nodeInfo; 
   myNode->fetchNewData();
   return NodeMessage::PREPARED_RECV_ROUTING_INFO;
 }
 
-int32_t ServerTalkHandler::commitRecvRoutingInfo(const RoutingInfo& routingInfo) {
+int32_t ServerTalkHandler::commitRecvNodeInfo(const NodeInfo& nodeInfo) {
   printf("commitRecvRoutingInfo\n");
   // Check if updateRoutingInfoTemp_ corresponds to routingInfo
   // Change the status and lock all objects for Node
   lock_guard<mutex> updateObjectsLock(myNode->lockTempObjectsNode_);
-  if (myNode->updateRoutingInfoTemp_.timestamp != 
-      routingInfo.timestamp) {
+  if (myNode->updateNodeInfoTemp_.timestamp != 
+      nodeInfo.timestamp) {
     return NodeMessage::ABORT_RECV_ROUTING_INFO;
   }
   lock_guard<mutex> lock(myNode->lockNode_);

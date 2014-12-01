@@ -13,8 +13,8 @@ class ServerTalkHandler : virtual public ServerTalkIf {
   void getDataForRectangle(std::vector<Data>& _return, const Rectangle& rect);
   void getNearestKByPoint(std::vector<Data> & _return, const Point& point, const int k);
   void receiveRoutingInfo(const RoutingInfo& rountingInfo);
-  int32_t prepareRecvRoutingInfo(const RoutingInfo& routingInfo);
-  int32_t commitRecvRoutingInfo(const RoutingInfo& routingInfo);
+  int32_t prepareRecvNodeInfo(const NodeInfo& nodeInfo);
+  int32_t commitRecvNodeInfo(const NodeInfo& nodeInfo);
 
 };
 
