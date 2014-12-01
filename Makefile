@@ -64,7 +64,7 @@ proximity: src/server/ProximityManager.cpp
 	g++ ${CPP_OPTS} -o bin/proximity ${INCS_DIRS} src/server/ProximityManager.cpp ${GEN_SRC} ${LIBS}
 
 leader: src/leader/MetaDataProvider_server.cpp
-	g++ ${CPP_OPTS} -o bin/leader ${INCS_DIRS} src/leader/MetaDataProvider_server.cpp src/leader/MetaDataProviderStore.cpp ${GEN_SRC} ${LIBS}
+	g++ ${CPP_OPTS} -o bin/leader ${INCS_DIRS} src/leader/MetaDataProvider_server.cpp src/leader/MetaDataProviderStore.cpp src/server/ServerTalker.cpp  ${GEN_SRC} ${LIBS}
 
 clean:
 	$(RM) -r bin/* gen-cpp/*

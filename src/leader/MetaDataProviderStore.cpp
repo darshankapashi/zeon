@@ -1,4 +1,5 @@
 #include "src/leader/MetaDataProviderStore.h"
+#include "src/server/ServerTalker.h"
 
 using namespace core;
 
@@ -34,11 +35,9 @@ int MetaDataProviderStore::initializeConfig(const MetaDataConfig& config) {
   }
 
   // create connection to each client
-  
-  
-  
-
-
+  for (auto node: config.allNodes) {
+    clientToServers_[node.nid] = ServerTalker(node).get();
+  }
   // Based on replication Factor assign replicas uniformly
   // TODO: decide replicas based on load 
   auto allNodeSize = allNodes_.size();
@@ -210,35 +209,35 @@ bool  MetaDataProviderStore::loadBalance() {
   // TODO: updateFreeNodeInfo and updateBusyNodeInfo based on toMoveRec_
   }
 
-  // send the prepareRecvRoutingInfo to free and busy node
-  //auto& clientFreeNode = clientToServers_[updateFreeNodeInfo.nodeId.nid];
-  //auto& clientBusyNode = clientToServers_[updateBusyNodeInfo.nodeId.nid];
+   //send the prepareRecvRoutingInfo to free and busy node
+  auto* clientFreeNode = clientToServers_[updateFreeNodeInfo.nodeId.nid];
+  auto* clientBusyNode = clientToServers_[updateBusyNodeInfo.nodeId.nid];
 
-  //int freeNodePrepareStatus = clientFreeNode.prepareRecvNodeInfo(updateFreeNodeInfo);
-  //int busyNodePrepareStatus = clientBusyNode.prepareRecvNodeInfo(updateBusyNodeInfo);
+  int freeNodePrepareStatus = clientFreeNode->prepareRecvNodeInfo(updateFreeNodeInfo);
+  int busyNodePrepareStatus = clientBusyNode->prepareRecvNodeInfo(updateBusyNodeInfo);
 
-  //if (freeNodePrepareStatus != NodeMessage::PREPARED_RECV_ROUTING_INFO
-    //|| busyNodePrepareStatus != NodeMessage::PREPARED_RECV_ROUTING_INFO) {
-    //return false;
-  //}
+  if (freeNodePrepareStatus != NodeMessage::PREPARED_RECV_ROUTING_INFO
+    || busyNodePrepareStatus != NodeMessage::PREPARED_RECV_ROUTING_INFO) {
+    return false;
+  }
 
-  //clientFreeNode.commitRecvNodeInfo(updateFreeNodeInfo);
-  //allNodes_[updateFreeNodeInfo.nodeId.nid] = updateFreeNodeInfo;
-  //clientBusyNode.commitRecvNodeInfo(updateBusyNodeInfo);
-  //allNodes_[updateBusyNodeInfo.nodeId.nid] = updateBusyNodeInfo;
+  clientFreeNode->commitRecvNodeInfo(updateFreeNodeInfo);
+  allNodes_[updateFreeNodeInfo.nodeId.nid] = updateFreeNodeInfo;
+  clientBusyNode->commitRecvNodeInfo(updateBusyNodeInfo);
+  allNodes_[updateBusyNodeInfo.nodeId.nid] = updateBusyNodeInfo;
 
-  //// update routing table at all nodes
-  //RoutingInfo updatedRoutingInfo;
-  //for (auto node : allNodes_) {
-    //updatedRoutingInfo.nodeRegionMap[node.first] = node.second;
-  //}
-  ////updatedRoutingInfo.nodeRegionMap = allNodes_;
-  //updatedRoutingInfo.timestamp = time(nullptr);
-  //for (auto client : clientToServers_) {
-    //if (client.first != freeNodeId && 
-        //client.first != busyNodeId) {
-      //client.second.receiveRoutingInfo(updatedRoutingInfo);
-    //}
-  //}
+  // update routing table at all nodes
+  RoutingInfo updatedRoutingInfo;
+  for (auto node : allNodes_) {
+    updatedRoutingInfo.nodeRegionMap[node.first] = node.second;
+  }
+  //updatedRoutingInfo.nodeRegionMap = allNodes_;
+  updatedRoutingInfo.timestamp = time(nullptr);
+  for (auto client : clientToServers_) {
+    if (client.first != freeNodeId && 
+        client.first != busyNodeId) {
+      client.second->receiveRoutingInfo(updatedRoutingInfo);
+    }
+  }
   return true;
 }
