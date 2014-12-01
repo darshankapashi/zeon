@@ -65,7 +65,7 @@ int32_t ServerTalkHandler::prepareRecvRoutingInfo(const RoutingInfo& routingInfo
   // Copy this in tempStateObjects
   // Atomically replace the routing info based on lock
   lock_guard<mutex> tempObjectsLock(myNode->lockTempObjectsNode_);
-  if (routingInfo.version < myNode->routingInfo_.version) {
+  if (routingInfo.timestamp < myNode->routingInfo_.timestamp) {
     return NodeMessage::STALE_ROUTING_INFO; 
   }
   myNode->updateRoutingInfoTemp_ = routingInfo;
@@ -75,6 +75,7 @@ int32_t ServerTalkHandler::prepareRecvRoutingInfo(const RoutingInfo& routingInfo
     myNode->updateNodeInfoTemp_ = 
       myNode->updateRoutingInfoTemp_.nodeRegionMap[myNode->me_.nodeId.nid]; 
   }
+  // TODO(darshan): call function to fetch all new keys, values, and update various objects in Node.h and DataStore.h. You would need to create temp copy of all structs, fill them as per updateNodeInfoTemp_ 
   return NodeMessage::PREPARED_RECV_ROUTING_INFO;
 }
 
@@ -83,8 +84,8 @@ int32_t ServerTalkHandler::commitRecvRoutingInfo(const RoutingInfo& routingInfo)
   // Check if updateRoutingInfoTemp_ corresponds to routingInfo
   // Change the status and lock all objects for Node
   lock_guard<mutex> updateObjectsLock(myNode->lockTempObjectsNode_);
-  if (myNode->updateRoutingInfoTemp_.version != 
-      routingInfo.version) {
+  if (myNode->updateRoutingInfoTemp_.timestamp != 
+      routingInfo.timestamp) {
     return NodeMessage::ABORT_RECV_ROUTING_INFO;
   }
   lock_guard<mutex> lock(myNode->lockNode_);

@@ -3,12 +3,6 @@
 
 using namespace core;
 
-//struct RectangleHasher {
-  //size_t operator()(const Rectangle& r) const {
-    //return getRectangleHash(r);
-  //}
-//};
-
 class MetaDataProviderStore {
   public:
   MetaDataProviderStore():
