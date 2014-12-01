@@ -56,6 +56,10 @@ class Client {
   PointStoreClient* client;
 };
 
+void printData(Data const& d) {
+  cout << "Recv: " << d.id << " (" << d.point.xCord << "," << d.point.yCord << ") " << d.value << "\n";
+}
+
 int main(int argc, char **argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
 
@@ -103,6 +107,19 @@ int main(int argc, char **argv) {
     client1.get().getNearestKByPoint(ret, makePoint(15, 15), 1);
     for (auto const& d: ret) {
       cout << "Recv: " << d.id << " (" << d.point.xCord << "," << d.point.yCord << ") " << d.value << "\n";
+    }
+
+    Data dataToMove = makeData(1, makePoint(115, 10));
+    dataToMove.prevPoint = makePoint(10, 10);
+    client2.get().setData(dataToMove, false);
+
+    try {
+      Data dataRecv;
+      printf("Getting data from server1\n");
+      client1.get().getData(dataRecv, 1, true);
+      printData(dataRecv);
+    } catch (ZeonException const& ze) {
+      printf("Set failed: %d %s\n", ze.what, ze.why.c_str());
     }
 
   } catch (ZeonException const& ze) {
