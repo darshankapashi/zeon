@@ -200,10 +200,23 @@ bool  MetaDataProviderStore::loadBalance() {
     updateFreeNodeInfo.nodeDataStats.rectangleStats.push_back(toAddRectangleStats);
 
     // remove rectangle based on regionHash
-    // TODO: set this updateBusyNodeInfo
-    //for (auto rec: updateBusyNodeInfo.nodeDataStats.region.rectangles) {
-     
-    //}
+    vector<RectangleStats> updatedBusyRectangleStats;
+    Region updatedBusyRegion;
+    for (auto rectStatus: updateBusyNodeInfo.nodeDataStats.rectangleStats) {
+      hash<Rectangle> hash_fn;
+      if (hash_fn(rectStatus.rectangle) !=  hash_fn(toSplitRec)) {
+        updatedBusyRectangleStats.emplace_back(rectStatus);
+        updatedBusyRegion.rectangles.emplace_back(rectStatus.rectangle);
+      }
+    }
+    RectangleStats toUpdateRectangleStats;
+    toUpdateRectangleStats.rectangle = toUpdateRectangle;
+    toUpdateRectangleStats.zidCount = -1;
+    toUpdateRectangleStats.queryRate = -1;
+    updatedBusyRectangleStats.emplace_back(toUpdateRectangleStats);
+    updatedBusyRegion.rectangles.emplace_back(toUpdateRectangleStats.rectangle);
+    updateBusyNodeInfo.nodeDataStats.rectangleStats = updatedBusyRectangleStats;
+    updateBusyNodeInfo.nodeDataStats.region = updatedBusyRegion;
   } 
   else {
   // TODO: updateFreeNodeInfo and updateBusyNodeInfo based on toMoveRec_
