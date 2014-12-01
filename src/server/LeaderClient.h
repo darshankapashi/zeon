@@ -19,26 +19,21 @@ using namespace core;
 
 class LeaderClient {
  public:
-  LeaderClient() {
-    boost::shared_ptr<TTransport> socket(new TSocket("localhost", 9990));
-    boost::shared_ptr<TTransport> transport(new TBufferedTransport(socket));
-    boost::shared_ptr<TProtocol> protocol(new TBinaryProtocol(transport));
-    metaDataProviderClient_.reset(new MetaDataProviderClient(protocol));
-    startHeartBeats();
-  }
-
   LeaderClient(NodeId leaderNodeId) {
-    boost::shared_ptr<TTransport> socket(new TSocket(leaderNodeId.ip, leaderNodeId.serverPort));
-    boost::shared_ptr<TTransport> transport(new TBufferedTransport(socket));
-    boost::shared_ptr<TProtocol> protocol(new TBinaryProtocol(transport));
-    metaDataProviderClient_.reset(new MetaDataProviderClient(protocol));
-    startHeartBeats();
+    //printf("Creating LeaderClient object this=%d\n", this);
+    socket_.reset(new TSocket(leaderNodeId.ip, leaderNodeId.serverPort));
+    transport_.reset(new TBufferedTransport(socket_));
+    protocol_.reset(new TBinaryProtocol(transport_));
+    transport_->open();
+    metaDataProviderClient_.reset(new MetaDataProviderClient(protocol_));
   }
 
   unique_ptr<MetaDataProviderClient> metaDataProviderClient_;
   RoutingInfo fetchRoutingInfo();
 
   ~LeaderClient() {
+    transport_->close();
+    //printf("Destroying LeaderClient object this=%d\n", this);
     if (runThread_) {
       runThread_ = false;
       heartBeatThread_.join();
@@ -54,4 +49,7 @@ private:
   void sendHeartBeat();
   bool runThread_;
   thread heartBeatThread_;
+  boost::shared_ptr<TTransport> socket_;
+  boost::shared_ptr<TTransport> transport_;
+  boost::shared_ptr<TProtocol> protocol_;
 };
