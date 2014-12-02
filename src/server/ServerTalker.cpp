@@ -26,3 +26,10 @@ ServerTalkClient* ServerTalker::get() {
   printf("serverTalker connection for: %lld\n", &client_);
   return &client_;
 }
+void ServerTalker::openTransport() {
+  transport_->open();
+}
+
+void ServerTalker::closeTransport() {
+  transport_->close();
+}

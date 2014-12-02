@@ -14,6 +14,8 @@ class ServerTalker {
   ServerTalker(std::string ip, int port);
   ~ServerTalker();
   ServerTalkClient* get();
+  void openTransport();
+  void closeTransport();
 
  private:
    boost::shared_ptr<TTransport> socket_;
