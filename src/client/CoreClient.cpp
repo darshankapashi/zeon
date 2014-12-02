@@ -66,6 +66,7 @@ int main(int argc, char **argv) {
   Client client1 ("localhost", FLAGS_port1);
   Client client2 ("localhost", FLAGS_port2);
   try {
+    cout << "======= Create test" << endl;
     // Create 3 points
     Data d1 = makeData(1, makePoint(10, 10), "Point1");
     Data d2 = makeData(2, makePoint(20, 20), "Point2");
@@ -82,9 +83,9 @@ int main(int argc, char **argv) {
     }
 
     // Create 3 points
-    Data d4 = makeData(4, makePoint(110, 10), "Point4");
-    Data d5 = makeData(5, makePoint(120, 20), "Point5");
-    Data d6 = makeData(6, makePoint(110, 20), "Point6");
+    Data d4 = makeData(4, makePoint(160, 10), "Point4");
+    Data d5 = makeData(5, makePoint(170, 20), "Point5");
+    Data d6 = makeData(6, makePoint(180, 20), "Point6");
     try {
       printf("Creating d4\n");
       client2.get().createData(d4.id, d4.point, time(nullptr), d4.value);
@@ -96,6 +97,7 @@ int main(int argc, char **argv) {
       printf("Create failed: %d %s\n", ze.what, ze.why.c_str());
     }
 
+    cout << "======= Get nearest K by point test" << endl;
     vector<Data> ret;
     printf("Getting 3 nearest points to (15,15)\n");
     client1.get().getNearestKByPoint(ret, makePoint(15, 15), 3);
@@ -113,6 +115,7 @@ int main(int argc, char **argv) {
     dataToMove.prevPoint = makePoint(10, 10);
     client2.get().setData(dataToMove, false);
 
+    cout << "======= Data move test" << endl;
     try {
       Data dataRecv;
       printf("Getting data from server1\n");
@@ -122,6 +125,24 @@ int main(int argc, char **argv) {
       printf("Set failed: %d %s\n", ze.what, ze.why.c_str());
     }
 
+    cout << "======= Load balance test" << endl;
+    try {
+      Data data;
+      cout << "Getting from server 1" << endl;
+      client1.get().getData(data, 4, true);
+      printData(data);
+    } catch (ZeonException const& ze) {
+      cout << "ZeonException: " << ze.what << " " << ze.why << endl;
+    }
+
+    try {
+      Data data;
+      cout << "Getting from server 2" << endl;
+      client2.get().getData(data, 4, true);
+      printData(data);
+    } catch (ZeonException const& ze) {
+      cout << "ZeonException: " << ze.what << " " << ze.why << endl;
+    }
   } catch (ZeonException const& ze) {
     cout << "ZeonException: " << ze.what << " " << ze.why << endl;
   } catch (TException const& tx) {
