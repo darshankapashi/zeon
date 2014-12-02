@@ -1,6 +1,6 @@
 #include <thread>
 #include <thrift/protocol/TBinaryProtocol.h>
-#include <thrift/server/TSimpleServer.h>
+#include <thrift/server/TThreadedServer.h>
 #include <thrift/transport/TServerSocket.h>
 #include <thrift/transport/TBufferTransports.h>
 #include <gflags/gflags.h>
@@ -38,7 +38,7 @@ void serveClients() {
   boost::shared_ptr<TProtocolFactory> protocolFactory(new TBinaryProtocolFactory());
 
   // TODO:: use a better server
-  TSimpleServer server(processor, serverTransport, transportFactory, protocolFactory);
+  TThreadedServer server(processor, serverTransport, transportFactory, protocolFactory);
   server.serve();  
 }
 
@@ -51,7 +51,7 @@ void serveServers() {
   boost::shared_ptr<TProtocolFactory> protocolFactory(new TBinaryProtocolFactory());
 
   // TODO:: use a better server
-  TSimpleServer server(processor, serverTransport, transportFactory, protocolFactory);
+  TThreadedServer server(processor, serverTransport, transportFactory, protocolFactory);
   server.serve();  
 }
 

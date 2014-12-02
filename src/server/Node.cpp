@@ -212,8 +212,8 @@ void Node::fetchAndStoreInTemp(Rectangle const& r) {
   bool found = false;
   for (auto const& node: nodes) {
     try {
-      ServerTalker walkieTalkie(routingInfo_.nodeRegionMap.at(node).nodeId);
       auto& datas = tempData_[r];
+      ServerTalker walkieTalkie(routingInfo_.nodeRegionMap.at(node).nodeId);
       walkieTalkie.get()->getDataForRectangle(datas, r);
       found = true;
     } catch (exception const& e) {
