@@ -184,6 +184,8 @@ bool  MetaDataProviderStore::loadBalance(bool test = false) {
   printf("Busy node: %lld Free node: %lld \n", busyNodeId, freeNodeId);
   auto updateFreeNodeInfo = allNodes_[freeNode.first.nid];
   auto updateBusyNodeInfo = allNodes_[busyNode.first.nid];
+  ParentRectangleList parentRectangleList;
+  ParentRectangleList parentRectangleListUpdate;
 
   vector<Rectangle> toMoveRectangles;
 
@@ -208,13 +210,23 @@ bool  MetaDataProviderStore::loadBalance(bool test = false) {
                      toSplitRec.bottomLeft.xCord, toSplitRec.bottomLeft.yCord, 
                      toSplitRec.topRight.xCord, toSplitRec.topRight.yCord); 
 
-    // rectangle to be added in freeNode.
+
     auto toAddRectangle = toSplitRec;
     toAddRectangle.topRight.xCord = toAddRectangle.bottomLeft.xCord + 
     (toAddRectangle.topRight.xCord - toAddRectangle.bottomLeft.xCord) / 2;
-    // rectangle to be updated with in busyNode
+
+    ParentRectangle pRec;
+    pRec.parent = toSplitRec;
+    pRec.me = toAddRectangle;
+    parentRectangleList.emplace_back(pRec);
+
     auto toUpdateRectangle = toSplitRec;
     toUpdateRectangle.bottomLeft.xCord = toAddRectangle.topRight.xCord;
+
+    ParentRectangle pRecUpdate;
+    pRecUpdate.parent = toSplitRec;
+    pRecUpdate.me = toUpdateRectangle;
+    parentRectangleListUpdate.emplace_back(pRecUpdate);
 
     updateFreeNodeInfo.nodeDataStats.region.rectangles.push_back(toAddRectangle);
     auto toAddRectangleStats = RectangleStats();
@@ -266,8 +278,14 @@ bool  MetaDataProviderStore::loadBalance(bool test = false) {
   clientToServers_.at(updateFreeNodeInfo.nodeId.nid).openTransport();
   clientToServers_.at(updateBusyNodeInfo.nodeId.nid).openTransport();
 
-  int freeNodePrepareStatus = clientFreeNode->prepareRecvNodeInfo(updateFreeNodeInfo);
-  int busyNodePrepareStatus = clientBusyNode->prepareRecvNodeInfo(updateBusyNodeInfo);
+  int freeNodePrepareStatus = 
+    clientFreeNode->prepareRecvNodeInfo(
+      updateFreeNodeInfo,
+      parentRectangleList);
+  int busyNodePrepareStatus = 
+    clientBusyNode->prepareRecvNodeInfo(
+      updateBusyNodeInfo,
+      parentRectangleListUpdate);
 
   if (freeNodePrepareStatus != NodeMessage::PREPARED_RECV_ROUTING_INFO
     || busyNodePrepareStatus != NodeMessage::PREPARED_RECV_ROUTING_INFO) {
