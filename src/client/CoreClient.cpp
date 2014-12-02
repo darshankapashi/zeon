@@ -16,6 +16,9 @@ using namespace core;
 DEFINE_int32(port1, 8000, "Server1 port to connect to");
 DEFINE_int32(port2, 8001, "Server2 port to connect to");
 
+DEFINE_bool(part1, true, "Run part 1");
+DEFINE_bool(part2, true, "Run part 2");
+
 Point makePoint(int x, int y) {
   Point p;
   p.xCord = x;
@@ -66,82 +69,105 @@ int main(int argc, char **argv) {
   Client client1 ("localhost", FLAGS_port1);
   Client client2 ("localhost", FLAGS_port2);
   try {
-    cout << "======= Create test" << endl;
-    // Create 3 points
-    Data d1 = makeData(1, makePoint(10, 10), "Point1");
-    Data d2 = makeData(2, makePoint(20, 20), "Point2");
-    Data d3 = makeData(3, makePoint(10, 20), "Point3");
-    try {
-      printf("Creating d1\n");
-      client1.get().createData(d1.id, d1.point, time(nullptr), d1.value);
-      printf("Creating d2\n");
-      client1.get().createData(d2.id, d2.point, time(nullptr), d2.value);
-      printf("Creating d3\n");
-      client1.get().createData(d3.id, d3.point, time(nullptr), d3.value);
-    } catch (ZeonException const& ze) {
-      printf("Create failed: %d %s\n", ze.what, ze.why.c_str());
+    if (FLAGS_part1) {
+      cout << "======= Create test" << endl;
+      // Create 3 points
+      Data d1 = makeData(1, makePoint(10, 10), "Point1");
+      Data d2 = makeData(2, makePoint(20, 20), "Point2");
+      Data d3 = makeData(3, makePoint(10, 20), "Point3");
+      try {
+        printf("Creating d1\n");
+        client1.get().createData(d1.id, d1.point, time(nullptr), d1.value);
+        printf("Creating d2\n");
+        client1.get().createData(d2.id, d2.point, time(nullptr), d2.value);
+        printf("Creating d3\n");
+        client1.get().createData(d3.id, d3.point, time(nullptr), d3.value);
+      } catch (ZeonException const& ze) {
+        printf("Create failed: %d %s\n", ze.what, ze.why.c_str());
+      }
+
+      // Create 3 points
+      Data d4 = makeData(4, makePoint(160, 10), "Point4");
+      Data d5 = makeData(5, makePoint(170, 20), "Point5");
+      Data d6 = makeData(6, makePoint(180, 20), "Point6");
+      try {
+        printf("Creating d4\n");
+        client2.get().createData(d4.id, d4.point, time(nullptr), d4.value);
+        printf("Creating d5\n");
+        client2.get().createData(d5.id, d5.point, time(nullptr), d5.value);
+        printf("Creating d6\n");
+        client2.get().createData(d6.id, d6.point, time(nullptr), d6.value);
+      } catch (ZeonException const& ze) {
+        printf("Create failed: %d %s\n", ze.what, ze.why.c_str());
+      }
+
+      cout << "======= Get nearest K by point test" << endl;
+      vector<Data> ret;
+      printf("Getting 3 nearest points to (15,15)\n");
+      client1.get().getNearestKByPoint(ret, makePoint(15, 15), 3);
+      for (auto const& d: ret) {
+        cout << "Recv: " << d.id << " (" << d.point.xCord << "," << d.point.yCord << ") " << d.value << "\n";
+      }
+
+      printf("Getting 1 nearest points to (15,15)\n");
+      client1.get().getNearestKByPoint(ret, makePoint(15, 15), 1);
+      for (auto const& d: ret) {
+        cout << "Recv: " << d.id << " (" << d.point.xCord << "," << d.point.yCord << ") " << d.value << "\n";
+      }
+
+      cout << "======= Data move test" << endl;
+      try {
+        Data dataToMove = makeData(1, makePoint(115, 10));
+        dataToMove.prevPoint = makePoint(10, 10);
+        client2.get().setData(dataToMove, false);
+
+        Data dataRecv;
+        printf("Getting data from server1\n");
+        client1.get().getData(dataRecv, 1, true);
+        printData(dataRecv);
+      } catch (ZeonException const& ze) {
+        printf("Set failed: %d %s\n", ze.what, ze.why.c_str());
+      }
     }
 
-    // Create 3 points
-    Data d4 = makeData(4, makePoint(160, 10), "Point4");
-    Data d5 = makeData(5, makePoint(170, 20), "Point5");
-    Data d6 = makeData(6, makePoint(180, 20), "Point6");
-    try {
-      printf("Creating d4\n");
-      client2.get().createData(d4.id, d4.point, time(nullptr), d4.value);
-      printf("Creating d5\n");
-      client2.get().createData(d5.id, d5.point, time(nullptr), d5.value);
-      printf("Creating d6\n");
-      client2.get().createData(d6.id, d6.point, time(nullptr), d6.value);
-    } catch (ZeonException const& ze) {
-      printf("Create failed: %d %s\n", ze.what, ze.why.c_str());
-    }
+    if (FLAGS_part2) {
+      cout << "======= Load balance test" << endl;
+      try {
+        Data data;
+        cout << "Getting from server 1" << endl;
+        client1.get().getData(data, 4, true);
+        printData(data);
+      } catch (ZeonException const& ze) {
+        cout << "ZeonException: " << ze.what << " " << ze.why << endl;
+      }
 
-    cout << "======= Get nearest K by point test" << endl;
-    vector<Data> ret;
-    printf("Getting 3 nearest points to (15,15)\n");
-    client1.get().getNearestKByPoint(ret, makePoint(15, 15), 3);
-    for (auto const& d: ret) {
-      cout << "Recv: " << d.id << " (" << d.point.xCord << "," << d.point.yCord << ") " << d.value << "\n";
-    }
+      try {
+        Data data;
+        cout << "Getting from server 2" << endl;
+        client2.get().getData(data, 4, true);
+        printData(data);
+      } catch (ZeonException const& ze) {
+        cout << "ZeonException: " << ze.what << " " << ze.why << endl;
+      }
 
-    printf("Getting 1 nearest points to (15,15)\n");
-    client1.get().getNearestKByPoint(ret, makePoint(15, 15), 1);
-    for (auto const& d: ret) {
-      cout << "Recv: " << d.id << " (" << d.point.xCord << "," << d.point.yCord << ") " << d.value << "\n";
-    }
+      try {
+        cout << "Creating for point (110, 10)" << endl;
+        Data d1 = makeData(1, makePoint(110, 10), "PointN");
+        client1.get().createData(d1.id, d1.point, time(nullptr), d1.value);
+        cout << "PASS" << endl;
+      } catch (ZeonException const& ze) {
+        cout << "ZeonException: " << ze.what << " " << ze.why << endl;
+      }
 
-    Data dataToMove = makeData(1, makePoint(115, 10));
-    dataToMove.prevPoint = makePoint(10, 10);
-    client2.get().setData(dataToMove, false);
+      try {
+        cout << "Creating for point (110, 10)" << endl;
+        Data d1 = makeData(1, makePoint(110, 10), "PointN");
+        client2.get().createData(d1.id, d1.point, time(nullptr), d1.value);
+      } catch (ZeonException const& ze) {
+        cout << "PASS" << endl;
+        cout << "ZeonException: " << ze.what << " " << ze.why << endl;
+      }
 
-    cout << "======= Data move test" << endl;
-    try {
-      Data dataRecv;
-      printf("Getting data from server1\n");
-      client1.get().getData(dataRecv, 1, true);
-      printData(dataRecv);
-    } catch (ZeonException const& ze) {
-      printf("Set failed: %d %s\n", ze.what, ze.why.c_str());
-    }
-
-    cout << "======= Load balance test" << endl;
-    try {
-      Data data;
-      cout << "Getting from server 1" << endl;
-      client1.get().getData(data, 4, true);
-      printData(data);
-    } catch (ZeonException const& ze) {
-      cout << "ZeonException: " << ze.what << " " << ze.why << endl;
-    }
-
-    try {
-      Data data;
-      cout << "Getting from server 2" << endl;
-      client2.get().getData(data, 4, true);
-      printData(data);
-    } catch (ZeonException const& ze) {
-      cout << "ZeonException: " << ze.what << " " << ze.why << endl;
     }
   } catch (ZeonException const& ze) {
     cout << "ZeonException: " << ze.what << " " << ze.why << endl;

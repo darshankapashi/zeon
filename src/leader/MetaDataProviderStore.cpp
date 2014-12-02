@@ -275,28 +275,6 @@ bool  MetaDataProviderStore::loadBalance(bool test = false) {
   auto* clientBusyNode = clientToServers_.at(updateBusyNodeInfo.nodeId.nid).get();
   printf("call prePareRoutingInfo\n");
 
-  clientToServers_.at(updateFreeNodeInfo.nodeId.nid).openTransport();
-  clientToServers_.at(updateBusyNodeInfo.nodeId.nid).openTransport();
-
-  int freeNodePrepareStatus = 
-    clientFreeNode->prepareRecvNodeInfo(
-      updateFreeNodeInfo,
-      parentRectangleList);
-  int busyNodePrepareStatus = 
-    clientBusyNode->prepareRecvNodeInfo(
-      updateBusyNodeInfo,
-      parentRectangleListUpdate);
-
-  if (freeNodePrepareStatus != NodeMessage::PREPARED_RECV_ROUTING_INFO
-    || busyNodePrepareStatus != NodeMessage::PREPARED_RECV_ROUTING_INFO) {
-    return false;
-  }
-  printf("Call commitRoutingInfo \n");
-  clientFreeNode->commitRecvNodeInfo(updateFreeNodeInfo);
-  allNodes_[updateFreeNodeInfo.nodeId.nid] = updateFreeNodeInfo;
-  clientBusyNode->commitRecvNodeInfo(updateBusyNodeInfo);
-  allNodes_[updateBusyNodeInfo.nodeId.nid] = updateBusyNodeInfo;
-
   // update routing table at all nodes
   RoutingInfo updatedRoutingInfo;
   for (auto node : allNodes_) {
@@ -305,6 +283,35 @@ bool  MetaDataProviderStore::loadBalance(bool test = false) {
 
   //updatedRoutingInfo.nodeRegionMap = allNodes_;
   updatedRoutingInfo.timestamp = time(nullptr);
+
+  clientToServers_.at(updateFreeNodeInfo.nodeId.nid).openTransport();
+  clientToServers_.at(updateBusyNodeInfo.nodeId.nid).openTransport();
+
+  RoutingInfo potentiallyUpdatedRoutingInfo;
+  potentiallyUpdatedRoutingInfo.nodeRegionMap[updateFreeNodeInfo.nodeId.nid] = updateFreeNodeInfo;
+  potentiallyUpdatedRoutingInfo.nodeRegionMap[updateBusyNodeInfo.nodeId.nid] = updateBusyNodeInfo;
+
+  int freeNodePrepareStatus = 
+    clientFreeNode->prepareRecvNodeInfo(
+      potentiallyUpdatedRoutingInfo,
+      parentRectangleList);
+  int busyNodePrepareStatus = 
+    clientBusyNode->prepareRecvNodeInfo(
+      potentiallyUpdatedRoutingInfo,
+      parentRectangleListUpdate);
+
+  if (freeNodePrepareStatus != NodeMessage::PREPARED_RECV_ROUTING_INFO
+    || busyNodePrepareStatus != NodeMessage::PREPARED_RECV_ROUTING_INFO) {
+    return false;
+  }
+
+  // TODO: If the commit for the free node fails, then dont commit the busy node
+  printf("Call commitRoutingInfo \n");
+  clientFreeNode->commitRecvNodeInfo(updatedRoutingInfo);
+  allNodes_[updateFreeNodeInfo.nodeId.nid] = updateFreeNodeInfo;
+  clientBusyNode->commitRecvNodeInfo(updatedRoutingInfo);
+  allNodes_[updateBusyNodeInfo.nodeId.nid] = updateBusyNodeInfo;
+
   for (auto client : clientToServers_) {
     if (client.first != freeNodeId && 
         client.first != busyNodeId) {

@@ -77,17 +77,18 @@ void ServerTalkHandler::receiveRoutingInfo(const RoutingInfo& routingInfo) {
   //myNode->me_ = myNode->updateNodeInfoTemp_; 
 }
 
-int32_t ServerTalkHandler::prepareRecvNodeInfo(const NodeInfo& nodeInfo, const ParentRectangleList& parentRectangleMap) {
+int32_t ServerTalkHandler::prepareRecvNodeInfo(const RoutingInfo& routingInfo, const ParentRectangleList& parentRectangleMap) {
   printf("prepareRecvRoutingInfo\n");
   // check if version for latest copy of routingInfo
   // Copy this in tempStateObjects
   // Atomically replace the routing info based on lock
   lock_guard<mutex> tempObjectsLock(myNode->lockTempObjectsNode_);
+  NodeInfo const& nodeInfo = routingInfo.nodeRegionMap.at(myNode->me_.nodeId.nid);
   if (nodeInfo.timestamp < myNode->me_.timestamp) {
     return NodeMessage::STALE_ROUTING_INFO; 
   }
   myNode->updateNodeInfoTemp_ = nodeInfo;
-  myNode->updateRoutingInfoTemp_ = myNode->routingInfo_;
+  myNode->updateRoutingInfoTemp_ = routingInfo;
   auto it = myNode->updateRoutingInfoTemp_.nodeRegionMap.find(myNode->me_.nodeId.nid);
   if (it == myNode->updateRoutingInfoTemp_.nodeRegionMap.end()) {
     return NodeMessage::ERROR;
@@ -98,21 +99,23 @@ int32_t ServerTalkHandler::prepareRecvNodeInfo(const NodeInfo& nodeInfo, const P
   return NodeMessage::PREPARED_RECV_ROUTING_INFO;
 }
 
-int32_t ServerTalkHandler::commitRecvNodeInfo(const NodeInfo& nodeInfo) {
+int32_t ServerTalkHandler::commitRecvNodeInfo(const RoutingInfo& routingInfo) {
   printf("commitRecvRoutingInfo\n");
   // Check if updateRoutingInfoTemp_ corresponds to routingInfo
   // Change the status and lock all objects for Node
   lock_guard<mutex> updateObjectsLock(myNode->lockTempObjectsNode_);
-  if (myNode->updateNodeInfoTemp_.timestamp != 
-      nodeInfo.timestamp) {
+  NodeInfo const& nodeInfo = routingInfo.nodeRegionMap.at(myNode->me_.nodeId.nid);
+  if (myNode->updateNodeInfoTemp_.timestamp != nodeInfo.timestamp) {
     return NodeMessage::ABORT_RECV_ROUTING_INFO;
   }
   lock_guard<mutex> lock(myNode->lockNode_);
   myNode->setStatus(NodeStatus::UPDATING);  
   myNode->me_ = myNode->updateNodeInfoTemp_; 
   myNode->routingInfo_ = myNode->updateRoutingInfoTemp_;
+  myNode->buildRectangleToNodeMap();
   myNode->setStatus(NodeStatus::ACTIVE);
   myNode->commitNewData();
+
   return NodeMessage::COMMIT_RECV_ROUTING_INFO;
 }
 }

@@ -20,6 +20,7 @@ void PointStoreHandler::routeCorrectly(Point const& p, Operation op) {
 
   ZeonException ze;
   ze.what = SERVER_REDIRECT;
+  // TODO: If getNodeForPoint throws, you can route it to some other random node
   ze.nodes = myNode->getNodeForPoint(p, op);
   ze.__isset.nodes = true;
   throw ze;
@@ -95,7 +96,7 @@ void PointStoreHandler::setData(const Data& data, const bool valuePresent) {
 
 void PointStoreHandler::createData(const zeonid_t id, const Point& point, const int64_t timestamp, const std::string& value) {
   printf("createData\n");
-  //routeCorrectly(point, WRITE_OP);
+  routeCorrectly(point, WRITE_OP);
   if (myNode->doIHaveThisId(id, WRITE_OP)) {
     throwError(ALREADY_EXISTS);
   }
