@@ -61,16 +61,17 @@ void ServerTalkHandler::getNearestKByPoint(std::vector<Data> & _return, const Po
 }
 
 void ServerTalkHandler::receiveRoutingInfo(const RoutingInfo& routingInfo) {
-  //int retStatus = prepareRecvRoutingInfo(routingInfo);
-  //if (retStatus == NodeMessage::PREPARED_RECV_ROUTING_INFO) {
-    //retStatus = commitRecvRoutingInfo(routingInfo);
-  //}
-  //if (retStatus != NodeMessage::COMMIT_RECV_ROUTING_INFO) {
-    //auto se = ServerTalkException();
-    //se.what = NodeMessage::STALE_ROUTING_INFO;
-    //se.why = "timestamp or version is stale";
-    //throw se;
-  //}
+  printf("Receive routing info without 2PC\n");
+  if (routingInfo.timestamp < myNode->routingInfo_.timestamp) {
+    auto se = ServerTalkException();
+    se.what = NodeMessage::STALE_ROUTING_INFO;
+    se.why = "timestamp or version is stale";
+    throw se;
+  }
+  lock_guard<mutex> lock(myNode->lockNode_); 
+  myNode->routingInfo_ = routingInfo;
+  // TODO: Check that me_ is not updated and match the version number 
+  //myNode->me_ = myNode->updateNodeInfoTemp_; 
 }
 
 int32_t ServerTalkHandler::prepareRecvNodeInfo(const NodeInfo& nodeInfo, 
