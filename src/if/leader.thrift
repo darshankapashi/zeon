@@ -56,6 +56,13 @@ struct NodeInfo {
   4: core.timestamp_t timestamp,
 }
 
+struct ParentRectangle {
+  1: core.Rectangle me,
+  2: core.Rectangle parent,
+}
+
+typedef list<ParentRectangle> ParentRectangleList
+
 struct RoutingInfo {
   1: map <core.nid_t, NodeInfo> nodeRegionMap,
   // timestamp when routingInfo was updated

@@ -73,7 +73,8 @@ void ServerTalkHandler::receiveRoutingInfo(const RoutingInfo& routingInfo) {
   //}
 }
 
-int32_t ServerTalkHandler::prepareRecvNodeInfo(const NodeInfo& nodeInfo) {
+int32_t ServerTalkHandler::prepareRecvNodeInfo(const NodeInfo& nodeInfo, 
+   const ParentRectangleList& parentRectangleMap) {
   printf("prepareRecvRoutingInfo\n");
   // check if version for latest copy of routingInfo
   // Copy this in tempStateObjects
