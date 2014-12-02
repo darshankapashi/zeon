@@ -1,6 +1,7 @@
 #include "src/leader/MetaDataProviderStore.h"
 #include "src/server/ServerTalker.h"
 
+#include <iostream>
 #include <thrift/protocol/TBinaryProtocol.h>
 #include <thrift/transport/TSocket.h>
 #include <thrift/transport/TTransportUtils.h>
