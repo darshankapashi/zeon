@@ -203,6 +203,10 @@ vector<vector<nid_t>> Node::getNodesToQuery(Point const& p) {
 }
 
 void Node::fetchAndStoreInTemp(Rectangle const& r) {
+  printf("fetchAndStoreInTemp Rectangle: (%lld,%lld) (%lld,%lld)\n", 
+      r.bottomLeft.xCord, r.bottomLeft.yCord,
+      r.topRight.xCord, r.topRight.yCord);
+
   auto const& nodes = rectangleToNode_[r];
   bool found = false;
   for (auto const& node: nodes) {
@@ -213,6 +217,7 @@ void Node::fetchAndStoreInTemp(Rectangle const& r) {
       found = true;
     } catch (exception const& e) {
       // Try another node
+      printf("Exception in getDataForRectangle to nid=%lld: %s", node, e.what());
       continue;
     }
   }
