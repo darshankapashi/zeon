@@ -17,6 +17,8 @@ DEFINE_string(my_ip_address, "localhost", "Address of my server");
 // TODO: get this from MetaDataStoreConfig or fetch it from leader based on ip and server_port / client_port
 DEFINE_int32(my_nid, 1, "NodeId.nid_t of my server");
 
+DEFINE_int64(heartbeat_interval, 5, "Time interval between periodic heartbeats between server and leader"); 
+
 using namespace ::apache::thrift;
 using namespace ::apache::thrift::protocol;
 using namespace ::apache::thrift::transport;
@@ -24,6 +26,8 @@ using namespace ::apache::thrift::server;
 
 using namespace  ::core;
 using namespace  ::server;
+
+NodeId leaderNode;
 
 void serveClients() {
   int port = FLAGS_client_port;
@@ -51,21 +55,17 @@ void serveServers() {
   server.serve();  
 }
 
-void initFromLeader(NodeId const& nodeId, std::unique_ptr<LeaderClient>* leaderClient) {
+void initFromLeader(NodeId const& nodeId) {
   bool success = false;
   while (!success) {
     try {
       printf("Contacting the Leader...\n");
-      NodeId leaderNode;
-      leaderNode.ip = "localhost";
-      leaderNode.serverPort = 9990;
-      (*leaderClient).reset(new LeaderClient(leaderNode));
-      auto routingInfo = (*leaderClient)->fetchRoutingInfo();
+      LeaderClient leaderClient(leaderNode);
+      auto routingInfo = leaderClient.fetchRoutingInfo();
       auto myNodeInfo = routingInfo.nodeRegionMap[nodeId.nid];
       
       myNode = new Node(myNodeInfo, routingInfo);
       myNode->setStatus(NodeStatus::ACTIVE);
-      (*leaderClient)->startHeartBeats();
       //NodeInfo nodeInfo;
       //myNode = new Node(nodeInfo);
       success = true;
@@ -76,9 +76,33 @@ void initFromLeader(NodeId const& nodeId, std::unique_ptr<LeaderClient>* leaderC
   }
 }
 
+void startHeartBeatsToLeader() {
+  while(true) {
+    if (myNode) {
+      auto& nodeInfo = myNode->me_;
+      // set the current timestamp for ping node
+      nodeInfo.timestamp = time(nullptr);
+      try {
+        LeaderClient leaderClient(leaderNode);
+        printf("Pinging leader\n");
+        leaderClient.metaDataProviderClient_->ping(nodeInfo);
+      } catch (exception const& e) {
+        printf("Ping not succesful: %s\n", e.what());
+      }
+    } else {
+      printf("Node is not initialized\n");
+    }
+    sleep(FLAGS_heartbeat_interval);
+  }
+  printf("Exiting sendHeartBeat thread\n");
+}
+
 int main(int argc, char **argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
   printf("Starting CoreServer...\n");
+  leaderNode.ip = "localhost";
+  leaderNode.serverPort = 9990;
+
   // Initialize Node class 
   // Assume that NodeId is got from gflag
   NodeId nodeId;
@@ -94,10 +118,13 @@ int main(int argc, char **argv) {
   proximity = new ProximityManager(proximityConfig);
   
   std::unique_ptr<LeaderClient> leaderClient;
-  std::thread leaderInitThread(&initFromLeader, nodeId, &leaderClient);
+  std::thread leaderInitThread(&initFromLeader, nodeId);
 
   printf("Spawning ServerTalkThread (port %d)...\n", FLAGS_server_talk_port);
   std::thread serverTalkThread(&serveServers);
+
+  printf("Spawning thread to ping leader\n");
+  std::thread leaderHeartBeatThread(&startHeartBeatsToLeader);
 
   printf("Ready to serve clients (port %d)...\n", FLAGS_client_port);
   serveClients();
