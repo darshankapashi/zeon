@@ -1,6 +1,7 @@
 #include "src/server/Structs.h"
 #include "gen-cpp/MetaDataProvider.h"
 #include "gen-cpp/ServerTalk.h"
+#include "src/server/ServerTalker.h"
 
 using namespace core;
 
@@ -53,5 +54,5 @@ class MetaDataProviderStore {
   // last updated timestamp
   timestamp_t leaderLastUpdateTime_;
   int32_t replicationFactor_;
-  unordered_map<nid_t, ServerTalkClient*> clientToServers_;
+  unordered_map<nid_t, ServerTalker> clientToServers_;
 };

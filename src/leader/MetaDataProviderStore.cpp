@@ -1,6 +1,4 @@
 #include "src/leader/MetaDataProviderStore.h"
-#include "src/server/ServerTalker.h"
-
 #include <thrift/protocol/TBinaryProtocol.h>
 #include <thrift/transport/TSocket.h>
 #include <thrift/transport/TTransportUtils.h>
@@ -41,8 +39,8 @@ int MetaDataProviderStore::initializeConfig(const MetaDataConfig& config) {
 
   // create connection to each client
   for (auto node: config.allNodes) {
-    clientToServers_[node.nid] = ServerTalker(node).get();
-    cout<<"created clientConnection: "<<clientToServers_[node.nid];
+    clientToServers_.emplace(make_pair(node.nid, ServerTalker(node)));
+    //cout<<"created clientConnection: "<<clientToServers_[node.nid];
   }
   // Based on replication Factor assign replicas uniformly
   // TODO: decide replicas based on load 
@@ -256,44 +254,44 @@ bool  MetaDataProviderStore::loadBalance(bool test = false) {
 
    //send the prepareRecvRoutingInfo to free and busy node
   printf("clientToServers_ size: %lld\n", clientToServers_.size());
-  auto* clientFreeNode = clientToServers_[updateFreeNodeInfo.nodeId.nid];
+  auto* clientFreeNode = clientToServers_.at(updateFreeNodeInfo.nodeId.nid).get();
   cout<<"free node id: "<<updateFreeNodeInfo.nodeId.nid<<endl;
   cout<<"buy node id: "<<updateBusyNodeInfo.nodeId.nid<<endl;
   cout<<clientFreeNode<<"\n";
-  auto* clientBusyNode = clientToServers_[updateBusyNodeInfo.nodeId.nid];
+  auto* clientBusyNode = clientToServers_.at(updateBusyNodeInfo.nodeId.nid).get();
   cout<<clientBusyNode<<"\n";
   printf("call prePareRoutingInfo\n");
 
   
-   boost::shared_ptr<TTransport> socket(new TSocket(updateFreeNodeInfo.nodeId.ip, updateFreeNodeInfo.nodeId.serverPort));
-;
-   boost::shared_ptr<TTransport> transport(new TBufferedTransport(socket));
-   transport->open();
-   boost::shared_ptr<TProtocol> protocol(new TBinaryProtocol(transport));
-   ServerTalkClient client(protocol);
-  int freeNodePrepareStatus = client.prepareRecvNodeInfo(updateFreeNodeInfo);
+   //boost::shared_ptr<TTransport> socket(new TSocket(updateFreeNodeInfo.nodeId.ip, updateFreeNodeInfo.nodeId.serverPort));
+//;
+   //boost::shared_ptr<TTransport> transport(new TBufferedTransport(socket));
+   //transport->open();
+   //boost::shared_ptr<TProtocol> protocol(new TBinaryProtocol(transport));
+   //ServerTalkClient client(protocol);
+  int freeNodePrepareStatus = clientFreeNode->prepareRecvNodeInfo(updateFreeNodeInfo);
 
-   boost::shared_ptr<TTransport> socket1(new TSocket(updateBusyNodeInfo.nodeId.ip, updateBusyNodeInfo.nodeId.serverPort));
-;
-   boost::shared_ptr<TTransport> transport1(new TBufferedTransport(socket1));
-   transport1->open();
-   boost::shared_ptr<TProtocol> protocol1(new TBinaryProtocol(transport1));
-   ServerTalkClient client1(protocol1);
-  int busyNodePrepareStatus = client1.prepareRecvNodeInfo(updateBusyNodeInfo);
+   //boost::shared_ptr<TTransport> socket1(new TSocket(updateBusyNodeInfo.nodeId.ip, updateBusyNodeInfo.nodeId.serverPort));
+//;
+   //boost::shared_ptr<TTransport> transport1(new TBufferedTransport(socket1));
+   //transport1->open();
+   //boost::shared_ptr<TProtocol> protocol1(new TBinaryProtocol(transport1));
+   //ServerTalkClient client1(protocol1);
+  int busyNodePrepareStatus = clientBusyNode->prepareRecvNodeInfo(updateBusyNodeInfo);
 
   if (freeNodePrepareStatus != NodeMessage::PREPARED_RECV_ROUTING_INFO
     || busyNodePrepareStatus != NodeMessage::PREPARED_RECV_ROUTING_INFO) {
     return false;
   }
   printf("Call commitRoutingInfo \n");
-  //clientFreeNode->commitRecvNodeInfo(updateFreeNodeInfo);
-  //allNodes_[updateFreeNodeInfo.nodeId.nid] = updateFreeNodeInfo;
-  //clientBusyNode->commitRecvNodeInfo(updateBusyNodeInfo);
-  //allNodes_[updateBusyNodeInfo.nodeId.nid] = updateBusyNodeInfo;
-  client.commitRecvNodeInfo(updateFreeNodeInfo);
+  clientFreeNode->commitRecvNodeInfo(updateFreeNodeInfo);
   allNodes_[updateFreeNodeInfo.nodeId.nid] = updateFreeNodeInfo;
-  client1.commitRecvNodeInfo(updateBusyNodeInfo);
+  clientBusyNode->commitRecvNodeInfo(updateBusyNodeInfo);
   allNodes_[updateBusyNodeInfo.nodeId.nid] = updateBusyNodeInfo;
+  //client.commitRecvNodeInfo(updateFreeNodeInfo);
+  //allNodes_[updateFreeNodeInfo.nodeId.nid] = updateFreeNodeInfo;
+  //client1.commitRecvNodeInfo(updateBusyNodeInfo);
+  //allNodes_[updateBusyNodeInfo.nodeId.nid] = updateBusyNodeInfo;
 
   // update routing table at all nodes
   RoutingInfo updatedRoutingInfo;
@@ -305,10 +303,10 @@ bool  MetaDataProviderStore::loadBalance(bool test = false) {
   for (auto client : clientToServers_) {
     if (client.first != freeNodeId && 
         client.first != busyNodeId) {
-      client.second->receiveRoutingInfo(updatedRoutingInfo);
+      (client.second.get())->receiveRoutingInfo(updatedRoutingInfo);
     }
   }
-  transport->close();
-  transport1->close();
+  //transport->close();
+  //transport1->close();
   return true;
 }

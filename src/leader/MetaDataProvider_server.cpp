@@ -25,7 +25,7 @@ class MetaDataProviderHandler : virtual public MetaDataProviderIf {
   void startLoadBalancing() {
     bool status = false;
     while(!status && FLAGS_load_balance_enabled) {
-      sleep(10);
+      sleep(7);
       metaDataProviderStore_.loadBalance(true);
       status = true;
     }
