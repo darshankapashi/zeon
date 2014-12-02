@@ -27,11 +27,13 @@ int MetaDataProviderStore::initializeConfig(const MetaDataConfig& config) {
   for (auto nodeRegion : config.nodeRegionMap) {
     allNodes_[nodeRegion.first].nodeDataStats.region = 
       nodeRegion.second;
-    //for (auto rec : nodeRegion.second) {
-      //auto rectStats = RectangleStats();
-      //rectStats.master = nodeRegion.first;
-      //rectangleToKeyCount_[rec] = rectStats;
-    //}
+    for (auto rec : nodeRegion.second.rectangles) {
+      RectangleStats rectStats;
+      rectStats.rectangle = rec;
+      rectStats.zidCount = -1;
+      rectStats.queryRate = -1;
+      allNodes_[nodeRegion.first].nodeDataStats.rectangleStats.emplace_back(rectStats);
+    }
   }
 
   // create connection to each client
@@ -145,8 +147,18 @@ int64_t totalQueryRate(const vector<RectangleStats>& recStatsList) {
 bool  MetaDataProviderStore::loadBalance(bool test = false) { 
 
   printf("Starting load balance\n");
+  printf("allNodes size: %d\n", allNodes_.size());
   vector<pair<SystemStats, vector<RectangleStats> >> statsVector;
-  for (auto node: allNodes_) {
+  for (auto& node: allNodes_) {
+    node.second.systemStats.nid = node.first;
+    node.second.nodeDataStats.nid = node.first;
+    if (test) {
+      printf("Rectangle stats for nid: %d\n", node.first);
+      for (auto recStats: node.second.nodeDataStats.rectangleStats) {
+        printf("Rectangle: (%lld, %lld) (%lld, %lld), zidCount: %ld, queryrate: %ld \n", recStats.rectangle.bottomLeft.xCord, 
+        recStats.rectangle.bottomLeft.yCord, recStats.rectangle.topRight.xCord, recStats.rectangle.topRight.yCord, recStats.zidCount, recStats.queryRate);
+      }
+    }
     statsVector.push_back(
       make_pair(node.second.systemStats, 
                 node.second.nodeDataStats.rectangleStats));

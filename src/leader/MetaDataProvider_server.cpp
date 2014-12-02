@@ -24,7 +24,7 @@ class MetaDataProviderHandler : virtual public MetaDataProviderIf {
   void startLoadBalancing() {
     bool status = false;
     while(!status && FLAGS_load_balance_enabled) {
-      sleep(10);
+      sleep(5);
       metaDataProviderStore_.loadBalance(true);
       status = true;
     }
@@ -130,10 +130,10 @@ int main(int argc, char **argv) {
 
 
   handler->initializeConfig(config);
+  printf("Leader server started\n");
+  //handler->startLoadBalancing();
   TThreadedServer server(processor, serverTransport, transportFactory, protocolFactory);
   server.serve();
-  printf("Leader server started\n");
-  handler->startLoadBalancing();
   return 0;
 }
 
