@@ -99,7 +99,7 @@ service MetaDataProvider {
   RoutingInfo getRoutingInfo() throws (1: MetaStoreException me),
 
   // Node informs the leader indicating its availability 
-//  void nodeJoin (1: core.NodeId nodeId, 2: core.NodeDataStats nodeDataStats, 
+  //  void nodeJoin (1: core.NodeId nodeId, 2: core.NodeDataStats nodeDataStats, 
   //3: core.SystemStats systemStats, 4: core.timestamp_t time ) 
   //throws (1: MetaStoreException me),
 
