@@ -6,6 +6,7 @@
 #include "src/leader/MetaDataProviderStore.h"
 #include <gflags/gflags.h>
 #include <ctime>
+#include <thread>
 
 using namespace ::apache::thrift;
 using namespace ::apache::thrift::protocol;
@@ -24,7 +25,7 @@ class MetaDataProviderHandler : virtual public MetaDataProviderIf {
   void startLoadBalancing() {
     bool status = false;
     while(!status && FLAGS_load_balance_enabled) {
-      sleep(5);
+      sleep(10);
       metaDataProviderStore_.loadBalance(true);
       status = true;
     }
@@ -39,7 +40,6 @@ class MetaDataProviderHandler : virtual public MetaDataProviderIf {
       me.why = "Error in initialization";
       throw me;
     }
-    //thread(startLoadBalancing(this));
   }
 
   void ping(const NodeInfo& nodeInfo) {
@@ -131,7 +131,7 @@ int main(int argc, char **argv) {
 
   handler->initializeConfig(config);
   printf("Leader server started\n");
-  //handler->startLoadBalancing();
+  std::thread loadBalanceThread(&MetaDataProviderHandler::startLoadBalancing, handler);
   TThreadedServer server(processor, serverTransport, transportFactory, protocolFactory);
   server.serve();
   return 0;

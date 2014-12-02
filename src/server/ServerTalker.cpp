@@ -14,6 +14,7 @@ ServerTalker::ServerTalker(std::string ip, int port)
     protocol_(new TBinaryProtocol(transport_)),
     client_(protocol_)
 {
+  printf("Creating ServerTalker connection for: %s %d\n", ip.c_str(), port);
   transport_->open();
 }
 
@@ -22,5 +23,6 @@ ServerTalker::~ServerTalker() {
 }
 
 ServerTalkClient* ServerTalker::get() {
+  printf("serverTalker connection for: %lld\n", &client_);
   return &client_;
 }
