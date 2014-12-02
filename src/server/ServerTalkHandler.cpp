@@ -24,7 +24,10 @@ void ServerTalkHandler::getValue(std::string& _return, const zeonid_t zid) {
 }
 
 void ServerTalkHandler::getDataForRectangle(vector<Data>& _return, const Rectangle& rect) {
-  printf("getDataForRectangle\n");
+  printf("getDataForRectangle Rectangle: (%lld,%lld) (%lld,%lld)\n", 
+    rect.bottomLeft.xCord, rect.bottomLeft.yCord,
+    rect.topRight.xCord, rect.topRight.yCord);
+
 
   // Find all the zids in this rectangle and return that.
   vector<Data> datas;
@@ -74,8 +77,7 @@ void ServerTalkHandler::receiveRoutingInfo(const RoutingInfo& routingInfo) {
   //myNode->me_ = myNode->updateNodeInfoTemp_; 
 }
 
-int32_t ServerTalkHandler::prepareRecvNodeInfo(const NodeInfo& nodeInfo, 
-   const ParentRectangleList& parentRectangleMap) {
+int32_t ServerTalkHandler::prepareRecvNodeInfo(const NodeInfo& nodeInfo, const ParentRectangleList& parentRectangleMap) {
   printf("prepareRecvRoutingInfo\n");
   // check if version for latest copy of routingInfo
   // Copy this in tempStateObjects
@@ -86,13 +88,13 @@ int32_t ServerTalkHandler::prepareRecvNodeInfo(const NodeInfo& nodeInfo,
   }
   myNode->updateNodeInfoTemp_ = nodeInfo;
   myNode->updateRoutingInfoTemp_ = myNode->routingInfo_;
-  auto it = myNode->updateRoutingInfoTemp_.nodeRegionMap.
-    find(myNode->me_.nodeId.nid);
+  auto it = myNode->updateRoutingInfoTemp_.nodeRegionMap.find(myNode->me_.nodeId.nid);
   if (it == myNode->updateRoutingInfoTemp_.nodeRegionMap.end()) {
     return NodeMessage::ERROR;
   }
   myNode->updateRoutingInfoTemp_.nodeRegionMap[myNode->me_.nodeId.nid] = nodeInfo; 
-  //myNode->fetchNewData();
+  myNode->setParentMapping(parentRectangleMap);
+  myNode->fetchNewData();
   return NodeMessage::PREPARED_RECV_ROUTING_INFO;
 }
 
@@ -110,7 +112,6 @@ int32_t ServerTalkHandler::commitRecvNodeInfo(const NodeInfo& nodeInfo) {
   myNode->me_ = myNode->updateNodeInfoTemp_; 
   myNode->routingInfo_ = myNode->updateRoutingInfoTemp_;
   myNode->setStatus(NodeStatus::ACTIVE);
-  // TODO: Use the temporary data and input it to the data store
   myNode->commitNewData();
   return NodeMessage::COMMIT_RECV_ROUTING_INFO;
 }

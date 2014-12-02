@@ -48,6 +48,7 @@ class Node {
   void fetchAndStoreInTemp(Rectangle const& r);
   void fetchNewData();
   void commitNewData();
+  void setParentMapping(ParentRectangleList const& list);
 
  public:
   NodeInfo me_;
@@ -68,4 +69,6 @@ class Node {
 
   // Temporary store for data
   unordered_map<Rectangle, vector<Data>> tempData_;
+
+  unordered_map<Rectangle, Rectangle> parentMapping_;
 };

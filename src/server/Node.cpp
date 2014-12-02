@@ -207,12 +207,13 @@ void Node::fetchAndStoreInTemp(Rectangle const& r) {
       r.bottomLeft.xCord, r.bottomLeft.yCord,
       r.topRight.xCord, r.topRight.yCord);
 
-  auto const& nodes = rectangleToNode_[r];
+  auto const& parentRect = parentMapping_.at(r);
+  auto const& nodes = rectangleToNode_[parentRect];
   bool found = false;
   for (auto const& node: nodes) {
     try {
-      ServerTalker walkieTalkie(routingInfo_.nodeRegionMap.at(node).nodeId);
       auto& datas = tempData_[r];
+      ServerTalker walkieTalkie(routingInfo_.nodeRegionMap.at(node).nodeId);
       walkieTalkie.get()->getDataForRectangle(datas, r);
       found = true;
     } catch (exception const& e) {
@@ -251,5 +252,12 @@ void Node::commitNewData() {
     for (auto const& data: kv.second) {
       storeData(data, true);
     }
+  }
+}
+
+void Node::setParentMapping(ParentRectangleList const& list) {
+  parentMapping_.clear();
+  for (auto const& k: list) {
+    parentMapping_[k.me] = k.parent;
   }
 }
