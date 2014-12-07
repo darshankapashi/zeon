@@ -5,6 +5,7 @@
 #include <thrift/transport/TTransportUtils.h>
 
 #include "gen-cpp/PointStore.h"
+#include "ZeonClient.h"
 
 using namespace std;
 using namespace apache::thrift;
@@ -19,55 +20,11 @@ DEFINE_int32(port2, 8001, "Server2 port to connect to");
 DEFINE_bool(part1, true, "Run part 1");
 DEFINE_bool(part2, true, "Run part 2");
 
-Point makePoint(int x, int y) {
-  Point p;
-  p.xCord = x;
-  p.yCord = y;
-  return p;
-}
-
-Data makeData(int id, Point p, string value = "") {
-  Data d;
-  d.id = id;
-  d.point = p;
-  d.value = value;
-  return d;
-}
-
-class Client {
- public:
-  Client(string ip, int port) {
-    socket.reset(new TSocket(ip, port));
-    transport.reset(new TBufferedTransport(socket));
-    protocol.reset(new TBinaryProtocol(transport));
-    client = new PointStoreClient(protocol);  
-    transport->open();
-  }
-
-  ~Client() {
-    transport->close();
-    delete client;
-  }
-
-  PointStoreClient& get() {
-    return *client;
-  }
-
-  boost::shared_ptr<TTransport> socket;
-  boost::shared_ptr<TTransport> transport;
-  boost::shared_ptr<TProtocol> protocol;
-  PointStoreClient* client;
-};
-
-void printData(Data const& d) {
-  cout << "Recv: " << d.id << " (" << d.point.xCord << "," << d.point.yCord << ") " << d.value << "\n";
-}
-
 int main(int argc, char **argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
 
-  Client client1 ("localhost", FLAGS_port1);
-  Client client2 ("localhost", FLAGS_port2);
+  ZeonClient client1 ("localhost", FLAGS_port1);
+  ZeonClient client2 ("localhost", FLAGS_port2);
   try {
     if (FLAGS_part1) {
       cout << "======= Create test" << endl;

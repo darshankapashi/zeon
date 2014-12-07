@@ -57,8 +57,10 @@ thrift: src/if/core.thrift src/if/server.thrift
 	thrift --gen cpp src/if/leader.thrift
 	thrift --gen cpp src/if/server.thrift
 
-client: src/client/CoreClient.cpp
-	g++ ${CPP_OPTS} -o bin/client ${INCS_DIRS} src/client/CoreClient.cpp ${GEN_SRC} ${LIBS}
+CLIENT_CPP = src/client/ClientTest.cpp src/client/ZeonClient.cpp
+
+client: ${CLIENT_CPP}
+	g++ ${CPP_OPTS} -o bin/client ${INCS_DIRS} ${CLIENT_CPP} ${GEN_SRC} ${LIBS}
 
 proximity: src/server/ProximityManager.cpp
 	g++ ${CPP_OPTS} -o bin/proximity ${INCS_DIRS} src/server/ProximityManager.cpp ${GEN_SRC} ${LIBS}
