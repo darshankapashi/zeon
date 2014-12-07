@@ -55,7 +55,8 @@ enum ErrorCode {
   SERVER_ERROR = 7,
   SERVER_NOT_READY = 8,
   SERVER_REDIRECT = 9,
-  ALREADY_EXISTS = 10, 
+  ALREADY_EXISTS = 10,
+  NO_SERVER_AVAILABLE = 11,
 }
 
 exception ZeonException {
