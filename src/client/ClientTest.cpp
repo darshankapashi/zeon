@@ -21,6 +21,8 @@ int main(int argc, char **argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
 
   ZeonClient client;
+  client.addClient("localhost", 8000);
+  client.addClient("localhost", 8001);
   try {
     if (FLAGS_part1) {
       cout << "======= Create test" << endl;

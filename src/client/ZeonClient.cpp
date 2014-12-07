@@ -64,17 +64,20 @@ void ZeonClient::setPrevPoint(Data& data) {
   try { \
     servers_[server]->client->method; \
   } catch (ZeonException const& e) { \
-    cout << "Call to server at " << servers_[server]->ip << ":" << servers_[server]->port << " failed\n"; \
+    cout << "Call to server at " << servers_[server]->ip << ":" << servers_[server]->port \
+         << " failed, err=" << e.what << "\n"; \
     if (e.what == SERVER_REDIRECT) { \
       bool success = false; \
       for (auto const& node: e.nodes) { \
         try { \
+          cout << "Contacting " << node.ip << ":" << node.clientPort << "\n"; \
           server = addClient(node.ip, node.clientPort); \
           servers_[server]->client->method; \
           success = true; \
           break; \
         } catch (ZeonException const& e) { \
-          cout << "Call to server at " << node.ip << ":" << node.clientPort << " failed\n"; \
+          cout << "Call to server at " << node.ip << ":" << node.clientPort \
+               << " failed, err=" << e.what << "\n"; \
         } \
       } \
       if (!success) { \
