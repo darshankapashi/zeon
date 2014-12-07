@@ -21,39 +21,56 @@ void printData(Data const& d) {
   cout << "Recv: " << d.id << " (" << d.point.xCord << "," << d.point.yCord << ") " << d.value << "\n";
 }
 
-ZeonClient::ZeonClient(string ip, int port) 
-  : ip_(ip), port_(port) 
-{
-  socket.reset(new TSocket(ip, port));
-  transport.reset(new TBufferedTransport(socket));
-  protocol.reset(new TBinaryProtocol(transport));
-  client = new PointStoreClient(protocol);  
-  transport->open();
+int ZeonClient::addClient(string ip, int port) {
+  for (int i = 0; i < servers_.size(); i++) {
+    auto const& meta = servers_[i];
+    if (meta->ip == ip && meta->port == port) {
+      return i;
+    }
+  }
+  servers_.emplace_back();
+  std::unique_ptr<Meta>& meta = servers_.back();
+  meta.reset(new Meta(ip, port));
+  meta->socket.reset(new TSocket(ip, port));
+  meta->transport.reset(new TBufferedTransport(meta->socket));
+  meta->protocol.reset(new TBinaryProtocol(meta->transport));
+  meta->client.reset(new PointStoreClient(meta->protocol));
+  meta->transport->open();
+  return servers_.size();
 }
 
-ZeonClient::~ZeonClient() {
-  transport->close();
-  delete client;
+int ZeonClient::getServer(zeonid_t id) {
+  int server;
+  auto serverIt = idToServers_.find(id);
+  if (serverIt == idToServers_.end()) {
+    server = rand() % servers_.size();
+  } else {
+    server = serverIt->second;
+  }
+  return server;
 }
 
-PointStoreClient& ZeonClient::get() {
-  return *client;
+void ZeonClient::setPrevPoint(Data& data) {
+  auto lastPointIt = lastPoints_.find(data.id);
+  if (lastPointIt != lastPoints_.end()) {
+    data.prevPoint = lastPointIt->second;
+  }
 }
 
 // TODO: This is a very hacky way to do this. 
 //       Maybe refactor this into a reusable function call 
 //       which takes in a function pointer as an argument
-#define WRAP_CALL(method) \
+#define WRAP_CALL(server, method) \
   try { \
-    client->method; \
+    servers_[server]->client->method; \
   } catch (ZeonException const& e) { \
-    cout << "Call to server at " << ip_ << ":" << port_ << " failed\n"; \
+    cout << "Call to server at " << servers_[server]->ip << ":" << servers_[server]->port << " failed\n"; \
     if (e.what == SERVER_REDIRECT) { \
       bool success = false; \
       for (auto const& node: e.nodes) { \
         try { \
-          ZeonClient maybeThisClient(node.ip, node.clientPort); \
-          maybeThisClient.get().method; \
+          server = addClient(node.ip, node.clientPort); \
+          servers_[server]->client->method; \
           success = true; \
           break; \
         } catch (ZeonException const& e) { \
@@ -73,17 +90,26 @@ PointStoreClient& ZeonClient::get() {
   }
 
 void ZeonClient::getData(Data& _return, const zeonid_t id, const bool valuePresent) {
-  WRAP_CALL(getData(_return, id, valuePresent));
+  int server = getServer(id);
+  WRAP_CALL(server, getData(_return, id, valuePresent));
+  idToServers_[id] = server;
 }
 
-void ZeonClient::setData(const Data& data, const bool valuePresent) {
-  WRAP_CALL(setData(data, valuePresent));
+void ZeonClient::setData(Data& data, const bool valuePresent) {
+  setPrevPoint(data);
+  int server = getServer(data.id);
+  WRAP_CALL(server, setData(data, valuePresent));
+  idToServers_[data.id] = server;
+  lastPoints_[data.id] = data.point;
 }
 
 void ZeonClient::createData(const zeonid_t id, const Point& point, const int64_t timestamp, const string& value) {
-  WRAP_CALL(createData(id, point, timestamp, value));
+  int server = getServer(id);
+  WRAP_CALL(server, createData(id, point, timestamp, value));
+  idToServers_[id] = server;
 }
 
 void ZeonClient::getNearestKByPoint(vector<Data> & _return, const Point& point, const int32_t k) {
-  WRAP_CALL(getNearestKByPoint(_return, point, k));
+  int server = rand() % servers_.size();
+  WRAP_CALL(server, getNearestKByPoint(_return, point, k));
 }

@@ -23,6 +23,7 @@ DEFINE_bool(part2, true, "Run part 2");
 int main(int argc, char **argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
 
+  /*
   ZeonClient client1 ("localhost", FLAGS_port1);
   ZeonClient client2 ("localhost", FLAGS_port2);
   try {
@@ -131,5 +132,5 @@ int main(int argc, char **argv) {
   } catch (TException const& tx) {
     cout << "ERROR: " << tx.what() << endl;
   }
-
+  */
 }
