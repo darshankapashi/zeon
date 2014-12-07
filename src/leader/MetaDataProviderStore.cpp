@@ -270,8 +270,8 @@ bool  MetaDataProviderStore::loadBalance(bool test = false) {
    //send the prepareRecvRoutingInfo to free and busy node
   printf("clientToServers_ size: %lld\n", clientToServers_.size());
   auto* clientFreeNode = clientToServers_.at(updateFreeNodeInfo.nodeId.nid).get();
-  //cout<<"free node id: "<<updateFreeNodeInfo.nodeId.nid<<endl;
-  //cout<<"buy node id: "<<updateBusyNodeInfo.nodeId.nid<<endl;
+  //cout << "free node id: " << updateFreeNodeInfo.nodeId.nid << endl;
+  //cout << "buy node id: " << updateBusyNodeInfo.nodeId.nid << endl;
   auto* clientBusyNode = clientToServers_.at(updateBusyNodeInfo.nodeId.nid).get();
   printf("call prePareRoutingInfo\n");
 

@@ -110,6 +110,7 @@ void ZeonClient::createData(const zeonid_t id, const Point& point, const int64_t
   int server = getServer(id);
   WRAP_CALL(server, createData(id, point, timestamp, value));
   idToServers_[id] = server;
+  lastPoints_[id] = point;
 }
 
 void ZeonClient::getNearestKByPoint(vector<Data> & _return, const Point& point, const int32_t k) {

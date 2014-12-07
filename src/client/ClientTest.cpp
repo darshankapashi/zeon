@@ -16,6 +16,7 @@ using namespace core;
 
 DEFINE_bool(part1, true, "Run part 1");
 DEFINE_bool(part2, true, "Run part 2");
+DEFINE_bool(part3, true, "Run part 3");
 
 int main(int argc, char **argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
@@ -123,6 +124,24 @@ int main(int argc, char **argv) {
         cout << "ZeonException: " << ze.what << " " << ze.why << endl;
       }
 
+    }
+
+    if (FLAGS_part3) {
+      cout << "====== setData previous point tracking test" << endl;
+      try {
+        Data data = makeData(10, makePoint(50,50), "Hello World");
+        client.createData(data.id, data.point, time(nullptr), data.value);
+        data.point = makePoint(60,60);
+        client.setData(data, false);
+        data.point = makePoint(80,80);
+        client.setData(data, false);
+        data.point = makePoint(160,80);
+        client.setData(data, false);
+        data.point = makePoint(110,60);
+        client.setData(data, false);
+      } catch (ZeonException const& ze) {
+        cout << "ZeonException: " << ze.what << " " << ze.why << endl;
+      }
     }
   } catch (ZeonException const& ze) {
     cout << "ZeonException: " << ze.what << " " << ze.why << endl;
