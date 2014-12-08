@@ -302,8 +302,6 @@ bool  MetaDataProviderStore::loadBalance(bool test = false) {
   for (auto node : allNodes_) {
     updatedRoutingInfo.nodeRegionMap[node.first] = node.second;
   }
-
-  //updatedRoutingInfo.nodeRegionMap = allNodes_;
   updatedRoutingInfo.timestamp = time(nullptr);
   for (auto client : clientToServers_) {
     if (client.first != freeNodeId && 
@@ -311,6 +309,7 @@ bool  MetaDataProviderStore::loadBalance(bool test = false) {
       (client.second.get())->receiveRoutingInfo(updatedRoutingInfo);
     }
   }
+
   clientToServers_.at(updateFreeNodeInfo.nodeId.nid).closeTransport();
   clientToServers_.at(updateBusyNodeInfo.nodeId.nid).closeTransport();
   return true;
