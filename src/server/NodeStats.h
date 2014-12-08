@@ -1,3 +1,4 @@
+#pragma once
 /*
  * This class encapsulates all the statistics that a server might need to keep a track of
  */
@@ -33,7 +34,7 @@ class NodeStats {
   long getAvg(Stat stat);
   long getLatest(Stat stat);
 
-  SystemStats getSystemStats(DataStoreConfig*);
+  SystemStats getSystemStats(DataStoreConfig* config = nullptr);
  private:
   // Disallow copy
   NodeStats(NodeStats const&);
@@ -48,4 +49,4 @@ class NodeStats {
   mutex statsLock_;
 };
 
-NodeStats* zeonData = new NodeStats();
+//NodeStats* zeonData = new NodeStats();

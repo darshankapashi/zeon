@@ -25,6 +25,8 @@ int MetaDataProviderStore::initializeConfig(const MetaDataConfig& config) {
     nodeInfo.nodeId = node;
     nodeInfo.timestamp = initializedTime;
     nodeInfo.nodeDataStats.nid = node.nid;
+    nodeInfo.systemStats.nid = node.nid;
+    nodeInfo.nodeDataStats.nid = node.nid;
     allNodes_[node.nid] = nodeInfo;
   }
   globalRegion_ = config.globalRegion;
@@ -34,8 +36,8 @@ int MetaDataProviderStore::initializeConfig(const MetaDataConfig& config) {
     for (auto rec : nodeRegion.second.rectangles) {
       RectangleStats rectStats;
       rectStats.rectangle = rec;
-      rectStats.zidCount = -1;
-      rectStats.queryRate = -1;
+      rectStats.zidCount = -2;
+      rectStats.queryRate = -3;
       allNodes_[nodeRegion.first].nodeDataStats.rectangleStats.emplace_back(rectStats);
     }
   }
@@ -152,15 +154,14 @@ int64_t totalQueryRate(const vector<RectangleStats>& recStatsList) {
 bool  MetaDataProviderStore::loadBalance(bool test = false) { 
 
   printf("Starting load balance\n");
-  printf("allNodes size: %d\n", allNodes_.size());
+  printf("allNodes size: %lu\n", allNodes_.size());
   vector<pair<SystemStats, vector<RectangleStats> >> statsVector;
+
   for (auto& node: allNodes_) {
-    node.second.systemStats.nid = node.first;
-    node.second.nodeDataStats.nid = node.first;
     if (test) {
-      printf("Rectangle stats for nid: %d\n", node.first);
+      printf("Rectangle stats for nid: %lld\n", node.first);
       for (auto recStats: node.second.nodeDataStats.rectangleStats) {
-        printf("Rectangle: (%lld, %lld) (%lld, %lld), zidCount: %ld, queryrate: %ld \n", recStats.rectangle.bottomLeft.xCord, 
+        printf("Rectangle: (%lld, %lld) (%lld, %lld), zidCount: %lld, queryrate: %d \n", recStats.rectangle.bottomLeft.xCord, 
         recStats.rectangle.bottomLeft.yCord, recStats.rectangle.topRight.xCord, recStats.rectangle.topRight.yCord, recStats.zidCount, recStats.queryRate);
       }
     }
@@ -169,6 +170,7 @@ bool  MetaDataProviderStore::loadBalance(bool test = false) {
                 node.second.nodeDataStats.rectangleStats));
   }
   sort(statsVector.begin(), statsVector.end(), statsComparator);
+
   // Fetch only busiest and move its load on least busiest node incase it exceeds the threshold
   if (!test && (!statsThresholdChecker(statsVector.front()) || statsThresholdChecker(statsVector.back()))) {
     printf("Stats threshold check failed\n");
@@ -177,6 +179,7 @@ bool  MetaDataProviderStore::loadBalance(bool test = false) {
 
   // TODO: If more than 1 rectangle then transfer rectangles to make number of zids managed by each of them comparable
   // Else split the rectangle
+  if (allNodes_.size() < 2) return true;
   auto& busyNode = statsVector.front();
   auto busyNodeId = busyNode.first.nid;
   auto& freeNode = statsVector.back();
@@ -187,11 +190,14 @@ bool  MetaDataProviderStore::loadBalance(bool test = false) {
   ParentRectangleList parentRectangleList;
   ParentRectangleList parentRectangleListUpdate;
 
-  vector<Rectangle> toMoveRectangles;
+  vector<RectangleStats> toMoveRectangles;
 
   auto busyNodeRectStats = busyNode.second; 
-  sort(busyNodeRectStats.begin(), busyNodeRectStats.end(), recStatsSorter);
+  for (int i = 0; i < busyNodeRectStats.size()/2; i++) {
+    toMoveRectangles.push_back(busyNodeRectStats[i]);
+  }
   // TODO: queryRateDifference correction
+  //sort(busyNodeRectStats.begin(), busyNodeRectStats.end(), recStatsSorter);
   //auto queryRateDifference = totalQueryRate(busyNode.second) - totalQueryRate(freeNode.second); 
   //auto queryRateDifference = 0;
   //for (auto rectStat: busyNodeRectStats) {
@@ -264,40 +270,60 @@ bool  MetaDataProviderStore::loadBalance(bool test = false) {
                      toUpdateRectangle.topRight.xCord, toUpdateRectangle.topRight.yCord); 
   } 
   else {
-  // TODO: updateFreeNodeInfo and updateBusyNodeInfo based on toMoveRec_
+    for (auto recStat: toMoveRectangles) {
+      updateFreeNodeInfo.nodeDataStats.region.
+        rectangles.emplace_back(recStat.rectangle);
+      updateFreeNodeInfo.nodeDataStats.rectangleStats.
+        emplace_back(recStat);
+    }
+    Region updatedBusyRegion;
+    vector<RectangleStats> updatedBusyRectangleStats;
+    for (auto recStat : updateBusyNodeInfo.nodeDataStats.rectangleStats) {
+      bool flag = false;
+      for (auto toMoveRecStat : toMoveRectangles) {
+        hash<Rectangle> hash_fn;
+        if (hash_fn(recStat.rectangle) ==  
+          hash_fn(toMoveRecStat.rectangle)) {
+          flag = true;
+          break;
+        }
+      }
+      if (!flag) {
+        updatedBusyRectangleStats.emplace_back(recStat);
+        updatedBusyRegion.rectangles.emplace_back(recStat.rectangle);
+      }
+    }
+    updateBusyNodeInfo.nodeDataStats.region = updatedBusyRegion;
+    updateBusyNodeInfo.nodeDataStats.rectangleStats = 
+      updatedBusyRectangleStats;
   }
 
+
    //send the prepareRecvRoutingInfo to free and busy node
-  printf("clientToServers_ size: %lld\n", clientToServers_.size());
+  printf("clientToServers_ size: %lu\n", clientToServers_.size());
   auto* clientFreeNode = clientToServers_.at(updateFreeNodeInfo.nodeId.nid).get();
-  //cout << "free node id: " << updateFreeNodeInfo.nodeId.nid << endl;
-  //cout << "buy node id: " << updateBusyNodeInfo.nodeId.nid << endl;
   auto* clientBusyNode = clientToServers_.at(updateBusyNodeInfo.nodeId.nid).get();
   printf("call prePareRoutingInfo\n");
 
-  // update routing table at all nodes
+  // Create potentially updated routing info
   RoutingInfo updatedRoutingInfo;
   for (auto node : allNodes_) {
     updatedRoutingInfo.nodeRegionMap[node.first] = node.second;
   }
-
-  //updatedRoutingInfo.nodeRegionMap = allNodes_;
+  updatedRoutingInfo.nodeRegionMap[updateFreeNodeInfo.nodeId.nid] = updateFreeNodeInfo;
+  updatedRoutingInfo.nodeRegionMap[updateBusyNodeInfo.nodeId.nid] = updateBusyNodeInfo;
   updatedRoutingInfo.timestamp = time(nullptr);
 
   clientToServers_.at(updateFreeNodeInfo.nodeId.nid).openTransport();
   clientToServers_.at(updateBusyNodeInfo.nodeId.nid).openTransport();
 
-  RoutingInfo potentiallyUpdatedRoutingInfo;
-  potentiallyUpdatedRoutingInfo.nodeRegionMap[updateFreeNodeInfo.nodeId.nid] = updateFreeNodeInfo;
-  potentiallyUpdatedRoutingInfo.nodeRegionMap[updateBusyNodeInfo.nodeId.nid] = updateBusyNodeInfo;
-
   int freeNodePrepareStatus = 
     clientFreeNode->prepareRecvNodeInfo(
-      potentiallyUpdatedRoutingInfo,
+      updatedRoutingInfo,
       parentRectangleList);
   int busyNodePrepareStatus = 
     clientBusyNode->prepareRecvNodeInfo(
-      potentiallyUpdatedRoutingInfo,
+      updatedRoutingInfo,
       parentRectangleListUpdate);
 
   if (freeNodePrepareStatus != NodeMessage::PREPARED_RECV_ROUTING_INFO
@@ -305,19 +331,22 @@ bool  MetaDataProviderStore::loadBalance(bool test = false) {
     return false;
   }
 
-  // TODO: If the commit for the free node fails, then dont commit the busy node
   printf("Call commitRoutingInfo \n");
-  clientFreeNode->commitRecvNodeInfo(updatedRoutingInfo);
-  allNodes_[updateFreeNodeInfo.nodeId.nid] = updateFreeNodeInfo;
-  clientBusyNode->commitRecvNodeInfo(updatedRoutingInfo);
-  allNodes_[updateBusyNodeInfo.nodeId.nid] = updateBusyNodeInfo;
-
-  // update routing table at all nodes
-  RoutingInfo updatedRoutingInfo;
-  for (auto node : allNodes_) {
-    updatedRoutingInfo.nodeRegionMap[node.first] = node.second;
+  auto commitFreeNodeStatus = 
+    clientFreeNode->commitRecvNodeInfo(updatedRoutingInfo);
+  if (commitFreeNodeStatus != NodeMessage::COMMIT_RECV_ROUTING_INFO) {
+    // commit didn't succeed on free node, abort
+    return true;
   }
-  updatedRoutingInfo.timestamp = time(nullptr);
+  allNodes_[updateFreeNodeInfo.nodeId.nid] = updateFreeNodeInfo;
+  // TODO: incase busyNodeCommit fails then commit to freeNode should be rolled back ideally, 
+  // Currently both free and busy node would handle that region
+  auto commitBusyNodeStatus = 
+    clientBusyNode->commitRecvNodeInfo(updatedRoutingInfo);
+  if (commitBusyNodeStatus == NodeMessage::COMMIT_RECV_ROUTING_INFO) {
+    allNodes_[updateBusyNodeInfo.nodeId.nid] = updateBusyNodeInfo;
+  }
+
   for (auto client : clientToServers_) {
     if (client.first != freeNodeId && 
         client.first != busyNodeId) {

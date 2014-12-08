@@ -10,6 +10,7 @@
 #include "LeaderClient.h"
 #include "StateObjects.h"
 #include "ProximityManager.h"
+#include "NodeStats.h"
 
 DEFINE_int32(client_port, 9090, "port used for client communication");
 DEFINE_int32(server_talk_port, 9091, "Port used for server-server communication");
@@ -77,9 +78,23 @@ void initFromLeader(NodeId const& nodeId) {
 }
 
 void startHeartBeatsToLeader() {
+  auto currSystemStats = myNode ? myNode->nodeStats_.getSystemStats() : SystemStats();
+  auto previousSystemStats = currSystemStats;
   while(true) {
     if (myNode) {
+      printf("Leader ping\n");
       auto& nodeInfo = myNode->me_;
+
+      previousSystemStats = currSystemStats;
+      currSystemStats = myNode->nodeStats_.getSystemStats();
+      SystemStats diffStats;
+      diffStats.user_cpu = 
+        currSystemStats.user_cpu - previousSystemStats.user_cpu;
+      diffStats.sys_cpu = 
+        currSystemStats.sys_cpu - previousSystemStats.sys_cpu;
+      nodeInfo.systemStats = diffStats;
+      printf ("CPU usage: %lld %lld \n", diffStats.user_cpu, diffStats.sys_cpu);
+
       // set the current timestamp for ping node
       nodeInfo.timestamp = time(nullptr);
       try {

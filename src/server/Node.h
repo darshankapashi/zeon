@@ -5,6 +5,7 @@
  */
 
 #include "Structs.h"
+#include "NodeStats.h"
 #include <unordered_set>
 
 enum Operation {
@@ -71,4 +72,6 @@ class Node {
   unordered_map<Rectangle, vector<Data>> tempData_;
 
   unordered_map<Rectangle, Rectangle> parentMapping_;
+
+  NodeStats nodeStats_;
 };

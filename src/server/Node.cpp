@@ -16,7 +16,7 @@ bool containsKey(Container c, KeyType k) {
 
 void printRoutingInfo(RoutingInfo const& routingInfo_) {
   for (auto const& kv: routingInfo_.nodeRegionMap) {
-    printf("All nodes: %lld %s (%d,%d) -> %d rectangles\n", 
+    printf("All nodes: %lld %s (%d,%d) -> %lu rectangles\n", 
             kv.first, 
             kv.second.nodeId.ip.c_str(), 
             kv.second.nodeId.serverPort,
