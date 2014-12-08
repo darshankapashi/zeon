@@ -270,31 +270,46 @@ bool  MetaDataProviderStore::loadBalance(bool test = false) {
    //send the prepareRecvRoutingInfo to free and busy node
   printf("clientToServers_ size: %lld\n", clientToServers_.size());
   auto* clientFreeNode = clientToServers_.at(updateFreeNodeInfo.nodeId.nid).get();
-  //cout<<"free node id: "<<updateFreeNodeInfo.nodeId.nid<<endl;
-  //cout<<"buy node id: "<<updateBusyNodeInfo.nodeId.nid<<endl;
+  //cout << "free node id: " << updateFreeNodeInfo.nodeId.nid << endl;
+  //cout << "buy node id: " << updateBusyNodeInfo.nodeId.nid << endl;
   auto* clientBusyNode = clientToServers_.at(updateBusyNodeInfo.nodeId.nid).get();
   printf("call prePareRoutingInfo\n");
+
+  // update routing table at all nodes
+  RoutingInfo updatedRoutingInfo;
+  for (auto node : allNodes_) {
+    updatedRoutingInfo.nodeRegionMap[node.first] = node.second;
+  }
+
+  //updatedRoutingInfo.nodeRegionMap = allNodes_;
+  updatedRoutingInfo.timestamp = time(nullptr);
 
   clientToServers_.at(updateFreeNodeInfo.nodeId.nid).openTransport();
   clientToServers_.at(updateBusyNodeInfo.nodeId.nid).openTransport();
 
+  RoutingInfo potentiallyUpdatedRoutingInfo;
+  potentiallyUpdatedRoutingInfo.nodeRegionMap[updateFreeNodeInfo.nodeId.nid] = updateFreeNodeInfo;
+  potentiallyUpdatedRoutingInfo.nodeRegionMap[updateBusyNodeInfo.nodeId.nid] = updateBusyNodeInfo;
+
   int freeNodePrepareStatus = 
     clientFreeNode->prepareRecvNodeInfo(
-      updateFreeNodeInfo,
+      potentiallyUpdatedRoutingInfo,
       parentRectangleList);
   int busyNodePrepareStatus = 
     clientBusyNode->prepareRecvNodeInfo(
-      updateBusyNodeInfo,
+      potentiallyUpdatedRoutingInfo,
       parentRectangleListUpdate);
 
   if (freeNodePrepareStatus != NodeMessage::PREPARED_RECV_ROUTING_INFO
     || busyNodePrepareStatus != NodeMessage::PREPARED_RECV_ROUTING_INFO) {
     return false;
   }
+
+  // TODO: If the commit for the free node fails, then dont commit the busy node
   printf("Call commitRoutingInfo \n");
-  clientFreeNode->commitRecvNodeInfo(updateFreeNodeInfo);
+  clientFreeNode->commitRecvNodeInfo(updatedRoutingInfo);
   allNodes_[updateFreeNodeInfo.nodeId.nid] = updateFreeNodeInfo;
-  clientBusyNode->commitRecvNodeInfo(updateBusyNodeInfo);
+  clientBusyNode->commitRecvNodeInfo(updatedRoutingInfo);
   allNodes_[updateBusyNodeInfo.nodeId.nid] = updateBusyNodeInfo;
 
   // update routing table at all nodes

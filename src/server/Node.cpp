@@ -14,15 +14,13 @@ bool containsKey(Container c, KeyType k) {
   return c.find(k) != c.end();
 }
 
-Node::Node(NodeInfo id, RoutingInfo routingInfo) {
-  me_ = id;
-  routingInfo_ = routingInfo;
-  printf("Node object created: %lld %s:%d\n", id.nodeId.nid, id.nodeId.ip.c_str(), id.nodeId.serverPort);
+void printRoutingInfo(RoutingInfo const& routingInfo_) {
   for (auto const& kv: routingInfo_.nodeRegionMap) {
-    printf("All nodes: %lld %s:%d -> %d rectangles\n", 
+    printf("All nodes: %lld %s (%d,%d) -> %d rectangles\n", 
             kv.first, 
             kv.second.nodeId.ip.c_str(), 
             kv.second.nodeId.serverPort,
+            kv.second.nodeId.clientPort,
             kv.second.nodeDataStats.region.rectangles.size());
     for (auto const& rect: kv.second.nodeDataStats.region.rectangles) {
       printf("\tRectangle: (%lld,%lld) (%lld,%lld)\n", 
@@ -30,6 +28,12 @@ Node::Node(NodeInfo id, RoutingInfo routingInfo) {
               rect.topRight.xCord, rect.topRight.yCord);
     }
   }
+}
+
+Node::Node(NodeInfo id, RoutingInfo routingInfo) {
+  me_ = id;
+  routingInfo_ = routingInfo;
+  printf("Node object created: %lld %s:%d\n", id.nodeId.nid, id.nodeId.ip.c_str(), id.nodeId.serverPort);
   buildRectangleToNodeMap();
 }
 
@@ -39,6 +43,10 @@ NodeId Node::getMasterForPoint(Point const& p) {
   }
 
   for (auto const& rectKV: rectangleToNode_) {
+    auto const& rect = rectKV.first;
+    printf("getMasterForPoint: checking rectangle (%lld,%lld) (%lld,%lld), point (%lld,%lld)\n",
+            rect.bottomLeft.xCord, rect.bottomLeft.yCord, rect.topRight.xCord, rect.topRight.yCord,
+            p.xCord, p.yCord);
     if (inRectangle(rectKV.first, p)) {
       auto nid = rectKV.second[0];
       return routingInfo_.nodeRegionMap.at(nid).nodeId;
@@ -118,6 +126,11 @@ void Node::sendInvalidations(Point const& p, zeonid_t const& zid) {
 }
 
 void Node::buildRectangleToNodeMap() {
+  printRoutingInfo(routingInfo_);
+  myMainRectangles_.clear();
+  myReplicaRectangles_.clear();
+  rectangleToNode_.clear();
+
   for (auto const& nodeKV: routingInfo_.nodeRegionMap) {
     auto const& node = nodeKV.second.nodeDataStats;
     printf("=> nid = %lld %lld %lld\n", nodeKV.first, node.nid, nodeKV.second.nodeId.nid);

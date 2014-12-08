@@ -50,15 +50,22 @@ $(EXECUTABLE): $(OBJS) $(GEN_OBJS)
 	$(CC) $(LDFLAGS) -o $(EXECUTABLE) $(OBJS) $(GEN_OBJS) 
 ################################
 
-all: thrift $(EXECUTABLE) client leader
+all: thrift $(EXECUTABLE) client leader benchmark
 
 thrift: src/if/core.thrift src/if/server.thrift
 	thrift --gen cpp:pure_enums src/if/core.thrift
 	thrift --gen cpp src/if/leader.thrift
 	thrift --gen cpp src/if/server.thrift
 
-client: src/client/CoreClient.cpp
-	g++ ${CPP_OPTS} -o bin/client ${INCS_DIRS} src/client/CoreClient.cpp ${GEN_SRC} ${LIBS}
+CLIENT_CPP = src/client/ClientTest.cpp src/client/ZeonClient.cpp
+
+client: ${CLIENT_CPP}
+	g++ ${CPP_OPTS} -o bin/client ${INCS_DIRS} ${CLIENT_CPP} ${GEN_SRC} ${LIBS}
+
+BENCHMARK_CPP = src/client/BenchmarkTest.cpp src/client/ZeonClient.cpp
+
+benchmark: $(BENCHMARK_CPP)
+	g++ ${CPP_OPTS} -o bin/benchmark ${INCS_DIRS} $(BENCHMARK_CPP) ${GEN_SRC} ${LIBS}
 
 proximity: src/server/ProximityManager.cpp
 	g++ ${CPP_OPTS} -o bin/proximity ${INCS_DIRS} src/server/ProximityManager.cpp ${GEN_SRC} ${LIBS}
@@ -66,5 +73,9 @@ proximity: src/server/ProximityManager.cpp
 leader: src/leader/MetaDataProvider_server.cpp
 	g++ ${CPP_OPTS} -o bin/leader ${INCS_DIRS} src/leader/MetaDataProvider_server.cpp src/leader/MetaDataProviderStore.cpp src/server/ServerTalker.cpp  ${GEN_SRC} ${LIBS}
 
+clear:
+	$(RM) -rf /tmp/zeon-*/*
+	
 clean:
-	$(RM) -r bin/* gen-cpp/*
+	$(RM) -r bin/* gen-cpp/* 
+	$(RM) -rf /tmp/zeon-*/*

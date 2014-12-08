@@ -84,7 +84,7 @@ void startHeartBeatsToLeader() {
       nodeInfo.timestamp = time(nullptr);
       try {
         LeaderClient leaderClient(leaderNode);
-        printf("Pinging leader\n");
+        //printf("Pinging leader\n");
         leaderClient.metaDataProviderClient_->ping(nodeInfo);
       } catch (exception const& e) {
         printf("Ping not succesful: %s\n", e.what());

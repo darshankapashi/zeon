@@ -98,11 +98,12 @@ Rectangle makeRectangle(int x1, int y1, int x2, int y2) {
   return r;
 }
 
-NodeId makeNode(nid_t id, string ip, int port) {
+NodeId makeNode(nid_t id, string ip, int serverPort, int clientPort) {
   NodeId node;
   node.nid = id;
   node.ip = ip;
-  node.serverPort = port;
+  node.serverPort = serverPort;
+  node.clientPort = clientPort;
   return node;
 }
 
@@ -116,7 +117,7 @@ int main(int argc, char **argv) {
   boost::shared_ptr<TProtocolFactory> protocolFactory(new TBinaryProtocolFactory());
 
   MetaDataConfig config;
-  config.allNodes = {makeNode(1, "localhost", 9000), makeNode(2, "localhost", 9001)};
+  config.allNodes = {makeNode(1, "localhost", 9000, 8000), makeNode(2, "localhost", 9001, 8001)};
   config.replicationFactor = 1;
 
   Region r1;
