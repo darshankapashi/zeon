@@ -132,7 +132,7 @@ int main(int argc, char **argv) {
 
   handler->initializeConfig(config);
   printf("Leader server started\n");
-  std::thread loadBalanceThread(&MetaDataProviderHandler::startLoadBalancing, handler);
+  //std::thread loadBalanceThread(&MetaDataProviderHandler::startLoadBalancing, handler);
   TThreadedServer server(processor, serverTransport, transportFactory, protocolFactory);
   server.serve();
   return 0;

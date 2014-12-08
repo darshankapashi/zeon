@@ -50,7 +50,7 @@ void PointStoreHandler::getData(Data& _return, const zeonid_t id, const bool val
 
 // TODO: Handle various failure scenarios, maybe use PREPARE-COMMIT
 void PointStoreHandler::setData(const Data& data, const bool valuePresent) {
-  printf("setData\n");
+  printf("setData id=%d\n", data.id);
   routeCorrectly(data.point, WRITE_OP);
 
   Data dataToStore = data;
@@ -58,7 +58,7 @@ void PointStoreHandler::setData(const Data& data, const bool valuePresent) {
   // TODO: Maybe we don't need to do the below steps in case the value
   //       is present in this request too.
   bool haveThisId = myNode->doIHaveThisId(data.id, WRITE_OP);
-  printf("setData: haveThisId=%d\n", haveThisId);
+  printf("setData: id=%d haveThisId=%d\n", data.id, haveThisId);
   if (!haveThisId) {
     // I don't have this id locally
 
@@ -84,6 +84,7 @@ void PointStoreHandler::setData(const Data& data, const bool valuePresent) {
   proximity->proximityCompute->insertPoint(d);
   d.point = d.prevPoint;
   proximity->proximityCompute->removePoint(d);
+  myNode->addId(data.id);
 
   // Send invalidations
   if (!haveThisId) {
@@ -95,7 +96,7 @@ void PointStoreHandler::setData(const Data& data, const bool valuePresent) {
 }
 
 void PointStoreHandler::createData(const zeonid_t id, const Point& point, const int64_t timestamp, const std::string& value) {
-  printf("createData\n");
+  printf("createData id=%d\n", id);
   routeCorrectly(point, WRITE_OP);
   if (myNode->doIHaveThisId(id, WRITE_OP)) {
     throwError(ALREADY_EXISTS);

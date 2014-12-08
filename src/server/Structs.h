@@ -18,7 +18,7 @@ string const DEFAULT_VALUE = "";
 struct DataStoreConfig {
   string pointDir = "/tmp/zeon-points/";
   string valueDir = "/tmp/zeon-values/";
-  long maxBufferSize = 100;
+  long maxBufferSize = 10000;
 };
 
 enum ProximityAlgoType {

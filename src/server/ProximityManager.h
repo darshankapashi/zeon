@@ -5,8 +5,22 @@
 using namespace std;
 using namespace core;
 
-//TODO: ProximityManager should insert <point,zid>. *Data* should not be stored here.
-//TODO: Make this work for multiple threads
+// TODO: ProximityManager should insert <point,zid>. *Data* should not be stored here.
+// TODO: Make this work for multiple threads
+
+// TODO: Use this struct in this module
+struct DataStub {
+  DataStub(Data const& d, bool usePrev = false) {
+    id = d.id;
+    if (usePrev)
+      p = d.prevPoint;
+    else
+      p = d.point;
+  }
+
+  zeonid_t id;
+  Point p;
+};
 
 class ProximityDistance {
   public: 
@@ -43,7 +57,7 @@ class ProximityCompute {
   virtual void getInternalPoints(vector<Data>& data, const Region& region) = 0;
   virtual void getInternalPoints(vector<Data>& data, const Rectangle& rectangle) = 0;
 
-  vector<Data> dataList_;
+  list<Data> dataList_;
   ProximityDistance* proximityDistance_;
   // Datastructure for Rtree
 };

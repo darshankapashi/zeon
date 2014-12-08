@@ -107,6 +107,10 @@ void Node::addId(zeonid_t zid) {
   zids_.insert(zid);
 }
 
+void Node::removeId(zeonid_t zid) {
+  zids_.erase(zid);
+}
+
 void Node::replicate(Data const& data, bool valuePresent) {
   for (auto const& replica: me_.nodeDataStats.replicatedServers) {
     auto const& node = routingInfo_.nodeRegionMap.at(replica).nodeId;
