@@ -94,7 +94,7 @@ int32_t ServerTalkHandler::prepareRecvNodeInfo(const RoutingInfo& routingInfo, c
   if (it == myNode->updateRoutingInfoTemp_.nodeRegionMap.end()) {
     return NodeMessage::ERROR;
   }
-  myNode->updateRoutingInfoTemp_.nodeRegionMap[myNode->me_.nodeId.nid] = nodeInfo; 
+  //myNode->updateRoutingInfoTemp_.nodeRegionMap[myNode->me_.nodeId.nid] = nodeInfo; 
   myNode->setParentMapping(parentRectangleMap);
   myNode->fetchNewData();
   return NodeMessage::PREPARED_RECV_ROUTING_INFO;
