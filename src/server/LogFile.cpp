@@ -136,7 +136,8 @@ void LogFile::writeValue(core::Data const& data) {
   lock_guard<mutex> lock(valueLock_);
   cout << "(reliable) Writing to disk: id=" << data.id << "\n";
   FileOps file(getValueFile(data.id), /* truncate */ true);
-  if (!file.syncWriteToFile(&b)) {
+  //if (!file.syncWriteToFile(&b)) {
+  if (!file.writeToFile(&b)) {  
     throw std::runtime_error("could not write");
   }
 }
