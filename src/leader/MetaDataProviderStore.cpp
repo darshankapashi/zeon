@@ -44,6 +44,7 @@ int MetaDataProviderStore::initializeConfig(const MetaDataConfig& config) {
 
   // create connection to each client
   for (auto node: config.allNodes) {
+    cout << "Connection to " << node.nid << " " << node.ip << " " << node.serverPort << " " << node.clientPort << endl;
     clientToServers_.emplace(make_pair(node.nid, ServerTalker(node)));
     //cout<<"created clientConnection: "<<clientToServers_[node.nid];
   }
