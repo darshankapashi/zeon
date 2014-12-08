@@ -21,6 +21,7 @@ using boost::shared_ptr;
 using namespace ::core;
 
 DEFINE_bool(load_balance_enabled, true, "Control whether load balancing is enabled");
+DECLARE_int32(load_balance_sleep_time);
 
 DEFINE_string(config_file, "config.txt", "File which contains all the node info");
 DEFINE_string(saved_config_file, "saved_config.txt", "File which contains all the node info");
@@ -29,12 +30,16 @@ DEFINE_string(metadata_file, "metadata.txt", "File which contains other metadata
 class MetaDataProviderHandler : virtual public MetaDataProviderIf {
  public:
 
-  void startLoadBalancing() {
-    bool status = false;
-    while(!status && FLAGS_load_balance_enabled) {
-      sleep(7);
+  void startLoadBalancing(bool continuous = true) {
+    int count  = 0;
+    if (continuous) {
+      while(count < 4 && FLAGS_load_balance_enabled) {
+        sleep(FLAGS_load_balance_sleep_time);
+        metaDataProviderStore_.loadBalance(true);
+        count++;
+      }
+    } else {
       metaDataProviderStore_.loadBalance(true);
-      status = true;
     }
   }
 
@@ -206,7 +211,7 @@ int main(int argc, char **argv) {
 
   handler->initializeConfig(config);
   printf("Leader server started\n");
-  //std::thread loadBalanceThread(&MetaDataProviderHandler::startLoadBalancing, handler);
+  std::thread loadBalanceThread(&MetaDataProviderHandler::startLoadBalancing, handler, true);
   TThreadedServer server(processor, serverTransport, transportFactory, protocolFactory);
   server.serve();
   return 0;

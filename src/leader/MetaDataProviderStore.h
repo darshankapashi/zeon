@@ -42,6 +42,7 @@ class MetaDataProviderStore {
   bool replicaterRegion();
 
   private:
+  void createServerConnections(const MetaDataConfig& config);
 
   // all nodes registered with time they pinged or updated last
   std::unordered_map<nid_t, NodeInfo> allNodes_;
