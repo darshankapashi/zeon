@@ -29,6 +29,8 @@ class ZeonClient {
   int getServer(zeonid_t id);
   void setPrevPoint(Data& data);
 
+  void hint(zeonid_t id, int server);
+
   void getData(Data& _return, const zeonid_t id, const bool valuePresent);
   void setData(Data& data, const bool valuePresent);
   void createData(const zeonid_t id, const Point& point, const int64_t timestamp, const string& value);

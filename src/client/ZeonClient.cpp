@@ -36,7 +36,7 @@ int ZeonClient::addClient(string ip, int port) {
   meta->protocol.reset(new TBinaryProtocol(meta->transport));
   meta->client.reset(new PointStoreClient(meta->protocol));
   meta->transport->open();
-  return servers_.size();
+  return servers_.size() - 1;
 }
 
 int ZeonClient::getServer(zeonid_t id) {
@@ -48,6 +48,10 @@ int ZeonClient::getServer(zeonid_t id) {
     server = serverIt->second;
   }
   return server;
+}
+
+void ZeonClient::hint(zeonid_t id, int server) {
+  idToServers_[id] = server;
 }
 
 void ZeonClient::setPrevPoint(Data& data) {
