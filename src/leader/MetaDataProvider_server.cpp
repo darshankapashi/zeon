@@ -24,6 +24,7 @@ DEFINE_bool(load_balance_enabled, true, "Control whether load balancing is enabl
 
 DEFINE_string(config_file, "config.txt", "File which contains all the node info");
 DEFINE_string(saved_config_file, "saved_config.txt", "File which contains all the node info");
+DEFINE_string(metadata_file, "metadata.txt", "File which contains other metadata about system");
 
 class MetaDataProviderHandler : virtual public MetaDataProviderIf {
  public:
@@ -117,6 +118,37 @@ NodeId makeNode(nid_t id, string ip, int serverPort, int clientPort) {
   return node;
 }
 
+void assignToNodes(MetaDataConfig& config, Rectangle const& rect) {
+  int width = rect.topRight.xCord - rect.bottomLeft.xCord;
+  int height = rect.topRight.yCord - rect.bottomLeft.xCord;
+  int numNodes = config.allNodes.size();
+  if (width > height) {
+    // Rectangle is broader
+    int eachWidth = width / numNodes;
+    int i = 0;
+    for (auto const& node: config.allNodes) {
+      Region& region = config.nodeRegionMap[node.nid];
+      region.rectangles.push_back(rect);
+      Rectangle& r = region.rectangles.back();
+      r.bottomLeft.xCord = rect.bottomLeft.xCord + i * eachWidth;
+      r.topRight.xCord = rect.bottomLeft.xCord + (i + 1) * eachWidth;
+      i++;
+    }
+  } else {
+    // Rectangle is taller
+    int eachHeight = height / numNodes;
+    int i = 0;
+    for (auto const& node: config.allNodes) {
+      Region& region = config.nodeRegionMap[node.nid];
+      region.rectangles.push_back(rect);
+      Rectangle& r = region.rectangles.back();
+      r.bottomLeft.yCord = rect.bottomLeft.yCord + i * eachHeight;
+      r.topRight.yCord = rect.bottomLeft.yCord + (i + 1) * eachHeight;
+      i++;
+    }    
+  }
+}
+
 MetaDataConfig getMetaDataConfig() {
   MetaDataConfig config;
   config.replicationFactor = 1;
@@ -134,7 +166,28 @@ MetaDataConfig getMetaDataConfig() {
     config.allNodes.emplace_back(makeNode(toint(strs[0]), strs[1], toint(strs[2]), toint(strs[3])));
   }
 
-  // TODO: Split node region map
+  ifstream metadataFile(FLAGS_metadata_file);
+  while(getline(metadataFile, line)) {
+    if (line.find("REPLICATION FACTOR: ") == 0) {
+      vector<string> strs;
+      boost::split(strs, line, boost::is_any_of(":"));
+      config.replicationFactor = toint(strs[1]);
+    } else if (line.find("FULL RECTANGLE: ") == 0) {
+      vector<string> strs;
+      boost::split(strs, line, boost::is_any_of(":"));
+      vector<string> coords;
+      boost::split(coords, strs[1], boost::is_any_of(","));
+      config.globalRegion.rectangles.emplace_back();
+      Rectangle& rect = config.globalRegion.rectangles.back();
+      rect.bottomLeft.xCord = toint(coords[0]);
+      rect.bottomLeft.yCord = toint(coords[1]);
+      rect.topRight.xCord = toint(coords[2]);
+      rect.topRight.yCord = toint(coords[3]);
+      assignToNodes(config, rect);
+    } else {
+      cout << "Unrecognized line: " << line << " (" << FLAGS_metadata_file << ")" << endl;
+    }
+  }
 
   // TODO: Implement saved config logic
   return config;
@@ -150,16 +203,6 @@ int main(int argc, char **argv) {
   boost::shared_ptr<TProtocolFactory> protocolFactory(new TBinaryProtocolFactory());
 
   MetaDataConfig config = getMetaDataConfig();
-
-  Region r1;
-  Rectangle a1 = makeRectangle(0, 0, 100, 100);
-  r1.rectangles = {a1};
-  config.nodeRegionMap[1] = r1;
-  Region r2;
-  Rectangle b1 = makeRectangle(100, 0, 200, 100);
-  r2.rectangles = {b1};
-  config.nodeRegionMap[2] = r2;
-
 
   handler->initializeConfig(config);
   printf("Leader server started\n");
