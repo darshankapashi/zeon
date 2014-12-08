@@ -1,16 +1,10 @@
 #include <iostream>
 #include <gflags/gflags.h>
-#include <thrift/protocol/TBinaryProtocol.h>
-#include <thrift/transport/TSocket.h>
-#include <thrift/transport/TTransportUtils.h>
 
 #include "gen-cpp/PointStore.h"
 #include "ZeonClient.h"
 
 using namespace std;
-using namespace apache::thrift;
-using namespace apache::thrift::protocol;
-using namespace apache::thrift::transport;
 
 using namespace core;
 
