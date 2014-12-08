@@ -9,7 +9,7 @@
 using namespace core;
 
 DEFINE_int32(cpu_threshold_for_split, 90, "percent threshold");
-DEFINE_int32(load_balance_sleep_time, 7, "seconds after which load balancing should be tried");
+DEFINE_int32(load_balance_sleep_time, 4, "seconds after which load balancing should be tried");
 
 int64_t getRegionHash(const Region& reg) {
   int64_t hashRes = 0;
@@ -21,12 +21,14 @@ int64_t getRegionHash(const Region& reg) {
 }
 
 void MetaDataProviderStore::createServerConnections(const MetaDataConfig& config) {
+  printf("Started create server connections\n");
   map<nid_t, bool> serverConnectionsStatus; 
   for (auto node: config.allNodes) {
     serverConnectionsStatus[node.nid] = false;
   }
   int numConnections = 0;
-  while (numConnections == config.allNodes.size()) {
+  while (numConnections != config.allNodes.size()) {
+    printf("numConnections: %d\n", numConnections);
     for (auto node: config.allNodes) {
       try {
         if (!serverConnectionsStatus[node.nid]) {
@@ -38,12 +40,14 @@ void MetaDataProviderStore::createServerConnections(const MetaDataConfig& config
         printf("leader server connection with nid_t %lld : %s\n", node.nid, e.what());
       }
     }
+    sleep(2);
   }
 }
 
 int MetaDataProviderStore::initializeConfig(const MetaDataConfig& config) {
   auto initializedTime = time(nullptr);
   for (auto node : config.allNodes) {
+    printf("set nid: %d\n", node.nid);
     NodeInfo nodeInfo;
     nodeInfo.nodeId = node;
     nodeInfo.timestamp = initializedTime;
@@ -65,7 +69,8 @@ int MetaDataProviderStore::initializeConfig(const MetaDataConfig& config) {
     }
   }
 
-  std::thread serverConnectionsThread(
+  printf("starting server connection thread\n");
+  auto serverConnectionThread = new std::thread(
     &MetaDataProviderStore::createServerConnections, this, config);
 
   // Based on replication Factor assign replicas uniformly
@@ -183,6 +188,7 @@ bool  MetaDataProviderStore::loadBalance(bool test = false) {
 
     for (auto& node: allNodes_) {
       if (test) {
+        printf("nid: %lld\n", node.first);
         printf("Rectangle stats for nid: %lld\n", node.first);
         for (auto recStats: node.second.nodeDataStats.rectangleStats) {
           printf("Rectangle: (%lld, %lld) (%lld, %lld), zidCount: %lld, queryrate: %d \n", recStats.rectangle.bottomLeft.xCord, 
@@ -192,8 +198,10 @@ bool  MetaDataProviderStore::loadBalance(bool test = false) {
       statsVector.push_back(
         make_pair(node.second.systemStats, 
                   node.second.nodeDataStats.rectangleStats));
+        printf("nid1: %lld\n", node.second.systemStats.nid);
     }
     sort(statsVector.begin(), statsVector.end(), statsComparator);
+    printf("stats vector size %lu\n", statsVector.size());
 
     // Fetch only busiest and move its load on least busiest node incase it exceeds the threshold
     if (!test && (!statsThresholdChecker(statsVector.front()) || statsThresholdChecker(statsVector.back()))) {

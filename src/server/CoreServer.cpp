@@ -73,7 +73,7 @@ void initFromLeader(NodeId const& nodeId) {
     } catch (exception const& e) {
       printf("Failed to contact the leader: %s\n", e.what());
     }
-    this_thread::sleep_for(chrono::seconds(5));
+    this_thread::sleep_for(chrono::seconds(2));
   }
 }
 
@@ -88,6 +88,7 @@ void startHeartBeatsToLeader() {
       previousSystemStats = currSystemStats;
       currSystemStats = myNode->nodeStats_.getSystemStats();
       SystemStats diffStats;
+      diffStats.nid = myNode->me_.nodeId.nid;
       diffStats.user_cpu = 
         currSystemStats.user_cpu - previousSystemStats.user_cpu;
       diffStats.sys_cpu = 
