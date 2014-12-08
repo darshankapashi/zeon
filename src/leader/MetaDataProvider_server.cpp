@@ -18,16 +18,19 @@ using boost::shared_ptr;
 using namespace ::core;
 
 DEFINE_bool(load_balance_enabled, true, "Control whether load balancing is enabled");
+DECLARE_int32(load_balance_sleep_time);
 
 class MetaDataProviderHandler : virtual public MetaDataProviderIf {
  public:
 
-  void startLoadBalancing() {
-    bool status = false;
-    while(!status && FLAGS_load_balance_enabled) {
-      sleep(7);
+  void startLoadBalancing(bool continuous = true) {
+    if (continuous) {
+      while(FLAGS_load_balance_enabled) {
+        sleep(FLAGS_load_balance_sleep_time);
+        metaDataProviderStore_.loadBalance(true);
+      }
+    } else {
       metaDataProviderStore_.loadBalance(true);
-      status = true;
     }
   }
 
@@ -132,7 +135,7 @@ int main(int argc, char **argv) {
 
   handler->initializeConfig(config);
   printf("Leader server started\n");
-  std::thread loadBalanceThread(&MetaDataProviderHandler::startLoadBalancing, handler);
+  std::thread loadBalanceThread(&MetaDataProviderHandler::startLoadBalancing, handler, false);
   TThreadedServer server(processor, serverTransport, transportFactory, protocolFactory);
   server.serve();
   return 0;
