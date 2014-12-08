@@ -6,6 +6,12 @@ echo $$
 rm -rf /tmp/zeon-*/*
 ./bin/leader &
 leader=$!
+pkill leader
+pkill server
+
+rm -rf /tmp/zeon-*
+mkdir /tmp/zeon-points
+mkdir /tmp/zeon-values
 ./bin/server --my_nid=1 --server_talk_port=9000 --client_port=8000 &
 server1=$!
 ./bin/server --my_nid=2 --server_talk_port=9001 --client_port=8001 &

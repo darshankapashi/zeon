@@ -1,3 +1,4 @@
+#include <boost/algorithm/string.hpp>
 #include <thrift/protocol/TBinaryProtocol.h>
 #include <thrift/server/TThreadedServer.h>
 #include <thrift/transport/TServerSocket.h>
@@ -6,6 +7,8 @@
 #include "src/leader/MetaDataProviderStore.h"
 #include <gflags/gflags.h>
 #include <ctime>
+#include <fstream>
+#include <iostream>
 #include <thread>
 
 using namespace ::apache::thrift;
@@ -19,6 +22,9 @@ using namespace ::core;
 
 DEFINE_bool(load_balance_enabled, true, "Control whether load balancing is enabled");
 DECLARE_int32(load_balance_sleep_time);
+
+DEFINE_string(config_file, "config.txt", "File which contains all the node info");
+DEFINE_string(saved_config_file, "saved_config.txt", "File which contains all the node info");
 
 class MetaDataProviderHandler : virtual public MetaDataProviderIf {
  public:
@@ -103,6 +109,10 @@ Rectangle makeRectangle(int x1, int y1, int x2, int y2) {
   return r;
 }
 
+int toint(string s) {
+  return atoi(s.c_str());
+}
+
 NodeId makeNode(nid_t id, string ip, int serverPort, int clientPort) {
   NodeId node;
   node.nid = id;
@@ -110,6 +120,29 @@ NodeId makeNode(nid_t id, string ip, int serverPort, int clientPort) {
   node.serverPort = serverPort;
   node.clientPort = clientPort;
   return node;
+}
+
+MetaDataConfig getMetaDataConfig() {
+  MetaDataConfig config;
+  config.replicationFactor = 1;
+
+  ifstream configFile(FLAGS_config_file);
+  string line;
+  while (getline(configFile, line)) {
+    vector<string> strs;
+    boost::split(strs, line, boost::is_any_of(","));
+    if (strs.size() != 4) {
+      string error = "Invalid line in config file: " + line + " (" + FLAGS_config_file + ")";
+      cout << error << endl;
+      throw runtime_error(error);
+    }
+    config.allNodes.emplace_back(makeNode(toint(strs[0]), strs[1], toint(strs[2]), toint(strs[3])));
+  }
+
+  // TODO: Split node region map
+
+  // TODO: Implement saved config logic
+  return config;
 }
 
 int main(int argc, char **argv) {
@@ -121,9 +154,7 @@ int main(int argc, char **argv) {
   boost::shared_ptr<TTransportFactory> transportFactory(new TBufferedTransportFactory());
   boost::shared_ptr<TProtocolFactory> protocolFactory(new TBinaryProtocolFactory());
 
-  MetaDataConfig config;
-  config.allNodes = {makeNode(1, "localhost", 9000, 8000), makeNode(2, "localhost", 9001, 8001)};
-  config.replicationFactor = 1;
+  MetaDataConfig config = getMetaDataConfig();
 
   Region r1;
   Rectangle a1 = makeRectangle(0, 0, 100, 100);

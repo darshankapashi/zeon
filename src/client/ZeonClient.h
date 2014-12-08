@@ -36,6 +36,10 @@ class ZeonClient {
   void createData(const zeonid_t id, const Point& point, const int64_t timestamp, const string& value);
   void getNearestKByPoint(vector<Data> & _return, const Point& point, const int32_t k);
 
+  size_t numServers() {
+    return servers_.size();
+  }
+
  private:
   struct Meta {
     Meta(string _ip, int _port) : ip(_ip), port(_port) {}

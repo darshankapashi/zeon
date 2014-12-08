@@ -12,7 +12,7 @@ ServerTalkHandler::ServerTalkHandler() {
 }
 
 void ServerTalkHandler::getValue(std::string& _return, const zeonid_t zid) {
-  printf("getValue\n");
+  printf("getValue id=%d\n", zid);
 
   // Return the value from the Datastore
   Data data;
@@ -54,6 +54,7 @@ void ServerTalkHandler::invalidate(const zeonid_t zid) {
 
   // Remove from Datastore
   // Remove from Log
+  myNode->removeId(zid);
   myDataStore->removeData(zid);
   myDataStore->removePersistedData(zid);
 }
