@@ -14,6 +14,8 @@ mkdir /tmp/zeon-values
 server1=$!
 ./bin/server --my_nid=2 --server_talk_port=9001 --client_port=8001 &
 server2=$!
+./bin/server --my_nid=3 --server_talk_port=9002 --client_port=8002 &
+server3=$!
 ./bin/leader &
 leader=$!
 wait $leader
@@ -23,5 +25,6 @@ then
   echo "Shutting down..."
   kill $server1
   kill $server2
+  kill $server3
   kill $leader
 fi
