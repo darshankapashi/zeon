@@ -1,7 +1,7 @@
 INCS_DIRS  =-I./
 OPT        = -O2
 DBG        = -g
-BUILD      = $(DBG)
+BUILD      = $(OPT)
 CPP_OPTS   =-Wall -std=c++11 $(BUILD)
 LIBS       =-lthrift -lgflags
 
@@ -66,6 +66,11 @@ BENCHMARK_CPP = src/client/BenchmarkTest.cpp src/client/ZeonClient.cpp
 
 benchmark: $(BENCHMARK_CPP)
 	g++ ${CPP_OPTS} -o bin/benchmark ${INCS_DIRS} $(BENCHMARK_CPP) ${GEN_SRC} ${LIBS}
+
+BENCHMARK_CLIENT_CPP = src/client/BenchmarkClient.cpp src/client/ZeonClient.cpp
+
+benchmark_client: $(BENCHMARK_CLIENT_CPP)
+	g++ ${CPP_OPTS} -o bin/benchmark_client ${INCS_DIRS} $(BENCHMARK_CLIENT_CPP) ${GEN_SRC} ${LIBS}
 
 proximity: src/server/ProximityManager.cpp
 	g++ ${CPP_OPTS} -o bin/proximity ${INCS_DIRS} src/server/ProximityManager.cpp ${GEN_SRC} ${LIBS}
