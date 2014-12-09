@@ -12,13 +12,13 @@
 #include "ProximityManager.h"
 #include "NodeStats.h"
 
-DEFINE_int32(client_port, 9090, "port used for client communication");
-DEFINE_int32(server_talk_port, 9091, "Port used for server-server communication");
-DEFINE_string(my_ip_address, "localhost", "Address of my server");
+DEFINE_int32(client_port, 8000, "port used for client communication");
+DEFINE_int32(server_talk_port, 9000, "Port used for server-server communication");
+DEFINE_string(my_ip_address, "10.0.0.4", "Address of my server");
 // TODO: get this from MetaDataStoreConfig or fetch it from leader based on ip and server_port / client_port
 DEFINE_int32(my_nid, 1, "NodeId.nid_t of my server");
+//DECLARE_int64(heartbeat_interval);
 
-DEFINE_int64(heartbeat_interval, 5, "Time interval between periodic heartbeats between server and leader"); 
 
 using namespace ::apache::thrift;
 using namespace ::apache::thrift::protocol;
@@ -116,7 +116,7 @@ void startHeartBeatsToLeader() {
 int main(int argc, char **argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
   printf("Starting CoreServer...\n");
-  leaderNode.ip = "localhost";
+  leaderNode.ip = "10.0.0.11";
   leaderNode.serverPort = 9990;
 
   // Initialize Node class 

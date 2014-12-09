@@ -1,7 +1,8 @@
-#include "src/server/Structs.h"
+#pragma once
 #include "gen-cpp/MetaDataProvider.h"
 #include "gen-cpp/ServerTalk.h"
 #include "src/server/ServerTalker.h"
+#include "src/server/Structs.h"
 
 using namespace core;
 

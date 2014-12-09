@@ -33,4 +33,6 @@ service ServerTalk {
   i32 prepareRecvNodeInfo(1: leader.RoutingInfo routingInfo, 2: leader.ParentRectangleList pRectMap) throws (1: ServerTalkException se),
 
   i32 commitRecvNodeInfo(1:leader.RoutingInfo routingInfo) throws (1:ServerTalkException se), 
+
+  bool takeOwnership(1: core.nid_t nid) throws (1: ServerTalkException se),
 }

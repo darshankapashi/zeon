@@ -156,7 +156,6 @@ void assignToNodes(MetaDataConfig& config, Rectangle const& rect) {
 
 MetaDataConfig getMetaDataConfig() {
   MetaDataConfig config;
-  config.replicationFactor = 1;
 
   ifstream configFile(FLAGS_config_file);
   string line;

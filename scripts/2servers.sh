@@ -4,7 +4,7 @@ trap : SIGTERM SIGINT
 echo $$
 
 rm -rf /tmp/zeon-*/*
-./bin/leader &
+#./bin/leader &
 leader=$!
 pkill leader
 pkill server
@@ -17,7 +17,7 @@ server1=$!
 ./bin/server --my_nid=2 --server_talk_port=9001 --client_port=8001 &
 server2=$!
 
-wait $leader
+#wait $leader
 
 if [[ $? -gt 128 ]]
 then

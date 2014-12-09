@@ -5,6 +5,8 @@
 #include "Structs.h"
 #include "ProximityManager.h"
 
+DEFINE_int64(heartbeat_interval, 5, "Time interval between periodic heartbeats between server and leader"); 
+
 namespace core {
 
 ServerTalkHandler::ServerTalkHandler() {
@@ -118,5 +120,27 @@ int32_t ServerTalkHandler::commitRecvNodeInfo(const RoutingInfo& routingInfo) {
   myNode->commitNewData();
 
   return NodeMessage::COMMIT_RECV_ROUTING_INFO;
+}
+
+bool ServerTalkHandler::takeOwnership(const nid_t nid) {
+  printf("take Ownership");
+  try {
+    // TODO: manage the replicated and replicas for also
+    auto canNodeInfo = myNode->routingInfo_.nodeRegionMap[nid];
+    myNode->updateNodeInfoTemp_ = myNode->me_;
+    for (auto rec: canNodeInfo.nodeDataStats.rectangleStats) {
+      myNode->updateNodeInfoTemp_.nodeDataStats.region.rectangles.
+        emplace_back(rec.rectangle);
+      myNode->updateNodeInfoTemp_.nodeDataStats.rectangleStats.
+        emplace_back(rec);
+    }
+    myNode->fetchNewData();
+    myNode->commitNewData();
+    return true;
+  } catch (exception e) {
+    printf("Failed takeOwnership for %lld on server %lld\n", 
+        nid, myNode->me_.nodeId.nid);
+    return false;
+  }
 }
 }

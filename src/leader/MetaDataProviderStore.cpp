@@ -1,5 +1,4 @@
 #include "src/leader/MetaDataProviderStore.h"
-#include "src/server/ServerTalker.h"
 
 #include <iostream>
 #include <thrift/protocol/TBinaryProtocol.h>
@@ -10,6 +9,7 @@ using namespace core;
 
 DEFINE_int32(cpu_threshold_for_split, 90, "percent threshold");
 DEFINE_int32(load_balance_sleep_time, 4, "seconds after which load balancing should be tried");
+DEFINE_int64(failure_check_interval, 10, "Time interval after which server is claimed to be dead"); 
 
 int64_t getRegionHash(const Region& reg) {
   int64_t hashRes = 0;
@@ -47,7 +47,6 @@ void MetaDataProviderStore::createServerConnections(const MetaDataConfig& config
 int MetaDataProviderStore::initializeConfig(const MetaDataConfig& config) {
   auto initializedTime = time(nullptr);
   for (auto node : config.allNodes) {
-    printf("set nid: %d\n", node.nid);
     NodeInfo nodeInfo;
     nodeInfo.nodeId = node;
     nodeInfo.timestamp = initializedTime;
@@ -75,19 +74,26 @@ int MetaDataProviderStore::initializeConfig(const MetaDataConfig& config) {
 
   // Based on replication Factor assign replicas uniformly
   // TODO: decide replicas based on load 
+  replicationFactor_ = config.replicationFactor;
   auto allNodeSize = allNodes_.size();
   if (replicationFactor_ > allNodeSize) {
     return NodeMessage::LESS_NODES_FOR_REPLICATION;
   }
   auto startIt  = allNodes_.begin();
   //int i = 0;
-  for (auto& node: allNodes_) {
-    for (int j = 1; j < replicationFactor_ + 1;  j++ ) {
-      //long long itOffset = (i + j) % allNodeSize;
-      //auto tempId = (startIt + itOffset)->first;
-      auto tempId = (startIt)->first;
-      node.second.nodeDataStats.replicatedServers.emplace_back(tempId);
+  while (startIt != allNodes_.end()) {
+    auto currIter = startIt;
+    printf("Replicas of node %lld :", currIter->first);
+    for (int j = 0; j < replicationFactor_;  j++ ) {
+      ++currIter;
+      if (currIter == allNodes_.end()) {
+        currIter = allNodes_.begin();
+      }
+      startIt->second.nodeDataStats.replicatedServers.emplace_back(currIter->first);
+      printf("%lld, ", currIter->first);
     }
+    startIt++;
+    printf("\n");
   }
   // reverse mapping of replicatedServers to get replicasFor_
   for (auto node: allNodes_) {
@@ -95,6 +101,14 @@ int MetaDataProviderStore::initializeConfig(const MetaDataConfig& config) {
     for (auto nodeReplicaId: nodeList) {
       allNodes_[nodeReplicaId].nodeDataStats.replicasFor.emplace_back(node.first);
     }
+  }
+
+  for (auto node: allNodes_) {
+    printf("Replicas on node %lld : ", node.first);
+    for (auto nid: node.second.nodeDataStats.replicasFor) {
+      printf("%lld, ", nid);
+    }
+    printf("\n");
   }
   return NodeMessage::INITIALIZED;
 }
@@ -392,4 +406,47 @@ bool  MetaDataProviderStore::loadBalance(bool test = false) {
     printf ("Load Balance failed : %s\n", e.what());
   }
   return true;
+}
+
+bool MetaDataProviderStore::checkForFailures() {
+  auto currTimestamp = time(nullptr);
+  vector<int> failedNodes;
+  for (auto node:allNodes_) {
+    if (node.second.timestamp + 3 * FLAGS_failure_check_interval < 
+          currTimestamp) {
+      failedNodes.emplace_back(node.first);
+    }
+  }
+  for (auto failedNid : failedNodes) {
+    auto nodeInfo = allNodes_[failedNid];
+    auto replicas = nodeInfo.nodeDataStats.replicatedServers;
+    int newPrimary = failedNid;
+    for (auto replica: replicas) {
+      if(find(failedNodes.begin(), failedNodes.end(), replica) == 
+          failedNodes.end()) {
+        newPrimary = replica;
+        break;
+      }
+    }
+    clientToServers_.at(newPrimary).openTransport();
+    clientToServers_.at(newPrimary).get()->takeOwnership(failedNid);    clientToServers_.at(newPrimary).closeTransport();
+
+    const auto& failedNodeInfo = allNodes_[failedNid];
+    auto& canNodeInfo = allNodes_[newPrimary];
+    for (auto rec: failedNodeInfo.nodeDataStats.rectangleStats) {
+      canNodeInfo.nodeDataStats.region.rectangles.
+        emplace_back(rec.rectangle);
+      canNodeInfo.nodeDataStats.rectangleStats.
+        emplace_back(rec);
+    }
+    RoutingInfo updatedRoutingInfo;
+    for (auto node : allNodes_) {
+      updatedRoutingInfo.nodeRegionMap[node.first] = node.second;
+    }
+    for (auto client : clientToServers_) {
+      if (client.first != newPrimary) { 
+        (client.second.get())->receiveRoutingInfo(updatedRoutingInfo);
+      }
+    }
+  }
 }

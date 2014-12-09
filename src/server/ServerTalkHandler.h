@@ -15,6 +15,7 @@ class ServerTalkHandler : virtual public ServerTalkIf {
   void receiveRoutingInfo(const RoutingInfo& rountingInfo);
   int32_t prepareRecvNodeInfo(const RoutingInfo& rountingInfo, const ParentRectangleList& parentRectangleMap);
   int32_t commitRecvNodeInfo(const RoutingInfo& rountingInfo);
+  bool takeOwnership(const nid_t nid);
 
 };
 

@@ -13,6 +13,8 @@
 using namespace std;
 using namespace ::core;
 
+DECLARE_int64(heartbeat_interval);
+
 string const DEFAULT_VALUE = "";
 
 struct DataStoreConfig {
