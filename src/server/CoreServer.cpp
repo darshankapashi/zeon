@@ -17,7 +17,6 @@ DEFINE_int32(server_talk_port, 9000, "Port used for server-server communication"
 DEFINE_string(my_ip_address, "10.0.0.4", "Address of my server");
 // TODO: get this from MetaDataStoreConfig or fetch it from leader based on ip and server_port / client_port
 DEFINE_int32(my_nid, 1, "NodeId.nid_t of my server");
-//DECLARE_int64(heartbeat_interval);
 
 
 using namespace ::apache::thrift;
@@ -63,9 +62,11 @@ void initFromLeader(NodeId const& nodeId) {
       printf("Contacting the Leader...\n");
       LeaderClient leaderClient(leaderNode);
       auto routingInfo = leaderClient.fetchRoutingInfo();
+      printf("size of r info fetched: %lu\n", routingInfo.nodeRegionMap.size() );
       auto myNodeInfo = routingInfo.nodeRegionMap[nodeId.nid];
       
       myNode = new Node(myNodeInfo, routingInfo);
+      printf("My id: %lld\n", myNode->me_.nodeId.nid);
       myNode->setStatus(NodeStatus::ACTIVE);
       //NodeInfo nodeInfo;
       //myNode = new Node(nodeInfo);
@@ -116,7 +117,7 @@ void startHeartBeatsToLeader() {
 int main(int argc, char **argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
   printf("Starting CoreServer...\n");
-  leaderNode.ip = "10.0.0.11";
+  leaderNode.ip = "localhost";
   leaderNode.serverPort = 9990;
 
   // Initialize Node class 

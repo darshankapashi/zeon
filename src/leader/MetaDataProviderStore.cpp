@@ -42,6 +42,7 @@ void MetaDataProviderStore::createServerConnections(const MetaDataConfig& config
     }
     sleep(2);
   }
+  printf("numConnections: %d\n", numConnections);
 }
 
 int MetaDataProviderStore::initializeConfig(const MetaDataConfig& config) {
@@ -412,7 +413,7 @@ bool MetaDataProviderStore::checkForFailures() {
   auto currTimestamp = time(nullptr);
   vector<int> failedNodes;
   for (auto node:allNodes_) {
-    if (node.second.timestamp + 3 * FLAGS_failure_check_interval < 
+    if (node.second.timestamp + FLAGS_failure_check_interval < 
           currTimestamp) {
       failedNodes.emplace_back(node.first);
     }

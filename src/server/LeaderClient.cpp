@@ -4,7 +4,11 @@
 using namespace core;
 
 RoutingInfo LeaderClient::fetchRoutingInfo() {
-  RoutingInfo routingInfo;;
-  metaDataProviderClient_->getRoutingInfo(routingInfo);
-  return routingInfo;
+  try {
+    RoutingInfo routingInfo;;
+    metaDataProviderClient_->getRoutingInfo(routingInfo);
+    return routingInfo;
+  } catch (exception e) {
+    throw e;
+  }
 }
