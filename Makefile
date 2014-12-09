@@ -1,7 +1,7 @@
 INCS_DIRS  =-I./
 OPT        = -O2
 DBG        = -g
-BUILD      = $(OPT)
+BUILD      = $(DBG)
 CPP_OPTS   =-Wall -std=c++11 $(BUILD)
 LIBS       =-lthrift -lgflags
 

@@ -66,14 +66,7 @@ void PointStoreHandler::setData(const Data& data, const bool valuePresent) {
     // I don't have this id locally
 
     // Fetch from previous server
-    // TODO: What if this master does not have the point???????
-    NodeId prevNode = myNode->getMasterForPoint(data.prevPoint);
-    ServerTalker walkieTalkie(prevNode.ip, prevNode.serverPort);
-    ServerTalkClient* client = walkieTalkie.get();
-    
-    // TODO: This should really be get *all* data
-    printf("Getting value from nid=%lld\n", prevNode.nid);
-    client->getValue(dataToStore.value, data.id);
+    myNode->getValue(dataToStore.value, data);
 
     // Store the old value
     valueGiven = true;
@@ -101,6 +94,7 @@ void PointStoreHandler::setData(const Data& data, const bool valuePresent) {
 
 void PointStoreHandler::createData(const zeonid_t id, const Point& point, const int64_t timestamp, const std::string& value) {
   printf("createData id=%d\n", id);
+  // TODO: there might be some race condition here
   routeCorrectly(point, WRITE_OP);
   if (myNode->doIHaveThisId(id, WRITE_OP)) {
     throwError(ALREADY_EXISTS);

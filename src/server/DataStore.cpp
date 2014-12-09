@@ -89,14 +89,20 @@ int DataStore::history(zeonid_t key, vector<Data>& history) {
 }
 
 int DataStore::removeData(zeonid_t key) {
-  int metaDataEraseStatus = metaData_.erase(key);
-  int valueEraseStatus = valueData_.erase(key);
-  removePersistedData(key);
-  if (metaDataEraseStatus || valueEraseStatus) {
-    return NOT_FOUND;
-  } else {
-    return DELETED;
+  int ret = DELETED;
+  LOCK(key);
+  try {
+    int metaDataEraseStatus = metaData_.erase(key);
+    int valueEraseStatus = valueData_.erase(key);
+    removePersistedData(key);
+    if (metaDataEraseStatus == 0 || valueEraseStatus == 0) {
+      ret = NOT_FOUND;
+    }
+  } catch (exception const& e) {
+    ret = SERVER_ERROR;
   }
+  UNLOCK(key);
+  return ret;
 }
 
 int DataStore::removePersistedData(zeonid_t key) {
