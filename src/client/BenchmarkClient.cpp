@@ -71,18 +71,20 @@ int main(int argc, char **argv) {
   }
 
   if (FLAGS_set) {
+    Data d;
     try {
       cout << "======= Setting " << FLAGS_num_set << " data points" << endl;
       timestamp t0 = get_timestamp();
       for (int i = 0; i < FLAGS_num_set; i++) {
         int id = FLAGS_start_set + rand() % FLAGS_num_set;
-        Data d = makeData(id, makePoint(rand() % 200, rand() % 100));
+        d = makeData(id, makePoint(rand() % 200, rand() % 100));
         client.setData(d, false);
       }
       timestamp t1 = get_timestamp();
       printTime(t0, t1);
     } catch (ZeonException const& ze) {
       cout << "ZeonException: " << ze.what << " " << ze.why << endl;
+      printData(d);
     }
   }
 }

@@ -27,6 +27,7 @@ struct Data {
   // unique id for Data
   1: zeonid_t id = 0,
   // last-updated location of id
+  // This should ideally be optional
   2: Point prevPoint,
   // last-updated location of id
   3: Point point,

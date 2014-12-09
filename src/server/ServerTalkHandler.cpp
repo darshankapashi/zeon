@@ -14,7 +14,7 @@ ServerTalkHandler::ServerTalkHandler() {
 }
 
 void ServerTalkHandler::getValue(std::string& _return, const zeonid_t zid) {
-  printf("getValue id=%d\n", zid);
+  printf("getValue id=%d haveThisId=%d\n", zid, myNode->doIHaveThisId(zid, READ_OP));
 
   // Return the value from the Datastore
   Data data;

@@ -1,7 +1,7 @@
 INCS_DIRS  =-I./
 OPT        = -O2
 DBG        = -g
-BUILD      = $(OPT)
+BUILD      = $(DBG)
 CPP_OPTS   =-Wall -std=c++11 $(BUILD)
 LIBS       =-lthrift -lgflags
 
@@ -50,7 +50,7 @@ $(EXECUTABLE): $(OBJS) $(GEN_OBJS)
 	$(CC) $(LDFLAGS) -o $(EXECUTABLE) $(OBJS) $(GEN_OBJS) 
 ################################
 
-all: thrift $(EXECUTABLE) client leader benchmark
+all: thrift $(EXECUTABLE) client leader benchmark benchmark_client
 
 thrift: src/if/core.thrift src/if/server.thrift
 	thrift --gen cpp:pure_enums src/if/core.thrift

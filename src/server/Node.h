@@ -28,6 +28,7 @@ class Node {
   
   void replicate(Data const& data, bool valuePresent);
   void sendInvalidations(Point const& p, zeonid_t const& zid);
+  void getValue(string& value, Data const& data);
 
   void buildRectangleToNodeMap();
 

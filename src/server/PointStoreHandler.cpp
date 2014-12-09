@@ -9,6 +9,9 @@ PointStoreHandler::PointStoreHandler()
   : PointStoreIf()
 {}
 
+// TODO: Better per key locking
+//       There are several scenarios in which parallel requests for the same key might result in a race in invalidations and getValue
+
 void PointStoreHandler::routeCorrectly(Point const& p, Operation op) {
   if (!myNode->isReady()) {
     throwError(SERVER_NOT_READY);
@@ -63,13 +66,7 @@ void PointStoreHandler::setData(const Data& data, const bool valuePresent) {
     // I don't have this id locally
 
     // Fetch from previous server
-    NodeId prevNode = myNode->getMasterForPoint(data.prevPoint);
-    ServerTalker walkieTalkie(prevNode.ip, prevNode.serverPort);
-    ServerTalkClient* client = walkieTalkie.get();
-    
-    // TODO: This should really be get *all* data
-    printf("Getting value from nid=%lld\n", prevNode.nid);
-    client->getValue(dataToStore.value, data.id);
+    myNode->getValue(dataToStore.value, data);
 
     // Store the old value
     valueGiven = true;
@@ -97,6 +94,7 @@ void PointStoreHandler::setData(const Data& data, const bool valuePresent) {
 
 void PointStoreHandler::createData(const zeonid_t id, const Point& point, const int64_t timestamp, const std::string& value) {
   printf("createData id=%d\n", id);
+  // TODO: there might be some race condition here
   routeCorrectly(point, WRITE_OP);
   if (myNode->doIHaveThisId(id, WRITE_OP)) {
     throwError(ALREADY_EXISTS);

@@ -129,6 +129,38 @@ void Node::sendInvalidations(Point const& p, zeonid_t const& zid) {
   }
 }
 
+void Node::getValue(string& value, Data const& data) {
+  NodeId prevNode = getMasterForPoint(data.prevPoint);
+
+  if (prevNode.nid != me_.nodeId.nid) {
+    // TODO: This should really be get *all* data
+    try {
+      printf("(1) Getting value from nid=%lld\n", prevNode.nid);
+      ServerTalker walkieTalkie(prevNode.ip, prevNode.serverPort);
+      ServerTalkClient* client = walkieTalkie.get();
+      client->getValue(value, data.id);
+      return;
+    } catch (ZeonException const& ze) {}
+  }
+
+  // Lets request *all* nodes!
+  for (auto const& nodeKV: routingInfo_.nodeRegionMap) {
+    auto const& node = nodeKV.second.nodeId;
+    if (node.nid == me_.nodeId.nid || node.nid == prevNode.nid) {
+      continue;
+    }
+
+    ServerTalker walkieTalkie(node.ip, node.serverPort);
+    ServerTalkClient* client = walkieTalkie.get();
+    try {
+      printf("(2) Getting value from nid=%lld\n", node.nid);
+      client->getValue(value, data.id);
+      return;
+    } catch (ZeonException const& ze2) {}
+  }
+  throwError(NOT_FOUND);
+}
+
 void Node::buildRectangleToNodeMap() {
   printRoutingInfo(routingInfo_);
   myMainRectangles_.clear();
