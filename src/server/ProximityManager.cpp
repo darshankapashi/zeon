@@ -7,11 +7,11 @@ using namespace core;
 
 ProximityManager* proximity;
 
-void LinearProximityCompute::insertPoint(Data data) {
+void LinearProximityCompute::insertPoint(Data const& data) {
   dataList_.emplace_back(data);
 }
 
-void LinearProximityCompute::removePoint(Data data) {
+void LinearProximityCompute::removePoint(Data const& data) {
   for (auto it =  dataList_.begin(); it != dataList_.end(); ++it) {
     if (it->id == data.id && 
         it->point.xCord == data.point.xCord && 
@@ -21,7 +21,7 @@ void LinearProximityCompute::removePoint(Data data) {
   }
 }
 
-bool linearComparison(pair<double, Data> p1, pair<double, Data> p2) {
+bool linearComparison(pair<double, Data> const& p1, pair<double, Data> const& p2) {
   return p1.first <= p2.first;
 }
 
