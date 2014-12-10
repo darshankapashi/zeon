@@ -46,6 +46,8 @@ class MetaDataProviderHandler : virtual public MetaDataProviderIf {
       metaDataProviderStore_.splitNodes(1, 2, true);
       sleep(3);
       metaDataProviderStore_.splitNodes(2, 3, true);
+      sleep(3);
+      metaDataProviderStore_.splitNodes(3, 1, true);
     }
   }
 

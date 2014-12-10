@@ -327,6 +327,7 @@ void Node::fetchNewData() {
 void Node::commitNewData() {
   for (auto const& kv: tempData_) {
     for (auto const& data: kv.second) {
+      myNode->addId(data.id);
       storeData(data, true);
     }
   }
