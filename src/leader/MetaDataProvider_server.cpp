@@ -131,6 +131,7 @@ void assignToNodes(MetaDataConfig& config, Rectangle const& rect) {
     // Rectangle is broader
     int eachWidth = width / numNodes;
     int i = 0;
+    Rectangle* lastRect;
     for (auto const& node: config.allNodes) {
       Region& region = config.nodeRegionMap[node.nid];
       region.rectangles.push_back(rect);
@@ -138,11 +139,14 @@ void assignToNodes(MetaDataConfig& config, Rectangle const& rect) {
       r.bottomLeft.xCord = rect.bottomLeft.xCord + i * eachWidth;
       r.topRight.xCord = rect.bottomLeft.xCord + (i + 1) * eachWidth;
       i++;
+      lastRect = &r;
     }
+    lastRect->topRight.xCord = rect.topRight.xCord;
   } else {
     // Rectangle is taller
     int eachHeight = height / numNodes;
     int i = 0;
+    Rectangle* lastRect;
     for (auto const& node: config.allNodes) {
       Region& region = config.nodeRegionMap[node.nid];
       region.rectangles.push_back(rect);
@@ -150,7 +154,9 @@ void assignToNodes(MetaDataConfig& config, Rectangle const& rect) {
       r.bottomLeft.yCord = rect.bottomLeft.yCord + i * eachHeight;
       r.topRight.yCord = rect.bottomLeft.yCord + (i + 1) * eachHeight;
       i++;
+      lastRect = &r;
     }    
+    lastRect->topRight.yCord = rect.topRight.yCord;
   }
 }
 
