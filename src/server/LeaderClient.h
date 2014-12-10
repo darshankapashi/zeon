@@ -7,8 +7,8 @@
 #include <thrift/transport/TTransportUtils.h>
 
 #include "gen-cpp/MetaDataProvider.h"
-#include "src/server/DataStore.h"
-#include "src/server/StateObjects.h"
+//#include "src/server/DataStore.h"
+//#include "src/server/StateObjects.h"
 
 using namespace std;
 using namespace apache::thrift;
@@ -30,6 +30,7 @@ class LeaderClient {
 
   unique_ptr<MetaDataProviderClient> metaDataProviderClient_;
   RoutingInfo fetchRoutingInfo();
+  bool splitNodes(nid_t busyId, nid_t freeId);
 
   ~LeaderClient() {
     //printf("Destroying LeaderClient object this=%d\n", this);

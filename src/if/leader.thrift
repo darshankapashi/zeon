@@ -91,12 +91,11 @@ service MetaDataProvider {
   void ping(1: NodeInfo nodeInfo) 
     throws (1: MetaStoreException me),
 
-  // Report to master about your managed region
-  //void informManagedRegion (1: i32 serverId, 2: core.Region region) 
-    //throws (1: MetaStoreException me),
-  
   // Fetch the entire routing information from master
   RoutingInfo getRoutingInfo() throws (1: MetaStoreException me),
+
+  // Admin client API for splitNodes
+  bool splitNodes(1:core.nid_t busyNode, 2: core.nid_t freeNode) throws (1: MetaStoreException me),
 
   // Node informs the leader indicating its availability 
   //  void nodeJoin (1: core.NodeId nodeId, 2: core.NodeDataStats nodeDataStats, 
