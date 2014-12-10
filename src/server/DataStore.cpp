@@ -42,7 +42,6 @@ int DataStore::storeValue(zeonid_t key, string val) {
 }
 
 int DataStore::get(zeonid_t key, Data& data, bool valuePresent) {
-  int ret = FOUND;
   vector<Data>* metadata = nullptr;
   {
     LOCK(metaDataLock_);
@@ -63,7 +62,7 @@ int DataStore::get(zeonid_t key, Data& data, bool valuePresent) {
     data.value = valueData_[key];
   }
 
-  return ret;
+  return FOUND;
 }
 
 int DataStore::history(zeonid_t key, vector<Data>& history) {
@@ -78,7 +77,6 @@ int DataStore::history(zeonid_t key, vector<Data>& history) {
 }
 
 int DataStore::removeData(zeonid_t key) {
-  int ret = DELETED;
   try {
     {
       LOCK(metaDataLock_);

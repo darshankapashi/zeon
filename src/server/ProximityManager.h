@@ -63,7 +63,7 @@ class ProximityCompute {
 };
 
 class LinearProximityCompute: public ProximityCompute {
-  public:
+ public:
   LinearProximityCompute(ProximityDistance* proximityDistance) :
     ProximityCompute(proximityDistance) {}
   
@@ -72,6 +72,8 @@ class LinearProximityCompute: public ProximityCompute {
   vector<Data> getKNearestPoints(const Point& point, int k);
   void getInternalPoints(vector<Data>& data, const Region& region);
   void getInternalPoints(vector<Data>& data, const Rectangle& rectangle);
+
+  mutex dataListLock_;
 };
 
 class ProximityManager {

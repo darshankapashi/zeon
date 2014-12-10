@@ -7,11 +7,15 @@ using namespace core;
 
 ProximityManager* proximity;
 
+#define LOCK(m) lock_guard<mutex> lock(m);
+
 void LinearProximityCompute::insertPoint(Data const& data) {
+  LOCK(dataListLock_);
   dataList_.emplace_back(data);
 }
 
 void LinearProximityCompute::removePoint(Data const& data) {
+  LOCK(dataListLock_);
   for (auto it =  dataList_.begin(); it != dataList_.end(); ++it) {
     if (it->id == data.id && 
         it->point.xCord == data.point.xCord && 
@@ -28,13 +32,15 @@ bool linearComparison(pair<double, Data> const& p1, pair<double, Data> const& p2
 vector<Data> LinearProximityCompute::getKNearestPoints(const Point& point, int k) {
   vector<pair<double, Data>> distanceVector;
   vector<Data> results;
-  for (auto const& d: dataList_) {
-    cout<<"distance: "<<proximityDistance_->getDistance(point, d.point)<<" id: "<<d.id << "\n";
+  decltype(dataList_) dataList;
+  {
+    LOCK(dataListLock_);
+    dataList = dataList_;
+  }
+  for (auto const& d: dataList) {
     distanceVector.emplace_back(proximityDistance_->getDistance(point, d.point), d);
   }
   sort(distanceVector.begin(), distanceVector.end(), linearComparison);
-  //cout<<"first: "<<distanceVector[0].first<<" "<<distanceVector[0].second.id << "\n";
-  //cout<<"second: "<<distanceVector[1].first<<" "<<distanceVector[1].second.id << "\n";
 
   // keep only k elements
   distanceVector.erase(distanceVector.begin() + k, distanceVector.end());
@@ -51,7 +57,12 @@ void LinearProximityCompute::getInternalPoints(vector<Data>& data, const Region&
 }
 
 void LinearProximityCompute::getInternalPoints(vector<Data>& data, const Rectangle& rectangle) {
-  for (auto const& d: dataList_) {
+  decltype(dataList_) dataList;
+  {
+    LOCK(dataListLock_);
+    dataList = dataList_;
+  }
+  for (auto const& d: dataList) {
     if (inRectangle(rectangle, d.point)) {
       data.push_back(d);
     }
