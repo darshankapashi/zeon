@@ -62,6 +62,11 @@ CLIENT_CPP = src/client/ClientTest.cpp src/client/ZeonClient.cpp
 client: ${CLIENT_CPP}
 	g++ ${CPP_OPTS} -o bin/client ${INCS_DIRS} ${CLIENT_CPP} ${GEN_SRC} ${LIBS}
 
+ADMIN_CLIENT_CPP = src/client/AdminClient.cpp src/server/LeaderClient.cpp
+
+admin_client: ${ADMIN_CLIENT_CPP}
+	g++ ${CPP_OPTS} -o bin/admin_client ${INCS_DIRS} ${ADMIN_CLIENT_CPP} ${GEN_SRC} ${LIBS}
+
 BENCHMARK_CPP = src/client/BenchmarkTest.cpp src/client/ZeonClient.cpp
 
 benchmark: $(BENCHMARK_CPP)

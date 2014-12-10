@@ -42,12 +42,7 @@ class MetaDataProviderHandler : virtual public MetaDataProviderIf {
       }
     } else {
       sleep(5);
-      //metaDataProviderStore_.loadBalance(true);
-      metaDataProviderStore_.splitNodes(1, 2, true);
-      sleep(3);
-      metaDataProviderStore_.splitNodes(2, 3, true);
-      sleep(3);
-      metaDataProviderStore_.splitNodes(3, 1, true);
+      metaDataProviderStore_.loadBalance(true);
     }
   }
 
@@ -82,6 +77,14 @@ class MetaDataProviderHandler : virtual public MetaDataProviderIf {
       auto me = MetaStoreException();
       me.why = "Node not registered yet";
       throw me; 
+    }
+  }
+
+  bool splitNodes(const nid_t busyId, const nid_t freeId) {
+    try {
+      return metaDataProviderStore_.splitNodes(busyId, freeId, false);
+    } catch (exception e) {
+      printf("split Nodes failed %s\n", e.what());
     }
   }
 
@@ -237,7 +240,7 @@ int main(int argc, char **argv) {
 
   handler->initializeConfig(config);
   printf("Leader server started\n");
-  std::thread loadBalanceThread(&MetaDataProviderHandler::startLoadBalancing, handler, false);
+  //std::thread loadBalanceThread(&MetaDataProviderHandler::startLoadBalancing, handler, false);
   //metaDataProviderStore_.splitNodes(1, 2, true);
   //std::thread checkFailureThread(&MetaDataProviderHandler::startCheckFailure, handler, true);
   TThreadedServer server(processor, serverTransport, transportFactory, protocolFactory);
