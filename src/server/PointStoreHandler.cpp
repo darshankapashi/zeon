@@ -58,7 +58,6 @@ void PointStoreHandler::setData(const Data& data, const bool valuePresent) {
 
   Data dataToStore = data;
   bool valueGiven = valuePresent;
-
   // TODO: Maybe we don't need to do the below steps in case the value
   //       is present in this request too.
   bool haveThisId = myNode->doIHaveThisId(data.id, WRITE_OP);
@@ -97,7 +96,6 @@ void PointStoreHandler::createData(const zeonid_t id, const Point& point, const 
   printf("createData id=%d\n", id);
   // TODO: there might be some race condition here
   routeCorrectly(point, WRITE_OP);
-
   if (myNode->doIHaveThisId(id, WRITE_OP)) {
     throwError(ALREADY_EXISTS);
   }
@@ -119,7 +117,6 @@ void PointStoreHandler::getNearestKById(std::vector<Data> & _return, const zeoni
 void PointStoreHandler::getNearestKByPoint(std::vector<Data> & _return, const Point& point, const int k) {
   printf("getNearestKByPoint\n");
   routeCorrectly(point, READ_OP);
-
   auto compute = proximity->proximityCompute;
   _return = compute->getKNearestPoints(point, k);
 
@@ -145,7 +142,6 @@ void PointStoreHandler::getPointsInRegion(std::vector<Data> & _return, const Reg
 
 void PointStoreHandler::removeData(const zeonid_t id) {
   printf("removeData\n");
-
   // TODO: How do you route this!!!
   int ret = myDataStore->removeData(id);
   if (ret != DELETED) {
