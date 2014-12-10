@@ -76,4 +76,6 @@ class Node {
   unordered_map<Rectangle, Rectangle> parentMapping_;
 
   NodeStats nodeStats_;
+
+  mutex zidsLock_;
 };

@@ -48,6 +48,8 @@ void ServerTalkHandler::replicate(const Data& data, const bool valuePresent) {
 
   // Add it to Datastore
   // Add it to Log
+  proximity->proximityCompute->insertPoint(data);
+  myNode->addId(data.id);
   storeData(data, valuePresent);
 }
 
@@ -56,6 +58,7 @@ void ServerTalkHandler::invalidate(const zeonid_t zid) {
 
   // Remove from Datastore
   // Remove from Log
+  proximity->proximityCompute->removePoint(zid);
   myNode->removeId(zid);
   myDataStore->removeData(zid);
   myDataStore->removePersistedData(zid);

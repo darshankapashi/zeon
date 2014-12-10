@@ -10,42 +10,44 @@ ProximityManager* proximity;
 #define LOCK(m) lock_guard<mutex> lock(m);
 
 void LinearProximityCompute::insertPoint(Data const& data) {
-  LOCK(dataListLock_);
-  dataList_.emplace_back(data);
+  LOCK(dataLock_);
+  data_[data.id] = data.point;
 }
 
 void LinearProximityCompute::removePoint(Data const& data) {
-  LOCK(dataListLock_);
-  for (auto it =  dataList_.begin(); it != dataList_.end(); ++it) {
-    if (it->id == data.id && 
-        it->point.xCord == data.point.xCord && 
-        it->point.yCord == data.point.yCord) {
-      dataList_.erase(it);
-    }
-  }
+  LOCK(dataLock_);
+  data_.erase(data.id);
 }
 
-bool linearComparison(pair<double, Data> const& p1, pair<double, Data> const& p2) {
-  return p1.first <= p2.first;
+void LinearProximityCompute::removePoint(zeonid_t const& zid) {
+  LOCK(dataLock_);
+  data_.erase(zid); 
+}
+
+bool linearComparison(tuple<double, zeonid_t, Point> const& p1, tuple<double, zeonid_t, Point> const& p2) {
+  return get<0>(p1) <= get<0>(p2);
 }
 
 vector<Data> LinearProximityCompute::getKNearestPoints(const Point& point, int k) {
-  vector<pair<double, Data>> distanceVector;
+  vector<tuple<double, zeonid_t, Point>> distanceVector;
   vector<Data> results;
-  decltype(dataList_) dataList;
+  decltype(data_) data;
   {
-    LOCK(dataListLock_);
-    dataList = dataList_;
+    LOCK(dataLock_);
+    data = data_;
   }
-  for (auto const& d: dataList) {
-    distanceVector.emplace_back(proximityDistance_->getDistance(point, d.point), d);
+  for (auto const& kv: data) {
+    distanceVector.emplace_back(proximityDistance_->getDistance(point, kv.second), kv.first, kv.second);
   }
   sort(distanceVector.begin(), distanceVector.end(), linearComparison);
 
   // keep only k elements
   distanceVector.erase(distanceVector.begin() + k, distanceVector.end());
   for (auto dv : distanceVector) {
-    results.emplace_back(dv.second);
+    results.emplace_back();
+    auto& d = results.back();
+    d.id = get<1>(dv);
+    d.point = get<2>(dv);
   }
   return results;
 }
@@ -57,14 +59,17 @@ void LinearProximityCompute::getInternalPoints(vector<Data>& data, const Region&
 }
 
 void LinearProximityCompute::getInternalPoints(vector<Data>& data, const Rectangle& rectangle) {
-  decltype(dataList_) dataList;
+  decltype(data_) dataCopy;
   {
-    LOCK(dataListLock_);
-    dataList = dataList_;
+    LOCK(dataLock_);
+    dataCopy = data_;
   }
-  for (auto const& d: dataList) {
-    if (inRectangle(rectangle, d.point)) {
-      data.push_back(d);
+  for (auto const& kv: dataCopy) {
+    if (inRectangle(rectangle, kv.second)) {
+      data.emplace_back();
+      auto& d = data.back();
+      d.id = kv.first;
+      d.point = kv.second;
     }
   }
 }
