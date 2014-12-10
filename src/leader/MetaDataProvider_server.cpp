@@ -21,7 +21,9 @@ using boost::shared_ptr;
 using namespace ::core;
 
 DEFINE_bool(load_balance_enabled, true, "Control whether load balancing is enabled");
+DEFINE_bool(check_failure_enabled, true, "Control whether check failure is enabled");
 DECLARE_int32(load_balance_sleep_time);
+DECLARE_int64(failure_check_interval);
 
 DEFINE_string(config_file, "config.txt", "File which contains all the node info");
 DEFINE_string(saved_config_file, "saved_config.txt", "File which contains all the node info");
@@ -39,7 +41,24 @@ class MetaDataProviderHandler : virtual public MetaDataProviderIf {
         count++;
       }
     } else {
-      metaDataProviderStore_.loadBalance(true);
+      sleep(5);
+      //metaDataProviderStore_.loadBalance(true);
+      metaDataProviderStore_.splitNodes(1, 2, true);
+      sleep(3);
+      metaDataProviderStore_.splitNodes(2, 3, true);
+    }
+  }
+
+  void startCheckFailure(bool continuous = true) {
+    int count  = 0;
+    if (continuous) {
+      while(count < 100 && FLAGS_check_failure_enabled) {
+        sleep(FLAGS_failure_check_interval);
+        metaDataProviderStore_.checkForFailures();
+        count++;
+      }
+    } else {
+      metaDataProviderStore_.checkForFailures();
     }
   }
 
@@ -210,7 +229,9 @@ int main(int argc, char **argv) {
 
   handler->initializeConfig(config);
   printf("Leader server started\n");
-  //std::thread loadBalanceThread(&MetaDataProviderHandler::startLoadBalancing, handler, true);
+  std::thread loadBalanceThread(&MetaDataProviderHandler::startLoadBalancing, handler, false);
+  //metaDataProviderStore_.splitNodes(1, 2, true);
+  //std::thread checkFailureThread(&MetaDataProviderHandler::startCheckFailure, handler, true);
   TThreadedServer server(processor, serverTransport, transportFactory, protocolFactory);
   server.serve();
   return 0;

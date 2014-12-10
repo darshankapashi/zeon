@@ -5,7 +5,7 @@
 #include "Structs.h"
 #include "ProximityManager.h"
 
-DEFINE_int64(heartbeat_interval, 5, "Time interval between periodic heartbeats between server and leader"); 
+DEFINE_int64(heartbeat_interval, 2, "Time interval between periodic heartbeats between server and leader"); 
 
 namespace core {
 
@@ -85,20 +85,28 @@ int32_t ServerTalkHandler::prepareRecvNodeInfo(const RoutingInfo& routingInfo, c
   // check if version for latest copy of routingInfo
   // Copy this in tempStateObjects
   // Atomically replace the routing info based on lock
+  //
   lock_guard<mutex> tempObjectsLock(myNode->lockTempObjectsNode_);
   NodeInfo const& nodeInfo = routingInfo.nodeRegionMap.at(myNode->me_.nodeId.nid);
-  if (nodeInfo.timestamp < myNode->me_.timestamp) {
-    return NodeMessage::STALE_ROUTING_INFO; 
-  }
+
+  // TODO check for staleness of routingInfo
+  //if (nodeInfo.timestamp < myNode->me_.timestamp) {
+    //printf("stale timestamp\n");
+    //return NodeMessage::STALE_ROUTING_INFO; 
+  //}
+  
   myNode->updateNodeInfoTemp_ = nodeInfo;
   myNode->updateRoutingInfoTemp_ = routingInfo;
   auto it = myNode->updateRoutingInfoTemp_.nodeRegionMap.find(myNode->me_.nodeId.nid);
   if (it == myNode->updateRoutingInfoTemp_.nodeRegionMap.end()) {
+    printf("not found iter");
     return NodeMessage::ERROR;
   }
-  //myNode->updateRoutingInfoTemp_.nodeRegionMap[myNode->me_.nodeId.nid] = nodeInfo; 
+  myNode->updateRoutingInfoTemp_.nodeRegionMap[myNode->me_.nodeId.nid] = nodeInfo; 
   myNode->setParentMapping(parentRectangleMap);
+
   myNode->fetchNewData();
+
   return NodeMessage::PREPARED_RECV_ROUTING_INFO;
 }
 
@@ -115,6 +123,7 @@ int32_t ServerTalkHandler::commitRecvNodeInfo(const RoutingInfo& routingInfo) {
   myNode->setStatus(NodeStatus::UPDATING);  
   myNode->me_ = myNode->updateNodeInfoTemp_; 
   myNode->routingInfo_ = myNode->updateRoutingInfoTemp_;
+  printf("new size of routing info: %lu\n", myNode->routingInfo_.nodeRegionMap[2].nodeDataStats.region.rectangles.size());
   myNode->buildRectangleToNodeMap();
   myNode->setStatus(NodeStatus::ACTIVE);
   myNode->commitNewData();

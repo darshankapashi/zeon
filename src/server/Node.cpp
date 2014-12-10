@@ -256,10 +256,32 @@ void Node::fetchAndStoreInTemp(Rectangle const& r) {
       r.bottomLeft.xCord, r.bottomLeft.yCord,
       r.topRight.xCord, r.topRight.yCord);
 
-  auto const& parentRect = parentMapping_.at(r);
+  //printf("parent rec size: %lu\n", parentMapping_.size());
+  //for (auto& k : parentMapping_) {
+    //printf("me rectangle: (%lld,%lld) (%lld,%lld)\n", 
+        //k.first.bottomLeft.xCord, k.first.bottomLeft.yCord,
+        //k.first.topRight.xCord, k.first.topRight.yCord);
+    //printf("pare Rectangle: (%lld,%lld) (%lld,%lld)\n", 
+        //k.second.bottomLeft.xCord, k.second.bottomLeft.yCord,
+        //k.second.topRight.xCord, k.second.topRight.yCord);
+  //}
+  auto parentRectIter = parentMapping_.find(r);
+  const auto& parentRect = parentRectIter != parentMapping_.end() ? parentRectIter->second : r;
+  printf("parent  Rectangle: (%lld,%lld) (%lld,%lld)\n",
+           parentRect.bottomLeft.xCord, parentRect.bottomLeft.yCord,
+           parentRect.topRight.xCord, parentRect.topRight.yCord);
+ 
+  for (auto rec: rectangleToNode_) {
+    printf("rectangleToNodee Map: (%lld,%lld) (%lld,%lld)\n", 
+        rec.first.bottomLeft.xCord, rec.first.bottomLeft.yCord,
+        rec.first.topRight.xCord, rec.first.topRight.yCord);
+  }
+
   auto const& nodes = rectangleToNode_[parentRect];
   bool found = false;
   for (auto const& node: nodes) {
+    if (found) break;
+    printf("node: %lld\n", node);
     try {
       auto& datas = tempData_[r];
       ServerTalker walkieTalkie(routingInfo_.nodeRegionMap.at(node).nodeId);
@@ -302,6 +324,8 @@ void Node::commitNewData() {
       storeData(data, true);
     }
   }
+   //TODO: lock all dataStructs when they are rebuilt
+  //buildRectangleToNodeMap();
 }
 
 void Node::setParentMapping(ParentRectangleList const& list) {

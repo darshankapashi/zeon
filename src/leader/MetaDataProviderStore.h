@@ -30,6 +30,7 @@ class MetaDataProviderStore {
   // Will need 2-phase commit for this entire transaction.
   // Will Need to figure out about replicas 
   bool loadBalance(bool test);
+  bool splitNodes(nid_t busyId, nid_t freeId, bool test);
 
   // runs periodically in background thread
   // checks:

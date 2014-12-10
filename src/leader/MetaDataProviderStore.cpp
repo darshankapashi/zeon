@@ -9,7 +9,7 @@ using namespace core;
 
 DEFINE_int32(cpu_threshold_for_split, 90, "percent threshold");
 DEFINE_int32(load_balance_sleep_time, 4, "seconds after which load balancing should be tried");
-DEFINE_int64(failure_check_interval, 10, "Time interval after which server is claimed to be dead"); 
+DEFINE_int64(failure_check_interval, 4, "Time interval after which server is claimed to be dead"); 
 
 int64_t getRegionHash(const Region& reg) {
   int64_t hashRes = 0;
@@ -81,7 +81,6 @@ int MetaDataProviderStore::initializeConfig(const MetaDataConfig& config) {
     return NodeMessage::LESS_NODES_FOR_REPLICATION;
   }
   auto startIt  = allNodes_.begin();
-  //int i = 0;
   while (startIt != allNodes_.end()) {
     auto currIter = startIt;
     printf("Replicas of node %lld :", currIter->first);
@@ -195,64 +194,19 @@ int64_t totalQueryRate(const vector<RectangleStats>& recStatsList) {
   return res;
 }
 
-bool  MetaDataProviderStore::loadBalance(bool test = false) { 
+bool MetaDataProviderStore::splitNodes(nid_t busyId, nid_t freeId, bool test = false) { 
   try {
-    printf("Starting load balance\n");
-    printf("allNodes size: %lu\n", allNodes_.size());
-    vector<pair<SystemStats, vector<RectangleStats> >> statsVector;
-
-    for (auto& node: allNodes_) {
-      if (test) {
-        printf("nid: %lld\n", node.first);
-        printf("Rectangle stats for nid: %lld\n", node.first);
-        for (auto recStats: node.second.nodeDataStats.rectangleStats) {
-          printf("Rectangle: (%lld, %lld) (%lld, %lld), zidCount: %lld, queryrate: %d \n", recStats.rectangle.bottomLeft.xCord, 
-          recStats.rectangle.bottomLeft.yCord, recStats.rectangle.topRight.xCord, recStats.rectangle.topRight.yCord, recStats.zidCount, recStats.queryRate);
-        }
-      }
-      statsVector.push_back(
-        make_pair(node.second.systemStats, 
-                  node.second.nodeDataStats.rectangleStats));
-        printf("nid1: %lld\n", node.second.systemStats.nid);
-    }
-    sort(statsVector.begin(), statsVector.end(), statsComparator);
-    printf("stats vector size %lu\n", statsVector.size());
-
-    // Fetch only busiest and move its load on least busiest node incase it exceeds the threshold
-    if (!test && (!statsThresholdChecker(statsVector.front()) || statsThresholdChecker(statsVector.back()))) {
-      printf("Stats threshold check failed\n");
-      return false;
-    }
-
-    // TODO: If more than 1 rectangle then transfer rectangles to make number of zids managed by each of them comparable
-    // Else split the rectangle
-    if (allNodes_.size() < 2) return true;
-    auto& busyNode = statsVector.front();
-    auto busyNodeId = busyNode.first.nid;
-    auto& freeNode = statsVector.back();
-    auto freeNodeId = freeNode.first.nid;
-    printf("Busy node: %lld Free node: %lld \n", busyNodeId, freeNodeId);
-    auto updateFreeNodeInfo = allNodes_[freeNode.first.nid];
-    auto updateBusyNodeInfo = allNodes_[busyNode.first.nid];
+    printf("Split nodes from %lld to %lld \n", busyId, freeId);
+    auto updateFreeNodeInfo = allNodes_[freeId];
+    auto updateBusyNodeInfo = allNodes_[busyId];
     ParentRectangleList parentRectangleList;
-    ParentRectangleList parentRectangleListUpdate;
 
     vector<RectangleStats> toMoveRectangles;
 
-    auto busyNodeRectStats = busyNode.second; 
+    auto busyNodeRectStats = updateBusyNodeInfo.nodeDataStats.rectangleStats; 
     for (int i = 0; i < busyNodeRectStats.size()/2; i++) {
       toMoveRectangles.push_back(busyNodeRectStats[i]);
     }
-    // TODO: queryRateDifference correction
-    //sort(busyNodeRectStats.begin(), busyNodeRectStats.end(), recStatsSorter);
-    //auto queryRateDifference = totalQueryRate(busyNode.second) - totalQueryRate(freeNode.second); 
-    //auto queryRateDifference = 0;
-    //for (auto rectStat: busyNodeRectStats) {
-      //if (rectStat.queryRate < queryRateDifference / 2) {
-        //toMoveRectangles.push_back(rectStat.rectangle);
-        //queryRateDifference -= 2 * rectStat.queryRate; 
-      //}
-    //}
 
      // incase no rectangle found split randomly, load balance the first one
     if (toMoveRectangles.empty()) {
@@ -275,11 +229,10 @@ bool  MetaDataProviderStore::loadBalance(bool test = false) {
 
       auto toUpdateRectangle = toSplitRec;
       toUpdateRectangle.bottomLeft.xCord = toAddRectangle.topRight.xCord;
-
       ParentRectangle pRecUpdate;
       pRecUpdate.parent = toSplitRec;
       pRecUpdate.me = toUpdateRectangle;
-      parentRectangleListUpdate.emplace_back(pRecUpdate);
+      parentRectangleList.emplace_back(pRecUpdate);
 
       updateFreeNodeInfo.nodeDataStats.region.rectangles.push_back(toAddRectangle);
       auto toAddRectangleStats = RectangleStats();
@@ -371,7 +324,7 @@ bool  MetaDataProviderStore::loadBalance(bool test = false) {
     int busyNodePrepareStatus = 
       clientBusyNode->prepareRecvNodeInfo(
         updatedRoutingInfo,
-        parentRectangleListUpdate);
+        parentRectangleList);
 
     if (freeNodePrepareStatus != NodeMessage::PREPARED_RECV_ROUTING_INFO
       || busyNodePrepareStatus != NodeMessage::PREPARED_RECV_ROUTING_INFO) {
@@ -395,29 +348,75 @@ bool  MetaDataProviderStore::loadBalance(bool test = false) {
     }
 
     for (auto client : clientToServers_) {
-      if (client.first != freeNodeId && 
-          client.first != busyNodeId) {
+      if (client.first != freeId && 
+          client.first != busyId) {
+        client.second.openTransport();
         (client.second.get())->receiveRoutingInfo(updatedRoutingInfo);
+        client.second.closeTransport();
       }
     }
 
-    clientToServers_.at(updateFreeNodeInfo.nodeId.nid).closeTransport();
-    clientToServers_.at(updateBusyNodeInfo.nodeId.nid).closeTransport();
+    clientToServers_.at(freeId).closeTransport();
+    clientToServers_.at(busyId).closeTransport();
   } catch (exception e) {
     printf ("Load Balance failed : %s\n", e.what());
   }
   return true;
 }
 
+bool  MetaDataProviderStore::loadBalance(bool test = false) { 
+  try {
+    printf("Starting load balance\n");
+    printf("allNodes size: %lu\n", allNodes_.size());
+    vector<pair<SystemStats, vector<RectangleStats> >> statsVector;
+
+    for (auto& node: allNodes_) {
+      if (test) {
+        printf("nid: %lld\n", node.first);
+        printf("Rectangle stats for nid: %lld\n", node.first);
+        for (auto recStats: node.second.nodeDataStats.rectangleStats) {
+          printf("Rectangle: (%lld, %lld) (%lld, %lld), zidCount: %lld, queryrate: %d \n", recStats.rectangle.bottomLeft.xCord, 
+          recStats.rectangle.bottomLeft.yCord, recStats.rectangle.topRight.xCord, recStats.rectangle.topRight.yCord, recStats.zidCount, recStats.queryRate);
+        }
+      }
+      statsVector.push_back(
+        make_pair(node.second.systemStats, 
+                  node.second.nodeDataStats.rectangleStats));
+        printf("nid1: %lld\n", node.first);
+    }
+    sort(statsVector.begin(), statsVector.end(), statsComparator);
+    printf("stats vector size %lu\n", statsVector.size());
+
+    // Fetch only busiest and move its load on least busiest node incase it exceeds the threshold
+    if (!test && (!statsThresholdChecker(statsVector.front()) || statsThresholdChecker(statsVector.back()))) {
+      printf("Stats threshold check failed\n");
+      return false;
+    }
+
+    // TODO: If more than 1 rectangle then transfer rectangles to make number of zids managed by each of them comparable
+    // Else split the rectangle
+    if (allNodes_.size() < 2) return true;
+    auto& busyId = statsVector.front().first.nid;
+    auto& freeId = statsVector.back().first.nid;
+    return splitNodes(busyId, freeId);
+  } catch (exception e) {
+    printf ("Load balance failed: %s\n", e.what());
+    return false;
+  }
+}
+
 bool MetaDataProviderStore::checkForFailures() {
+  printf("checkForFailures");
   auto currTimestamp = time(nullptr);
   vector<int> failedNodes;
   for (auto node:allNodes_) {
     if (node.second.timestamp + FLAGS_failure_check_interval < 
           currTimestamp) {
       failedNodes.emplace_back(node.first);
+      printf("Node failed: %lld\n", node.first);
     }
   }
+  printf("Failed nodes size %lu\n", failedNodes.size());
   for (auto failedNid : failedNodes) {
     auto nodeInfo = allNodes_[failedNid];
     auto replicas = nodeInfo.nodeDataStats.replicatedServers;
@@ -429,6 +428,7 @@ bool MetaDataProviderStore::checkForFailures() {
         break;
       }
     }
+    printf("Transfer ownership from %lld to %lld\n", failedNid, newPrimary);
     clientToServers_.at(newPrimary).openTransport();
     clientToServers_.at(newPrimary).get()->takeOwnership(failedNid);    clientToServers_.at(newPrimary).closeTransport();
 
