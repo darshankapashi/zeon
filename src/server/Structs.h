@@ -62,3 +62,14 @@ struct hash<Rectangle> {
 
 void throwError(ErrorCode what, string why = "");
 bool inRectangle(Rectangle const& r, Point const& p);
+
+// Per ID locking
+#define LOCK(key) \
+  try { \
+    lockTableLock_.lock(); \
+    lock_guard<mutex> lock(lockTable_[key]); \
+    lockTableLock_.unlock(); \
+  } catch (system_error const& e) { \
+    lockTableLock_.unlock(); \
+    throwError(FAILED_TO_LOCK); \
+  }

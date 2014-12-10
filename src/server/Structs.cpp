@@ -1,5 +1,12 @@
 #include "Structs.h"
 
+// Locks on each key
+// TODO: This can be a RWLock
+unordered_map<zeonid_t, mutex> lockTable_;
+
+// Lock for the lock table
+mutex lockTableLock_;
+
 void throwError(ErrorCode what, string why) {
   ZeonException ze;
   ze.what = what;
