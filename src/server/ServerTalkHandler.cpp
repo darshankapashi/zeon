@@ -79,6 +79,7 @@ void ServerTalkHandler::receiveRoutingInfo(const RoutingInfo& routingInfo) {
   }
   lock_guard<mutex> lock(myNode->lockNode_); 
   myNode->routingInfo_ = routingInfo;
+  myNode->buildRectangleToNodeMap();
   // TODO: Check that me_ is not updated and match the version number 
   //myNode->me_ = myNode->updateNodeInfoTemp_; 
 }

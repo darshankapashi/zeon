@@ -167,6 +167,7 @@ void Node::getValue(string& value, Data const& data) {
 }
 
 void Node::buildRectangleToNodeMap() {
+  printf("buildRectangleToNodeMap\n");
   printRoutingInfo(routingInfo_);
   myMainRectangles_.clear();
   myReplicaRectangles_.clear();
