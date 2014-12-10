@@ -51,27 +51,31 @@ class ProximityCompute {
   ProximityCompute(ProximityDistance* proximityDistance):
     proximityDistance_(proximityDistance) {
   }
-  virtual void insertPoint(Data data) = 0; 
-  virtual void removePoint(Data data) = 0;
+  virtual void insertPoint(Data const& data) = 0; 
+  virtual void removePoint(Data const& data) = 0;
+  virtual void removePoint(zeonid_t const& zid) = 0;
   virtual vector<Data> getKNearestPoints(const Point& point, int k) = 0;
   virtual void getInternalPoints(vector<Data>& data, const Region& region) = 0;
   virtual void getInternalPoints(vector<Data>& data, const Rectangle& rectangle) = 0;
 
-  list<Data> dataList_;
+  map<zeonid_t, Point> data_;
   ProximityDistance* proximityDistance_;
   // Datastructure for Rtree
 };
 
 class LinearProximityCompute: public ProximityCompute {
-  public:
+ public:
   LinearProximityCompute(ProximityDistance* proximityDistance) :
     ProximityCompute(proximityDistance) {}
   
-  void insertPoint(Data point);
-  void removePoint(Data point);
+  void insertPoint(Data const& point);
+  void removePoint(Data const& point);
+  void removePoint(zeonid_t const& zid);
   vector<Data> getKNearestPoints(const Point& point, int k);
   void getInternalPoints(vector<Data>& data, const Region& region);
   void getInternalPoints(vector<Data>& data, const Rectangle& rectangle);
+
+  mutex dataLock_;
 };
 
 class ProximityManager {

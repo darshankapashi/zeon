@@ -18,6 +18,7 @@ int main(int argc, char **argv) {
   ZeonClient client;
   client.addClient("localhost", 8000);
   client.addClient("localhost", 8001);
+  client.addClient("localhost", 8002);
   try {
     if (FLAGS_part1) {
       cout << "======= Create test" << endl;

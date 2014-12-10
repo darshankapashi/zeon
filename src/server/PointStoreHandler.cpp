@@ -107,6 +107,10 @@ void PointStoreHandler::createData(const zeonid_t id, const Point& point, const 
   storeData(data, true);
   myNode->addId(id);
   proximity->proximityCompute->insertPoint(data);
+
+  // Replication
+  myNode->replicate(data, true);
+
 }
 
 void PointStoreHandler::getNearestKById(std::vector<Data> & _return, const zeonid_t id) {

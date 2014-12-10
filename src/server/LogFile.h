@@ -39,4 +39,14 @@ class LogFile {
 
   mutex pointLock_;
   mutex valueLock_;
+
+  bool lockKey(zeonid_t key);
+  void unlockKey(zeonid_t key);
+
+  // Locks on each key
+  // TODO: This can be a RWLock
+  unordered_map<zeonid_t, mutex> lockTable_;
+
+  // Lock for the lock table
+  mutex lockTableLock_;
 };

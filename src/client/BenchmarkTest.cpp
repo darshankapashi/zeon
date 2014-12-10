@@ -26,6 +26,7 @@ int main(int argc, char **argv) {
   ZeonClient client;
   client.addClient("localhost", 8000);
   client.addClient("localhost", 8001);
+  client.addClient("localhost", 8002);
 
   try {
     timestamp t0 = get_timestamp();

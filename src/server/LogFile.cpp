@@ -128,16 +128,41 @@ void LogFile::writePoint(core::Data const& data) {
   queue_.write(smallData);
 }
 
+#define LOCK(key) if (!lockKey(key)) throwError(FAILED_TO_LOCK);
+#define UNLOCK(key) unlockKey(key)
+
 void LogFile::writeValue(core::Data const& data) {
   writePoint(data);
 
   WriteBlob<Data> b(data);
 
-  lock_guard<mutex> lock(valueLock_);
   cout << "(reliable) Writing to disk: id=" << data.id << "\n";
-  FileOps file(getValueFile(data.id), /* truncate */ true);
-  //if (!file.syncWriteToFile(&b)) {
-  if (!file.writeToFile(&b)) {  
-    throw std::runtime_error("could not write");
+  LOCK(data.id);
+  try {
+    FileOps file(getValueFile(data.id), /* truncate */ true);
+    //if (!file.syncWriteToFile(&b)) {
+    if (!file.writeToFile(&b)) {  
+      throw std::runtime_error("could not write");
+    }
+    UNLOCK(data.id);
+  } catch (exception const& e) {
+    UNLOCK(data.id);
+    throw e;
   }
+}
+
+bool LogFile::lockKey(zeonid_t key) {
+  try {
+    lockTableLock_.lock();
+    lockTable_[key].lock();
+    lockTableLock_.unlock();
+    return true;
+  } catch (system_error const& e) {
+    lockTableLock_.unlock();
+    return false;
+  }
+}
+
+void LogFile::unlockKey(zeonid_t key) {
+  lockTable_[key].unlock();
 }

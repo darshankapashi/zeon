@@ -31,9 +31,6 @@ class DataStore {
   LogFile* log() { return &logFile_; }
 
  private:
-  bool lockKey(zeonid_t key);
-  void unlockKey(zeonid_t key);
-
   // Map of key -> list of Data objects, value is undefined here
   unordered_map<zeonid_t, vector<Data>> metaData_;
 
@@ -41,14 +38,11 @@ class DataStore {
   // TODO: convert this into LRU cache since valueData_ could be large
   unordered_map<zeonid_t, string> valueData_;
 
-  // Locks on each key
-  // TODO: This can be a RWLock
-  unordered_map<zeonid_t, mutex> lockTable_;
-
-  // Lock for the lock table
-  mutex lockTableLock_;
-
   LogFile logFile_;
+
+  // Various locks
+  mutex metaDataLock_;
+  mutex valueLock_;
 };
 
 void storeData(Data const& d, bool valuePresent);
