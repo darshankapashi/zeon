@@ -2,7 +2,10 @@
 #include "ServerTalker.h"
 #include "Datastore.h"
 
+#include <iostream>
+
 Node* myNode;
+//ServerTalkerManager* otherServers;
 
 template <class Container, class ValueType>
 bool contains(Container c, ValueType v) {
@@ -44,10 +47,10 @@ NodeId Node::getMasterForPoint(Point const& p) {
 
   for (auto const& rectKV: rectangleToNode_) {
     auto const& rect = rectKV.first;
-    printf("getMasterForPoint: checking rectangle (%lld,%lld) (%lld,%lld), point (%lld,%lld)\n",
-            rect.bottomLeft.xCord, rect.bottomLeft.yCord, rect.topRight.xCord, rect.topRight.yCord,
-            p.xCord, p.yCord);
-    if (inRectangle(rectKV.first, p)) {
+    //printf("getMasterForPoint: checking rectangle (%lld,%lld) (%lld,%lld), point (%lld,%lld)\n",
+    //        rect.bottomLeft.xCord, rect.bottomLeft.yCord, rect.topRight.xCord, rect.topRight.yCord,
+    //        p.xCord, p.yCord);
+    if (inRectangle(rect, p)) {
       auto nid = rectKV.second[0];
       return routingInfo_.nodeRegionMap.at(nid).nodeId;
     }
@@ -69,9 +72,9 @@ vector<NodeId> Node::getNodeForPoint(Point const& p, Operation op) {
 
 bool Node::amITheMaster(Point const& p) {
   for (auto const& rect: myMainRectangles_) {
-    printf("amITheMaster: checking rectangle (%lld,%lld) (%lld,%lld), point (%lld,%lld)\n",
-            rect.bottomLeft.xCord, rect.bottomLeft.yCord, rect.topRight.xCord, rect.topRight.yCord,
-            p.xCord, p.yCord);
+    //printf("amITheMaster: checking rectangle (%lld,%lld) (%lld,%lld), point (%lld,%lld)\n",
+    //        rect.bottomLeft.xCord, rect.bottomLeft.yCord, rect.topRight.xCord, rect.topRight.yCord,
+    //        p.xCord, p.yCord);
     if (inRectangle(rect, p))
       return true;
   }
@@ -117,11 +120,21 @@ void Node::removeId(zeonid_t zid) {
 }
 
 void Node::replicate(Data const& data, bool valuePresent) {
-  for (auto const& replica: me_.nodeDataStats.replicatedServers) {
+  int numReplicas = me_.nodeDataStats.replicatedServers.size();
+  vector<thread> threads(numReplicas);
+
+  auto funcToCall = [this, &data, valuePresent] (int replica) {
     auto const& node = routingInfo_.nodeRegionMap.at(replica).nodeId;
-    printf("Sending replicate to nid=%lld for zid=%lld\n", node.nid, data.id);
+    //printf("Sending replicate to nid=%lld for zid=%lld\n", node.nid, data.id);
     ServerTalker walkieTalkie(node.ip, node.serverPort);
     walkieTalkie.get()->replicate(data, valuePresent);
+  };
+
+  for (int i = 0; i < numReplicas; i++) {
+    threads[i] = thread(funcToCall, me_.nodeDataStats.replicatedServers[i]);
+  }
+  for (int i = 0; i < numReplicas; i++) {
+    threads[i].join();
   }
 }
 
@@ -169,6 +182,10 @@ void Node::getValue(string& value, Data const& data) {
 void Node::buildRectangleToNodeMap() {
   printf("buildRectangleToNodeMap\n");
   printRoutingInfo(routingInfo_);
+
+  // Update the pool of servers
+  //otherServers->update(routingInfo_);
+  
   myMainRectangles_.clear();
   myReplicaRectangles_.clear();
   rectangleToNode_.clear();

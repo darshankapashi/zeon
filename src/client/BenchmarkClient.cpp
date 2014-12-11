@@ -76,6 +76,8 @@ int main(int argc, char **argv) {
   ZeonClient client;
   addClients(client);
 
+  srand(time(nullptr) ^ getpid());
+
   if (FLAGS_create) {
     try {
       int numCreate = (FLAGS_end_create - FLAGS_start_create);

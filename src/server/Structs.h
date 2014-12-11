@@ -14,6 +14,7 @@ using namespace std;
 using namespace ::core;
 
 DECLARE_int64(heartbeat_interval);
+DECLARE_int32(my_nid);
 
 string const DEFAULT_VALUE = "";
 

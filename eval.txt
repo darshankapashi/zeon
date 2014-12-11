@@ -1,0 +1,16 @@
+1. Increasing replicas does not increase creation time by a lot
+10000 creates, 3 servers, 1 client
+Replicas: +0 Time:  3689001
+Replicas: +1 Time: 11304625
+Replicas: +2 Time: 14736025
+
+30000 creates, 3 servers, 3 clients
+Replicas: +0 Time:  6418227
+Replicas: +1 Time: 18369477
+Replicas: +2 Time: 27464490
+
+Use:
+./bin/benchmark_client --create=1 --start_create=0 --end_create=10000
+sh scripts/3clients.sh
+
+2. 

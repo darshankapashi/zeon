@@ -31,11 +31,11 @@ void PointStoreHandler::routeCorrectly(Point const& p, Operation op) {
 
 void PointStoreHandler::ping() {
   // Your implementation goes here
-  printf("ping\n");
+  printf("[%d] ping\n", FLAGS_my_nid);
 }
 
 void PointStoreHandler::getData(Data& _return, const zeonid_t id, const bool valuePresent) {
-  printf("getData\n");
+  printf("[%d] getData\n", FLAGS_my_nid);
   // TODO: How do you route this!!!!
   int ret;
   try {
@@ -53,7 +53,7 @@ void PointStoreHandler::getData(Data& _return, const zeonid_t id, const bool val
 
 // TODO: Handle various failure scenarios, maybe use PREPARE-COMMIT
 void PointStoreHandler::setData(const Data& data, const bool valuePresent) {
-  printf("setData id=%d\n", data.id);
+  printf("[%d] setData id=%d\n", FLAGS_my_nid, data.id);
   routeCorrectly(data.point, WRITE_OP);
 
   Data dataToStore = data;
@@ -61,7 +61,7 @@ void PointStoreHandler::setData(const Data& data, const bool valuePresent) {
   // TODO: Maybe we don't need to do the below steps in case the value
   //       is present in this request too.
   bool haveThisId = myNode->doIHaveThisId(data.id, WRITE_OP);
-  printf("setData: id=%d haveThisId=%d\n", data.id, haveThisId);
+  printf("[%d] setData: id=%d haveThisId=%d\n", FLAGS_my_nid, data.id, haveThisId);
   if (!haveThisId) {
     // I don't have this id locally
 
@@ -93,7 +93,7 @@ void PointStoreHandler::setData(const Data& data, const bool valuePresent) {
 }
 
 void PointStoreHandler::createData(const zeonid_t id, const Point& point, const int64_t timestamp, const std::string& value) {
-  printf("createData id=%d\n", id);
+  printf("[%d] createData id=%d\n", FLAGS_my_nid, id);
   // TODO: there might be some race condition here
   routeCorrectly(point, WRITE_OP);
   if (myNode->doIHaveThisId(id, WRITE_OP)) {
@@ -115,11 +115,11 @@ void PointStoreHandler::createData(const zeonid_t id, const Point& point, const 
 
 void PointStoreHandler::getNearestKById(std::vector<Data> & _return, const zeonid_t id) {
   // Your implementation goes here
-  printf("getNearestKById\n");
+  printf("[%d] getNearestKById\n", FLAGS_my_nid);
 }
 
 void PointStoreHandler::getNearestKByPoint(std::vector<Data> & _return, const Point& point, const int k) {
-  printf("getNearestKByPoint\n");
+  printf("[%d] getNearestKByPoint\n", FLAGS_my_nid);
   routeCorrectly(point, READ_OP);
   auto compute = proximity->proximityCompute;
   _return = compute->getKNearestPoints(point, k);
@@ -141,11 +141,11 @@ void PointStoreHandler::getNearestKByPoint(std::vector<Data> & _return, const Po
 
 void PointStoreHandler::getPointsInRegion(std::vector<Data> & _return, const Region& region) {
   // Your implementation goes here
-  printf("getPointsInRegion\n");
+  printf("[%d] getPointsInRegion\n", FLAGS_my_nid);
 }
 
 void PointStoreHandler::removeData(const zeonid_t id) {
-  printf("removeData\n");
+  printf("[%d] removeData\n", FLAGS_my_nid);
   // TODO: How do you route this!!!
   int ret = myDataStore->removeData(id);
   if (ret != DELETED) {
