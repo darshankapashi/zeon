@@ -32,5 +32,6 @@
 *.swo
 
 gen-cpp/*
+gen-php/*
 bin/*
 

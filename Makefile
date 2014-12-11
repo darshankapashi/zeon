@@ -54,6 +54,7 @@ all: thrift $(EXECUTABLE) client leader benchmark benchmark_client
 
 thrift: src/if/core.thrift src/if/server.thrift
 	thrift --gen cpp:pure_enums src/if/core.thrift
+	thrift --gen php src/if/core.thrift
 	thrift --gen cpp src/if/leader.thrift
 	thrift --gen cpp src/if/server.thrift
 

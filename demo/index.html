@@ -1,0 +1,62 @@
+<html>
+
+<script src="jquery-2.1.1.min.js"> </script>
+<script type="text/javascript">
+var canvas, ctx;
+var counter = 0;
+
+$(document).ready(function() {
+  init();
+});
+
+function init() {
+  canvas = document.getElementById('canvas');
+  ctx = canvas.getContext("2d");
+
+  canvas.addEventListener("mouseup", function (e) {
+    addPoint(e);
+  }, false);
+}
+
+function sendRequest(x, y, id) {
+  $.ajax({
+    type: 'POST',
+    url: 'ajax.php',
+    data: { x: x, y: y, id: id },
+    beforeSend: function() {
+      $('#status-bar').html('Loading...');
+    },
+    success: function(data) {
+      $('#status-bar').html('Added to backend!');
+    },
+    error: function() {
+      $('#status-bar').html('Request failed!');
+    }
+  });
+}
+
+function plotPoint(x, y) {
+  ctx.beginPath();
+  ctx.fillStyle="#000000";
+  ctx.arc(x, y, 10, 0, 2 * Math.PI);
+  ctx.fill();
+}
+
+function addPoint(e) {
+  x = e.clientX - canvas.offsetLeft;
+  y = e.clientY - canvas.offsetTop;
+  counter = counter + 1;
+  sendRequest(x, y, counter);
+  plotPoint(x, y);
+}
+</script>
+
+<body>
+    <a href="query.html" target="_blank"> Open Query Interface </a>
+    <div id="status-bar">
+      Nothing to do.
+    </div>
+    <canvas id="canvas" width="800" height="600" style="margin-left: 40px; margin-top: 40px; border: 2px solid;"></canvas>
+</body>
+
+</html>

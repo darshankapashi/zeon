@@ -1,0 +1,71 @@
+<html>
+<script src="jquery-2.1.1.min.js"> </script>
+
+<script type="text/javascript">
+var canvas, ctx;
+
+$(document).ready(function() {
+  init();
+});
+
+function init() {
+    canvas = document.getElementById('canvas');
+    ctx = canvas.getContext("2d");
+
+    canvas.addEventListener("mousedown", function (e) {
+        findPoints(e);
+    }, false);
+    canvas.addEventListener("mouseup", function (e) {
+        clearCanvas();
+    }, false);
+}
+
+function clearCanvas() {
+  ctx.clearRect(0 , 0 , ctx.width, ctx.height);
+}
+
+function sendRequest(x, y) {
+  $.ajax({
+    type: 'GET',
+    url: 'ajax.php',
+    data: { x: x, y: y},
+    beforeSend: function() {
+      $('#status-bar').html('Loading...');
+    },
+    success: function(data) {
+      data = JSON.parse(data);
+      for (i = 0; i < data.length; i++) {
+        plotPoint(data[i].x, data[i].y, "#FF0000");
+      }
+      $('#status-bar').html('Done!');
+    },
+    error:function(){
+      $('#status-bar').html('Request failed!');
+    }
+  });
+}
+
+function plotPoint(x, y, color) {
+  console.log("plot " + x + " " + y);
+  ctx.beginPath();
+  ctx.fillStyle = color;
+  ctx.arc(x, y, 10, 0, 2 * Math.PI) ;
+  ctx.fill();
+}
+
+function findPoints(e) {
+  x = e.clientX - canvas.offsetLeft;
+  y = e.clientY - canvas.offsetTop;
+  data = sendRequest(x, y);
+  plotPoint(x, y, "#00FF00");
+}
+
+</script>
+<body>
+    <a href="query.php" target="_blank"> Open Query Interface </a>
+    <div id="status-bar">
+      Nothing to do.
+    </div>
+    <canvas id="canvas" width="800" height="600" style="margin-left: 40px; margin-top: 40px; border: 2px solid;"></canvas>
+</body>
+</html>

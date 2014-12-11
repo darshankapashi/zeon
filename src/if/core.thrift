@@ -1,4 +1,5 @@
 namespace cpp core
+namespace php core
 
 typedef i64 zeonid_t
 typedef i64 timestamp_t

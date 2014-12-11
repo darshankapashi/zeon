@@ -83,7 +83,6 @@ void startHeartBeatsToLeader() {
   auto previousSystemStats = currSystemStats;
   while(true) {
     if (myNode) {
-      printf("Leader ping\n");
       auto& nodeInfo = myNode->me_;
 
       previousSystemStats = currSystemStats;
@@ -95,7 +94,6 @@ void startHeartBeatsToLeader() {
       diffStats.sys_cpu = 
         currSystemStats.sys_cpu - previousSystemStats.sys_cpu;
       nodeInfo.systemStats = diffStats;
-      printf ("CPU usage: %lld %lld \n", diffStats.user_cpu, diffStats.sys_cpu);
 
       // set the current timestamp for ping node
       nodeInfo.timestamp = time(nullptr);
