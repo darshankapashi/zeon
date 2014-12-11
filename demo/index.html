@@ -3,7 +3,6 @@
 <script src="jquery-2.1.1.min.js"> </script>
 <script type="text/javascript">
 var canvas, ctx;
-var counter = 0;
 
 $(document).ready(function() {
   init();
@@ -18,11 +17,11 @@ function init() {
   }, false);
 }
 
-function sendRequest(x, y, id) {
+function sendRequest(x, y) {
   $.ajax({
     type: 'POST',
     url: 'ajax.php',
-    data: { x: x, y: y, id: id },
+    data: { x: x, y: y},
     beforeSend: function() {
       $('#status-bar').html('Loading...');
     },
@@ -45,8 +44,7 @@ function plotPoint(x, y) {
 function addPoint(e) {
   x = e.clientX - canvas.offsetLeft;
   y = e.clientY - canvas.offsetTop;
-  counter = counter + 1;
-  sendRequest(x, y, counter);
+  sendRequest(x, y);
   plotPoint(x, y);
 }
 </script>

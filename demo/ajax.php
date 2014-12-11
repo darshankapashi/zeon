@@ -22,7 +22,8 @@ function printResult($ret) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   // Pick any node, let server redirect
   try {
-    add_point('localhost', 8000, $x, $y, $_POST['id']);
+    $id = rand();
+    add_point('localhost', 8000, $x, $y, $id);
   } catch (\core\ZeonException $ze) {
     if ($ze->what != \core\ErrorCode::SERVER_REDIRECT) {
       $error = \core\ErrorCode::__names[$ze->what];
@@ -31,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       // Contact other nodes
       foreach($nodes as $node) {
         try {
-          add_point($node->ip, $node->clientPort, $x, $y, $_POST['id']);
+          add_point($node->ip, $node->clientPort, $x, $y, $id);
           break;
         } catch (\core\ZeonException $ze) {
           $error = \core\ErrorCode::__names[$ze->what];
