@@ -450,4 +450,5 @@ bool MetaDataProviderStore::checkForFailures() {
       }
     }
   }
+  return true;
 }

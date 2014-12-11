@@ -10,6 +10,7 @@ using namespace std;
 using namespace core;
 
 DEFINE_string(config_file, "config.txt", "File which contains all the node info");
+DEFINE_string(metadata_file, "metadata.txt", "File which contains other metadata about system");
 
 DEFINE_bool(create, false, "Use create calls");
 DEFINE_bool(set, false, "Use set calls");
@@ -50,8 +51,28 @@ void addClients(ZeonClient& client) {
   }
 }
 
+int maxX, maxY;
+
+void readMetadata() {
+  string line;
+  ifstream metadataFile(FLAGS_metadata_file);
+  while(getline(metadataFile, line)) {
+    if (line.find("FULL RECTANGLE: ") == 0) {
+      vector<string> strs;
+      boost::split(strs, line, boost::is_any_of(":"));
+      vector<string> coords;
+      boost::split(coords, strs[1], boost::is_any_of(","));
+      maxX = toint(coords[2]);
+      maxY = toint(coords[3]);
+    } else {
+      cout << "Unrecognized line: " << line << " (" << FLAGS_metadata_file << ")" << endl;
+    }
+  }
+}
+
 int main(int argc, char **argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
+  readMetadata();
   ZeonClient client;
   addClients(client);
 
@@ -61,7 +82,7 @@ int main(int argc, char **argv) {
       cout << "======= Creating " << numCreate << " data points" << endl;
       timestamp t0 = get_timestamp();
       for (int i = FLAGS_start_create; i < FLAGS_end_create; i++) {
-        client.createData(i, makePoint(rand() % 200, rand() % 100), time(nullptr), "Point" + to_string(i));
+        client.createData(i, makePoint(rand() % maxX, rand() % maxY), time(nullptr), "Point" + to_string(i));
       }
       timestamp t1 = get_timestamp();
       printTime(t0, t1);
@@ -77,7 +98,7 @@ int main(int argc, char **argv) {
       timestamp t0 = get_timestamp();
       for (int i = 0; i < FLAGS_num_set; i++) {
         int id = FLAGS_start_set + rand() % FLAGS_num_set;
-        d = makeData(id, makePoint(rand() % 200, rand() % 100));
+        d = makeData(id, makePoint(rand() % maxX, rand() % maxY));
         client.setData(d, false);
       }
       timestamp t1 = get_timestamp();
