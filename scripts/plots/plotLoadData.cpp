@@ -10,7 +10,7 @@ int main() {
   map<int, vector<int> > A;
   int pid, count;
   ifstream fin;
-  fin.open("loadBalanceParsed.txt", ios::in);
+  fin.open("nodeFailParsed2.txt", ios::in);
   while (!fin.eof()) {
     fin >> pid >> count;
     if (A.find(pid) == A.end()) {
@@ -23,7 +23,9 @@ int main() {
   map<int, int> stats;
   for (int i =0; i < size; i++) {
     for (auto kv: A) {
-      stats[i] += kv.second[i];
+      if ( i < kv.second.size()) {
+        stats[i] += kv.second[i];
+      } 
     }
   }
   for (auto kv:stats) {
