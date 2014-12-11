@@ -68,6 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if ($error === "") {
     http_response_code(200);
   } else {
+    echo $error;
     http_response_code(400);
   }
 }

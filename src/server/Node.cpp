@@ -271,7 +271,6 @@ vector<vector<nid_t>> Node::getNodesToQuery(Point const& p) {
   }
   // TODO: This can be smarter when we get to that stage
 
-  cout << "Neighbours : " << nodes.size() << "\n";
   return nodes;
 }
 

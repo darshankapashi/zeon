@@ -23,6 +23,7 @@ DEFINE_int32(start_set, 0, "Index of id to start from");
 DEFINE_int32(num_set, 0, "Number of calls");
 
 DEFINE_int32(num_get, 0, "Number of calls");
+DEFINE_int32(print_every, 50, "Number of calls");
 
 int toint(string s) {
   return atoi(s.c_str());
@@ -36,7 +37,7 @@ timestamp get_timestamp() {
 }
 
 void printTime(timestamp t0, timestamp t1) {
-  printf("It took %llu microseconds\n", (t1 - t0));
+  printf("[%d] It took %llu microseconds\n", getpid(), (t1 - t0));
 }
 
 void addClients(ZeonClient& client) {
@@ -115,17 +116,25 @@ int main(int argc, char **argv) {
   }
 
   if (FLAGS_get_nearest) {
-    try {
-      cout << "======= Getting " << FLAGS_num_get << " data points" << endl;
-      timestamp t0 = get_timestamp();
-      for (int i = 0; i < FLAGS_num_get; i++) {
-        vector<Data> data;
-        client.getNearestKByPoint(data, makePoint(rand() % maxX, rand() % maxY), 10);
+    cout << "======= Getting " << FLAGS_num_get << " data points" << endl;
+    timestamp t0 = get_timestamp();
+    timestamp tx = get_timestamp();
+    for (int i = 0; i < FLAGS_num_get; i++) {
+      vector<Data> data;
+      try {
+        client.getNearestKByPoint(data, makePoint(600 + (rand() % 300), rand() % maxY), 10);
+      } catch (ZeonException const& ze) {
+        cout << "ZeonException: " << ze.what << " " << ze.why << endl;
+      } catch (exception const& e) {
+        cout << "Exception: " << e.what();
       }
-      timestamp t1 = get_timestamp();
-      printTime(t0, t1);
-    } catch (ZeonException const& ze) {
-      cout << "ZeonException: " << ze.what << " " << ze.why << endl;
+      if (i % FLAGS_print_every == 0) {
+        timestamp ty = get_timestamp();
+        printTime(tx, ty);
+        tx = ty;
+      }
     }
+    timestamp t1 = get_timestamp();
+    printTime(t0, t1);
   }  
 }

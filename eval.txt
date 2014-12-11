@@ -28,4 +28,15 @@ sh scripts/3clients.sh
 1 servers, 5 clients, +0 replicas ->  6454684
 30 clients -> 53186413
 
+Use:
+sh scripts/3clients.sh 30
+
 3. Run benchmark_client for t time period and load balance in between. Put more load on 1 rectangle
+4.7s vs 3s
+
+3 servers, +0 replicas, no call to adjoining server, 20 clients
+
+Use:
+sh scripts/startup.sh
+sh scripts/3clients.sh 7
+sh scripts/3clients.sh 20 20

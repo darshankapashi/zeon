@@ -9,8 +9,8 @@ ProximityManager* proximity;
 
 #define LOCK(m) lock_guard<mutex> lock(m);
 
-bool linearComparison(DistData const& p1, DistData const& p2) {
-  return p1.distance <= p2.distance;
+bool linearComparison(DistData const p1, DistData const p2) {
+  return p1.distance < p2.distance;
 }
 
 void LinearProximityCompute::insertPoint(Data const& data) {
@@ -45,7 +45,9 @@ void LinearProximityCompute::getKNearestPoints(vector<DistData>& results, const 
       results.push_back(d);
     }
   }
-  sort(results.begin(), results.end(), linearComparison);
+  if (results.size() > 0) {
+    sort(results.begin(), results.end(), linearComparison);
+  }
   if (results.size() > k) {
     results.resize(k);
   }

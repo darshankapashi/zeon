@@ -25,7 +25,7 @@ struct DataStub {
   Point p;
 };
 
-bool linearComparison(DistData const& p1, DistData const& p2);
+bool linearComparison(DistData const p1, DistData const p2);
 
 class ProximityDistance {
   public: 

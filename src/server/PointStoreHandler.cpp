@@ -126,19 +126,22 @@ void PointStoreHandler::getNearestKById(std::vector<Data> & _return, const zeoni
 }
 
 void PointStoreHandler::getNearestKByPoint(std::vector<Data> & _return, const Point& point, const int k) {
-  printf("[%d] getNearestKByPoint\n", FLAGS_my_nid);
   routeCorrectly(point, READ_OP);
   auto compute = proximity->proximityCompute;
   vector<DistData> results;
   compute->getKNearestPoints(results, point, k, nullptr);
-  double maxDist = results.back().distance;
+  double maxDist;
+  if (results.size() > 0) {
+    maxDist = results.back().distance;
+  } else {
+    maxDist = numeric_limits<double>::max();
+  }
 
   // Query neighbours
   auto neighbouringNodes = myNode->getNodesToQuery(point);
   int numNodes = neighbouringNodes.size();
-  vector<thread> threads(numNodes);
-  mutex returnLock;
 
+  mutex returnLock;
   auto funcToCall = [point, k, maxDist, &returnLock, &results] (nid_t nid) {
     // Get master node
     auto node = myNode->getNode(nid);
@@ -153,21 +156,32 @@ void PointStoreHandler::getNearestKByPoint(std::vector<Data> & _return, const Po
     }
   };
 
-  for (int i = 0; i < numNodes; i++) {
-    threads[i] = thread(funcToCall, neighbouringNodes[i][0]);
+  /*
+  if (numNodes == 1) {
+    funcToCall(neighbouringNodes[0][0]);
+  } else {
+    vector<thread> threads(numNodes);
+    for (int i = 0; i < numNodes; i++) {
+      threads[i] = thread(funcToCall, neighbouringNodes[i][0]);
+    }
+    for (int i = 0; i < numNodes; i++) {
+      threads[i].join();
+    }
   }
-  for (int i = 0; i < numNodes; i++) {
-    threads[i].join();
-  }
+  */
 
-  sort(results.begin(), results.end(), linearComparison);
-  results.resize(k);
-  for (auto const& res: results) {
-    _return.emplace_back();
-    auto& d = _return.back();
-    d.id = res.zid;
-    d.point = res.point;
+  if (results.size() > 0) {
+    sort(results.begin(), results.end(), linearComparison);
+    results.resize(k);
+  
+    for (auto const& res: results) {
+      _return.emplace_back();
+      auto& d = _return.back();
+      d.id = res.zid;
+      d.point = res.point;
+    }
   }
+  printf("[%d] getNearestKByPoint: %d\n", FLAGS_my_nid, _return.size());
 }
 
 void PointStoreHandler::getPointsInRegion(std::vector<Data> & _return, const Region& region) {
