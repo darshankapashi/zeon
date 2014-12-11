@@ -31,11 +31,16 @@ int ZeonClient::addClient(string ip, int port) {
   servers_.emplace_back();
   std::unique_ptr<Meta>& meta = servers_.back();
   meta.reset(new Meta(ip, port));
-  meta->socket.reset(new TSocket(ip, port));
+  auto* socket = new TSocket(ip, port);
+  socket->setSendTimeout(500);
+  socket->setRecvTimeout(500);
+
+  meta->socket.reset(socket);
   meta->transport.reset(new TBufferedTransport(meta->socket));
   meta->protocol.reset(new TBinaryProtocol(meta->transport));
   meta->client.reset(new PointStoreClient(meta->protocol));
   meta->transport->open();
+  markUp(servers_.size() - 1);
   return servers_.size() - 1;
 }
 
@@ -67,16 +72,22 @@ void ZeonClient::setPrevPoint(Data& data) {
 #define WRAP_CALL(server, method) \
   try { \
     servers_[server]->client->method; \
+    markUp(server); \
   } catch (ZeonException const& e) { \
     if (e.what == SERVER_REDIRECT) { \
       bool success = false; \
       for (auto const& node: e.nodes) { \
         try { \
           server = addClient(node.ip, node.clientPort); \
+          if (downServers_.count(server) > 0) \
+            continue; \
           servers_[server]->client->method; \
           success = true; \
+          markUp(server); \
           break; \
-        } catch (ZeonException const& e) {} \
+        } catch (exception const& e) { \
+          markDown(server); \
+        } \
       } \
       if (!success) { \
         ZeonException ze(e); \
@@ -86,9 +97,13 @@ void ZeonClient::setPrevPoint(Data& data) {
         throw ze; \
       } \
     } else { \
+      markDown(server); \
       throw e; \
     } \
-  }
+  } catch (exception const& e) { \
+    markDown(server); \
+    throw e; \
+  } 
 
 void ZeonClient::getData(Data& _return, const zeonid_t id, const bool valuePresent) {
   int server = getServer(id);
@@ -112,6 +127,11 @@ void ZeonClient::createData(const zeonid_t id, const Point& point, const int64_t
 }
 
 void ZeonClient::getNearestKByPoint(vector<Data> & _return, const Point& point, const int32_t k) {
-  int server = rand() % servers_.size();
-  WRAP_CALL(server, getNearestKByPoint(_return, point, k));
+  vector<int> up;
+  for (auto s: upServers_) {
+    up.push_back(s);
+  }
+  int server = rand() % up.size();
+  //cout << "[" << getpid() << "] Using server: " << up[server] << "\n";
+  WRAP_CALL(up[server], getNearestKByPoint(_return, point, k));
 }

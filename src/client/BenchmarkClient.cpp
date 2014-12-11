@@ -16,6 +16,7 @@ DEFINE_string(metadata_file, "metadata.txt", "File which contains other metadata
 DEFINE_bool(create, false, "Use create calls");
 DEFINE_bool(set, false, "Use set calls");
 DEFINE_bool(get_nearest, false, "Use get_nearest calls");
+DEFINE_bool(get_nearest_hotspot, false, "Use get_nearest calls");
 
 DEFINE_int32(start_create, 0, "Index of id to start from");
 DEFINE_int32(end_create, 0, "Index of id to end at");
@@ -116,10 +117,8 @@ int main(int argc, char **argv) {
     }
   }
 
-  if (FLAGS_get_nearest) {
+  if (FLAGS_get_nearest_hotspot) {
     cout << "======= Getting " << FLAGS_num_get << " data points" << endl;
-    //timestamp t0 = get_timestamp();
-    //timestamp tx = get_timestamp();
     int i = 0; int success = 0;
     auto points = [&i, &client, &success] () {
       for (i = 0; i < FLAGS_num_get; i++) {
@@ -132,11 +131,6 @@ int main(int argc, char **argv) {
         } catch (exception const& e) {
           cout << "Exception: " << e.what();
         }
-        //if (i % FLAGS_print_every == 0) {
-          //timestamp ty = get_timestamp();
-          //printTime(tx, ty);
-          //tx = ty;
-        //}
       }
     };
 
@@ -147,8 +141,37 @@ int main(int argc, char **argv) {
       printf("[%d] Completed %d requests\n", getpid(), (success - prev));
       prev = success;
     }
-
-    //timestamp t1 = get_timestamp();
-    //printTime(t0, t1);
   }  
+  if (FLAGS_get_nearest) {
+    cout << "======= Getting " << FLAGS_num_get << " data points" << endl;
+    int i = 0; int success = 0;
+    auto points = [&i, &client, &success] () {
+      //bool flag = false;
+      for (i = 0; i < FLAGS_num_get; i++) {
+        vector<Data> data;
+        try {
+          //if (flag) {
+          //  printf("[%d] Request #%d\n", getpid(), i);
+          //}
+          client.getNearestKByPoint(data, makePoint(rand() % maxX, rand() % maxY), 10);
+          success++;
+        } catch (ZeonException const& ze) {
+          //cout << "ZeonException: " << ze.what << " " << ze.why << endl;
+        } catch (exception const& e) {
+          //cout << "Exception: " << e.what() << "\n";
+          //flag = true;
+        }
+      }
+    };
+
+    thread request_thread = thread(points);
+    int prev = success;
+    while (i != FLAGS_num_get) {
+      this_thread::sleep_for(chrono::seconds(1));
+      printf("[%d] Completed %d requests\n", getpid(), (success - prev));
+      prev = success;
+    }
+    request_thread.join();
+  }  
+
 }

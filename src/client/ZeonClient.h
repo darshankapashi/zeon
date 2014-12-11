@@ -1,3 +1,4 @@
+#include <iostream>
 #include <string>
 #include <thrift/protocol/TBinaryProtocol.h>
 #include <thrift/transport/TSocket.h>
@@ -55,6 +56,21 @@ class ZeonClient {
     string ip;
     int port;    
   };
+
+  void markDown(int server) {
+    //cout << "[" <<getpid() << "] Marking server " << server << " DOWN\n";
+    downServers_.insert(server);
+    upServers_.erase(server);
+  }
+
+  void markUp(int server) {
+    //cout << "[" <<getpid() << "] Marking server " << server << " UP\n";
+    upServers_.insert(server);
+    downServers_.erase(server);
+  }
+
+  set<int> upServers_;
+  set<int> downServers_;
 
   unordered_map<zeonid_t, Point> lastPoints_;
   unordered_map<zeonid_t, int> idToServers_;

@@ -6,7 +6,7 @@ do
   then
     ./bin/benchmark_client --create=1 --start_create=$(((i - 1) * 10000)) --end_create=$((i * 10000)) &
   else
-    ./bin/benchmark_client --get_nearest=1 --num_get=10000 --print_every=$2 &
+    ./bin/benchmark_client --get_nearest=1 --num_get=100000 &
   fi
 done
 

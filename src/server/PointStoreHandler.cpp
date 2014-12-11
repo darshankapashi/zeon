@@ -142,6 +142,7 @@ void PointStoreHandler::getNearestKByPoint(std::vector<Data> & _return, const Po
   int numNodes = neighbouringNodes.size();
 
   mutex returnLock;
+  /*
   auto funcToCall = [point, k, maxDist, &returnLock, &results] (nid_t nid) {
     // Get master node
     auto node = myNode->getNode(nid);
@@ -155,7 +156,7 @@ void PointStoreHandler::getNearestKByPoint(std::vector<Data> & _return, const Po
       results.push_back(k);
     }
   };
-
+  */
   /*
   if (numNodes == 1) {
     funcToCall(neighbouringNodes[0][0]);
