@@ -2,6 +2,7 @@
 #include <gflags/gflags.h>
 #include <iostream>
 #include <fstream>
+#include <thread>
 
 #include "gen-cpp/PointStore.h"
 #include "ZeonClient.h"
@@ -117,24 +118,37 @@ int main(int argc, char **argv) {
 
   if (FLAGS_get_nearest) {
     cout << "======= Getting " << FLAGS_num_get << " data points" << endl;
-    timestamp t0 = get_timestamp();
-    timestamp tx = get_timestamp();
-    for (int i = 0; i < FLAGS_num_get; i++) {
-      vector<Data> data;
-      try {
-        client.getNearestKByPoint(data, makePoint(600 + (rand() % 300), rand() % maxY), 10);
-      } catch (ZeonException const& ze) {
-        cout << "ZeonException: " << ze.what << " " << ze.why << endl;
-      } catch (exception const& e) {
-        cout << "Exception: " << e.what();
+    //timestamp t0 = get_timestamp();
+    //timestamp tx = get_timestamp();
+    int i = 0; int success = 0;
+    auto points = [&i, &client, &success] () {
+      for (i = 0; i < FLAGS_num_get; i++) {
+        vector<Data> data;
+        try {
+          client.getNearestKByPoint(data, makePoint(600 + (rand() % 300), rand() % maxY), 10);
+          success++;
+        } catch (ZeonException const& ze) {
+          cout << "ZeonException: " << ze.what << " " << ze.why << endl;
+        } catch (exception const& e) {
+          cout << "Exception: " << e.what();
+        }
+        //if (i % FLAGS_print_every == 0) {
+          //timestamp ty = get_timestamp();
+          //printTime(tx, ty);
+          //tx = ty;
+        //}
       }
-      if (i % FLAGS_print_every == 0) {
-        timestamp ty = get_timestamp();
-        printTime(tx, ty);
-        tx = ty;
-      }
+    };
+
+    thread request_thread = thread(points);
+    int prev = success;
+    while (i != FLAGS_num_get) {
+      this_thread::sleep_for(chrono::seconds(1));
+      printf("[%d] Completed %d requests\n", getpid(), (success - prev));
+      prev = success;
     }
-    timestamp t1 = get_timestamp();
-    printTime(t0, t1);
+
+    //timestamp t1 = get_timestamp();
+    //printTime(t0, t1);
   }  
 }
