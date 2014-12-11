@@ -9,6 +9,10 @@ ProximityManager* proximity;
 
 #define LOCK(m) lock_guard<mutex> lock(m);
 
+bool linearComparison(DistData const p1, DistData const p2) {
+  return p1.distance < p2.distance;
+}
+
 void LinearProximityCompute::insertPoint(Data const& data) {
   LOCK(dataLock_);
   data_[data.id] = data.point;
@@ -24,32 +28,29 @@ void LinearProximityCompute::removePoint(zeonid_t const& zid) {
   data_.erase(zid); 
 }
 
-bool linearComparison(tuple<double, zeonid_t, Point> const& p1, tuple<double, zeonid_t, Point> const& p2) {
-  return get<0>(p1) <= get<0>(p2);
-}
-
-vector<Data> LinearProximityCompute::getKNearestPoints(const Point& point, int k) {
-  vector<tuple<double, zeonid_t, Point>> distanceVector;
-  vector<Data> results;
+void LinearProximityCompute::getKNearestPoints(vector<DistData>& results, const Point& point, int k, const double* maxDist) {
   decltype(data_) data;
   {
     LOCK(dataLock_);
     data = data_;
   }
+  bool checkMaxDist = (maxDist != nullptr);
   for (auto const& kv: data) {
-    distanceVector.emplace_back(proximityDistance_->getDistance(point, kv.second), kv.first, kv.second);
+    double dist = proximityDistance_->getDistance(point, kv.second);
+    if (!checkMaxDist || (checkMaxDist && dist < *maxDist)) {
+      DistData d;
+      d.distance = dist;
+      d.zid = kv.first;
+      d.point = kv.second;
+      results.push_back(d);
+    }
   }
-  sort(distanceVector.begin(), distanceVector.end(), linearComparison);
-
-  // keep only k elements
-  distanceVector.erase(distanceVector.begin() + k, distanceVector.end());
-  for (auto dv : distanceVector) {
-    results.emplace_back();
-    auto& d = results.back();
-    d.id = get<1>(dv);
-    d.point = get<2>(dv);
+  if (results.size() > 0) {
+    sort(results.begin(), results.end(), linearComparison);
   }
-  return results;
+  if (results.size() > k) {
+    results.resize(k);
+  }
 }
 
 void LinearProximityCompute::getInternalPoints(vector<Data>& data, const Region& region) {

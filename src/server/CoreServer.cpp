@@ -115,6 +115,7 @@ void startHeartBeatsToLeader() {
 int main(int argc, char **argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
   printf("Starting CoreServer...\n");
+
   leaderNode.ip = "localhost";
   leaderNode.serverPort = 9990;
 

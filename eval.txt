@@ -1,0 +1,42 @@
+1. Increasing replicas does not increase creation time by a lot
+10000 creates, 3 servers, 1 client
+Replicas: +0 Time:  3689001
+Replicas: +1 Time: 11304625
+Replicas: +2 Time: 14736025
+
+30000 creates, 3 servers, 3 clients
+Replicas: +0 Time:  6418227
+Replicas: +1 Time: 18369477
+Replicas: +2 Time: 27464490
+
+Use:
+./bin/benchmark_client --create=1 --start_create=0 --end_create=10000
+sh scripts/3clients.sh
+
+2. 1 server, 3 clients vs 3 servers, 3 clients -> QPS is equivalent
+3 servers, 1 clients, +1 replicas -> 10817380
+3 servers, 2 clients, +1 replicas -> 14378073
+3 servers, 3 clients, +1 replicas -> 18072242
+3 servers, 4 clients, +1 replicas -> 21846114
+3 servers, 5 clients, +1 replicas -> 25287483
+30 clients -> 139595056
+
+1 servers, 1 clients, +0 replicas ->  2793463
+1 servers, 2 clients, +0 replicas ->  4160543
+1 servers, 3 clients, +0 replicas ->  5752337
+1 servers, 4 clients, +0 replicas ->  6447094
+1 servers, 5 clients, +0 replicas ->  6454684
+30 clients -> 53186413
+
+Use:
+sh scripts/3clients.sh 30
+
+3. Run benchmark_client for t time period and load balance in between. Put more load on 1 rectangle
+4.7s vs 3s
+
+3 servers, +0 replicas, no call to adjoining server, 20 clients
+
+Use:
+sh scripts/startup.sh
+sh scripts/3clients.sh 7
+sh scripts/3clients.sh 20 20

@@ -23,7 +23,7 @@ struct WriteBlob : public Blob {
     obj.write(&protocol);
 
     buffer->getBuffer(&data, &len);
-    cout << "Serialized id=" << obj.id << " len=" << len << "\n";
+    //cout << "Serialized id=" << obj.id << " len=" << len << "\n";
   }
 
   boost::shared_ptr<TTransport> trans_;
@@ -69,7 +69,7 @@ void LogFile::consumer() {
   int inactive = 0;
   while(run_) {
     if (queue_.read(data)) {
-      cout << "Writing to disk: id=" << data.id << "\n";
+      //cout << "Writing to disk: id=" << data.id << "\n";
       WriteBlob<Data> b(data); // serialize
       FileOps fileOp(getPointFile(data.id)); // open file
       fileOp.writeToFile(&b); // write
@@ -123,7 +123,7 @@ void LogFile::writePoint(core::Data const& data) {
   smallData.id = data.id;
   smallData.point = data.point;
   smallData.version = data.version;
-  printf("Point enqueued for writing...\n");
+  //printf("Point enqueued for writing...\n");
   lock_guard<mutex> lock(pointLock_);
   queue_.write(smallData);
 }
@@ -136,17 +136,17 @@ void LogFile::writeValue(core::Data const& data) {
 
   WriteBlob<Data> b(data);
 
-  cout << "(reliable) Writing to disk: id=" << data.id << "\n";
-  LOCK(data.id);
+  //cout << "(reliable) Writing to disk: id=" << data.id << "\n";
+  //LOCK(data.id);
   try {
     FileOps file(getValueFile(data.id), /* truncate */ true);
     //if (!file.syncWriteToFile(&b)) {
     if (!file.writeToFile(&b)) {  
       throw std::runtime_error("could not write");
     }
-    UNLOCK(data.id);
+    //UNLOCK(data.id);
   } catch (exception const& e) {
-    UNLOCK(data.id);
+    //UNLOCK(data.id);
     throw e;
   }
 }

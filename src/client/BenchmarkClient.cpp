@@ -2,6 +2,7 @@
 #include <gflags/gflags.h>
 #include <iostream>
 #include <fstream>
+#include <thread>
 
 #include "gen-cpp/PointStore.h"
 #include "ZeonClient.h"
@@ -14,12 +15,16 @@ DEFINE_string(metadata_file, "metadata.txt", "File which contains other metadata
 
 DEFINE_bool(create, false, "Use create calls");
 DEFINE_bool(set, false, "Use set calls");
+DEFINE_bool(get_nearest, false, "Use get_nearest calls");
 
 DEFINE_int32(start_create, 0, "Index of id to start from");
-DEFINE_int32(end_create, 0, "Index of id to start from");
+DEFINE_int32(end_create, 0, "Index of id to end at");
 
 DEFINE_int32(start_set, 0, "Index of id to start from");
-DEFINE_int32(num_set, 0, "Index of id to start from");
+DEFINE_int32(num_set, 0, "Number of calls");
+
+DEFINE_int32(num_get, 0, "Number of calls");
+DEFINE_int32(print_every, 50, "Number of calls");
 
 int toint(string s) {
   return atoi(s.c_str());
@@ -33,7 +38,7 @@ timestamp get_timestamp() {
 }
 
 void printTime(timestamp t0, timestamp t1) {
-  printf("It took %llu microseconds\n", (t1 - t0));
+  printf("[%d] It took %llu microseconds\n", getpid(), (t1 - t0));
 }
 
 void addClients(ZeonClient& client) {
@@ -76,6 +81,8 @@ int main(int argc, char **argv) {
   ZeonClient client;
   addClients(client);
 
+  srand(time(nullptr) ^ getpid());
+
   if (FLAGS_create) {
     try {
       int numCreate = (FLAGS_end_create - FLAGS_start_create);
@@ -108,4 +115,40 @@ int main(int argc, char **argv) {
       printData(d);
     }
   }
+
+  if (FLAGS_get_nearest) {
+    cout << "======= Getting " << FLAGS_num_get << " data points" << endl;
+    //timestamp t0 = get_timestamp();
+    //timestamp tx = get_timestamp();
+    int i = 0; int success = 0;
+    auto points = [&i, &client, &success] () {
+      for (i = 0; i < FLAGS_num_get; i++) {
+        vector<Data> data;
+        try {
+          client.getNearestKByPoint(data, makePoint(600 + (rand() % 300), rand() % maxY), 10);
+          success++;
+        } catch (ZeonException const& ze) {
+          cout << "ZeonException: " << ze.what << " " << ze.why << endl;
+        } catch (exception const& e) {
+          cout << "Exception: " << e.what();
+        }
+        //if (i % FLAGS_print_every == 0) {
+          //timestamp ty = get_timestamp();
+          //printTime(tx, ty);
+          //tx = ty;
+        //}
+      }
+    };
+
+    thread request_thread = thread(points);
+    int prev = success;
+    while (i != FLAGS_num_get) {
+      this_thread::sleep_for(chrono::seconds(1));
+      printf("[%d] Completed %d requests\n", getpid(), (success - prev));
+      prev = success;
+    }
+
+    //timestamp t1 = get_timestamp();
+    //printTime(t0, t1);
+  }  
 }

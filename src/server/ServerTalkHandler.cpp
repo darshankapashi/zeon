@@ -14,7 +14,7 @@ ServerTalkHandler::ServerTalkHandler() {
 }
 
 void ServerTalkHandler::getValue(std::string& _return, const zeonid_t zid) {
-  printf("getValue id=%d haveThisId=%d\n", zid, myNode->doIHaveThisId(zid, READ_OP));
+  printf("[%d] getValue id=%d haveThisId=%d\n", FLAGS_my_nid, zid, myNode->doIHaveThisId(zid, READ_OP));
 
   // Return the value from the Datastore
   Data data;
@@ -26,7 +26,7 @@ void ServerTalkHandler::getValue(std::string& _return, const zeonid_t zid) {
 }
 
 void ServerTalkHandler::getDataForRectangle(vector<Data>& _return, const Rectangle& rect) {
-  printf("getDataForRectangle Rectangle: (%lld,%lld) (%lld,%lld)\n", 
+  printf("[%d] getDataForRectangle Rectangle: (%lld,%lld) (%lld,%lld)\n", FLAGS_my_nid, 
     rect.bottomLeft.xCord, rect.bottomLeft.yCord,
     rect.topRight.xCord, rect.topRight.yCord);
 
@@ -38,13 +38,13 @@ void ServerTalkHandler::getDataForRectangle(vector<Data>& _return, const Rectang
     _return.emplace_back();
     int ret = myDataStore->get(data.id, _return.back(), true);
     if (ret != FOUND) {
-      printf("Could not find %lld in myDataStore, error=%d\n", data.id, ret);
+      printf("[%d] Could not find %lld in myDataStore, error=%d\n", FLAGS_my_nid, data.id, ret);
     }
   }
 }
 
 void ServerTalkHandler::replicate(const Data& data, const bool valuePresent) {
-  printf("replicate\n");
+  printf("[%d] replicate\n", FLAGS_my_nid);
 
   // Add it to Datastore
   // Add it to Log
@@ -54,7 +54,7 @@ void ServerTalkHandler::replicate(const Data& data, const bool valuePresent) {
 }
 
 void ServerTalkHandler::invalidate(const zeonid_t zid) {
-  printf("invalidate\n");
+  printf("[%d] invalidate\n", FLAGS_my_nid);
 
   // Remove from Datastore
   // Remove from Log
@@ -64,13 +64,13 @@ void ServerTalkHandler::invalidate(const zeonid_t zid) {
   myDataStore->removePersistedData(zid);
 }
 
-void ServerTalkHandler::getNearestKByPoint(std::vector<Data> & _return, const Point& point, const int k) {
-  printf("getNearestKByPoint\n");
-  _return = proximity->proximityCompute->getKNearestPoints(point, k);
+void ServerTalkHandler::getNearestKByPoint(std::vector<DistData> & _return, const Point& point, const int k, const double maxDist) {
+  printf("[%d] getNearestKByPoint*\n", FLAGS_my_nid);
+  proximity->proximityCompute->getKNearestPoints(_return, point, k, &maxDist);
 }
 
 void ServerTalkHandler::receiveRoutingInfo(const RoutingInfo& routingInfo) {
-  printf("Receive routing info without 2PC\n");
+  printf("[%d] Receive routing info without 2PC\n", FLAGS_my_nid);
   if (routingInfo.timestamp < myNode->routingInfo_.timestamp) {
     auto se = ServerTalkException();
     se.what = NodeMessage::STALE_ROUTING_INFO;
@@ -85,7 +85,7 @@ void ServerTalkHandler::receiveRoutingInfo(const RoutingInfo& routingInfo) {
 }
 
 int32_t ServerTalkHandler::prepareRecvNodeInfo(const RoutingInfo& routingInfo, const ParentRectangleList& parentRectangleMap) {
-  printf("prepareRecvRoutingInfo\n");
+  printf("[%d] prepareRecvRoutingInfo\n", FLAGS_my_nid);
   // check if version for latest copy of routingInfo
   // Copy this in tempStateObjects
   // Atomically replace the routing info based on lock
@@ -95,7 +95,7 @@ int32_t ServerTalkHandler::prepareRecvNodeInfo(const RoutingInfo& routingInfo, c
 
   // TODO check for staleness of routingInfo
   //if (nodeInfo.timestamp < myNode->me_.timestamp) {
-    //printf("stale timestamp\n");
+    //printf("[%d] stale timestamp\n");
     //return NodeMessage::STALE_ROUTING_INFO; 
   //}
   
@@ -103,7 +103,7 @@ int32_t ServerTalkHandler::prepareRecvNodeInfo(const RoutingInfo& routingInfo, c
   myNode->updateRoutingInfoTemp_ = routingInfo;
   auto it = myNode->updateRoutingInfoTemp_.nodeRegionMap.find(myNode->me_.nodeId.nid);
   if (it == myNode->updateRoutingInfoTemp_.nodeRegionMap.end()) {
-    printf("not found iter");
+    printf("[%d] not found iter", FLAGS_my_nid);
     return NodeMessage::ERROR;
   }
   myNode->updateRoutingInfoTemp_.nodeRegionMap[myNode->me_.nodeId.nid] = nodeInfo; 
@@ -115,7 +115,7 @@ int32_t ServerTalkHandler::prepareRecvNodeInfo(const RoutingInfo& routingInfo, c
 }
 
 int32_t ServerTalkHandler::commitRecvNodeInfo(const RoutingInfo& routingInfo) {
-  printf("commitRecvRoutingInfo\n");
+  printf("[%d] commitRecvRoutingInfo\n", FLAGS_my_nid);
   // Check if updateRoutingInfoTemp_ corresponds to routingInfo
   // Change the status and lock all objects for Node
   lock_guard<mutex> updateObjectsLock(myNode->lockTempObjectsNode_);
@@ -127,7 +127,7 @@ int32_t ServerTalkHandler::commitRecvNodeInfo(const RoutingInfo& routingInfo) {
   myNode->setStatus(NodeStatus::UPDATING);  
   myNode->me_ = myNode->updateNodeInfoTemp_; 
   myNode->routingInfo_ = myNode->updateRoutingInfoTemp_;
-  printf("new size of routing info: %lu\n", myNode->routingInfo_.nodeRegionMap[2].nodeDataStats.region.rectangles.size());
+  printf("[%d] new size of routing info: %lu\n", FLAGS_my_nid, myNode->routingInfo_.nodeRegionMap[2].nodeDataStats.region.rectangles.size());
   myNode->buildRectangleToNodeMap();
   myNode->setStatus(NodeStatus::ACTIVE);
   myNode->commitNewData();
@@ -136,7 +136,7 @@ int32_t ServerTalkHandler::commitRecvNodeInfo(const RoutingInfo& routingInfo) {
 }
 
 bool ServerTalkHandler::takeOwnership(const nid_t nid) {
-  printf("take Ownership");
+  printf("[%d] take Ownership", FLAGS_my_nid);
   try {
     // TODO: manage the replicated and replicas for also
     auto canNodeInfo = myNode->routingInfo_.nodeRegionMap[nid];
@@ -151,7 +151,7 @@ bool ServerTalkHandler::takeOwnership(const nid_t nid) {
     myNode->commitNewData();
     return true;
   } catch (exception e) {
-    printf("Failed takeOwnership for %lld on server %lld\n", 
+    printf("[%d] Failed takeOwnership for %lld on server %lld\n", FLAGS_my_nid, 
         nid, myNode->me_.nodeId.nid);
     return false;
   }

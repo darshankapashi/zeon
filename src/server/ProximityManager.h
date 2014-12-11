@@ -1,6 +1,9 @@
+#pragma once
+
 #include <iostream>
-#include "src/server/Structs.h"
+#include "Structs.h"
 #include <cmath>
+#include "gen-cpp/server_types.h"
 
 using namespace std;
 using namespace core;
@@ -21,6 +24,8 @@ struct DataStub {
   zeonid_t id;
   Point p;
 };
+
+bool linearComparison(DistData const p1, DistData const p2);
 
 class ProximityDistance {
   public: 
@@ -54,7 +59,7 @@ class ProximityCompute {
   virtual void insertPoint(Data const& data) = 0; 
   virtual void removePoint(Data const& data) = 0;
   virtual void removePoint(zeonid_t const& zid) = 0;
-  virtual vector<Data> getKNearestPoints(const Point& point, int k) = 0;
+  virtual void getKNearestPoints(vector<DistData>& data, const Point& point, int k, const double* maxDist) = 0;
   virtual void getInternalPoints(vector<Data>& data, const Region& region) = 0;
   virtual void getInternalPoints(vector<Data>& data, const Rectangle& rectangle) = 0;
 
@@ -71,7 +76,7 @@ class LinearProximityCompute: public ProximityCompute {
   void insertPoint(Data const& point);
   void removePoint(Data const& point);
   void removePoint(zeonid_t const& zid);
-  vector<Data> getKNearestPoints(const Point& point, int k);
+  void getKNearestPoints(vector<DistData>& data, const Point& point, int k, const double* maxDist);
   void getInternalPoints(vector<Data>& data, const Region& region);
   void getInternalPoints(vector<Data>& data, const Rectangle& rectangle);
 
