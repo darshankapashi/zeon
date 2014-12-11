@@ -8,6 +8,13 @@ exception ServerTalkException {
   2: string why,
 }
 
+struct DistData {
+  1: double distance,
+  2: core.zeonid_t zid,
+  3: core.Point point,
+  // optionally add the value here too
+}
+
 service ServerTalk {
   string getValue(1: core.zeonid_t zid)
     throws (1: core.ZeonException ze),
@@ -22,7 +29,7 @@ service ServerTalk {
     throws (1: core.ZeonException ze),  
 
   // Get K Data values nearest to point
-  list<core.Data> getNearestKByPoint (1: core.Point point, 2: i32 k) 
+  list<DistData> getNearestKByPoint (1: core.Point point, 2: i32 k, 3: double maxDist) 
     throws (1: core.ZeonException ze),
 
   // assumes routingInfo as ground truth, will be used by replicas not involved in split and merge

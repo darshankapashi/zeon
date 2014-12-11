@@ -51,4 +51,5 @@ then
   echo "Shutting down..."
   pkill -f bin/server
   kill $leader
+  #rm -rf /tmp/zeon-*
 fi

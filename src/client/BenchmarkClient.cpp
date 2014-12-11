@@ -14,12 +14,15 @@ DEFINE_string(metadata_file, "metadata.txt", "File which contains other metadata
 
 DEFINE_bool(create, false, "Use create calls");
 DEFINE_bool(set, false, "Use set calls");
+DEFINE_bool(get_nearest, false, "Use get_nearest calls");
 
 DEFINE_int32(start_create, 0, "Index of id to start from");
-DEFINE_int32(end_create, 0, "Index of id to start from");
+DEFINE_int32(end_create, 0, "Index of id to end at");
 
 DEFINE_int32(start_set, 0, "Index of id to start from");
-DEFINE_int32(num_set, 0, "Index of id to start from");
+DEFINE_int32(num_set, 0, "Number of calls");
+
+DEFINE_int32(num_get, 0, "Number of calls");
 
 int toint(string s) {
   return atoi(s.c_str());
@@ -110,4 +113,19 @@ int main(int argc, char **argv) {
       printData(d);
     }
   }
+
+  if (FLAGS_get_nearest) {
+    try {
+      cout << "======= Getting " << FLAGS_num_get << " data points" << endl;
+      timestamp t0 = get_timestamp();
+      for (int i = 0; i < FLAGS_num_get; i++) {
+        vector<Data> data;
+        client.getNearestKByPoint(data, makePoint(rand() % maxX, rand() % maxY), 10);
+      }
+      timestamp t1 = get_timestamp();
+      printTime(t0, t1);
+    } catch (ZeonException const& ze) {
+      cout << "ZeonException: " << ze.what << " " << ze.why << endl;
+    }
+  }  
 }

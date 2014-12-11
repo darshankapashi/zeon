@@ -137,16 +137,16 @@ void LogFile::writeValue(core::Data const& data) {
   WriteBlob<Data> b(data);
 
   //cout << "(reliable) Writing to disk: id=" << data.id << "\n";
-  LOCK(data.id);
+  //LOCK(data.id);
   try {
     FileOps file(getValueFile(data.id), /* truncate */ true);
     //if (!file.syncWriteToFile(&b)) {
     if (!file.writeToFile(&b)) {  
       throw std::runtime_error("could not write");
     }
-    UNLOCK(data.id);
+    //UNLOCK(data.id);
   } catch (exception const& e) {
-    UNLOCK(data.id);
+    //UNLOCK(data.id);
     throw e;
   }
 }

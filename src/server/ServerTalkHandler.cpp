@@ -64,9 +64,9 @@ void ServerTalkHandler::invalidate(const zeonid_t zid) {
   myDataStore->removePersistedData(zid);
 }
 
-void ServerTalkHandler::getNearestKByPoint(std::vector<Data> & _return, const Point& point, const int k) {
-  printf("[%d] getNearestKByPoint\n", FLAGS_my_nid);
-  _return = proximity->proximityCompute->getKNearestPoints(point, k);
+void ServerTalkHandler::getNearestKByPoint(std::vector<DistData> & _return, const Point& point, const int k, const double maxDist) {
+  printf("[%d] getNearestKByPoint*\n", FLAGS_my_nid);
+  proximity->proximityCompute->getKNearestPoints(_return, point, k, &maxDist);
 }
 
 void ServerTalkHandler::receiveRoutingInfo(const RoutingInfo& routingInfo) {

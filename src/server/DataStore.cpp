@@ -19,6 +19,8 @@ int DataStore::storeMetaData(zeonid_t key, Point point, int64_t timestamp) {
     metadata = &metaData_[key];
   }
 
+  // This might crash for multiple updates to the same key
+
   // generate unique version number
   auto versionNumber = metadata->size() > 0 ? 
     metadata->back().version.counter + 1 : 
