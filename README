@@ -3,3 +3,29 @@
 Dependencies:
 - thrift 0.9.1
 - gflags 2.0
+
+Build:
+make all -j
+
+It will create the binaries in the bin/ folder.
+
+Run:
+Leader - ./bin/leader
+Server - ./bin/server --my_nid= --client_port= --server_port=
+
+For a simpler startup, check the scripts/ folder. startup.sh reads from the config.txt and starts up the leader and the servers on localhost with the right arguments.
+
+Configuration files:
+config.txt - It contains 1 line per server in the System
+metadata.txt - It contains different parameters of the system, to be used by the leader
+
+Code Organization:
+src/
+  - client: Some client libraries/binaries to query the system
+  - leader: Code for the Leader module
+  - server: Code for the Server. Some of it is included by the leader/ directory too
+  - if: All the thrift interfaces
+scripts/
+  - Some simple bash scripts to bootstrap the system, to run multiple clients, etc.
+demo/
+  - PHP + JS code used for the toy application built on top of Zeon
